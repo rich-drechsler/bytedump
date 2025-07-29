@@ -1,0 +1,11 @@
+#
+# Force git to track this essentially "empty" directory. It's the default
+# directory that makefiles use when they're asked to install things, but
+# right now I don't think git should track files that are installed there.
+#
+
+image/*
+
+!image/.gitkeep
+!image/README.md
+
