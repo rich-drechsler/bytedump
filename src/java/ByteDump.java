@@ -31,17 +31,7 @@ import java.util.Scanner;
  * bytedump script to Java. My goal, when I started working on the conversion, was
  * building a Java class file that resembled the bytedump bash script closely enough
  * that understanding one implementation would be useful if you decided to dig into
- * the other. Right now that bash implementation can found at
- *
- *     https://github.com/rich-drechsler/bytedump-bash
- *
- * but once this Java version is ready I plan on creating a new repository and when
- * that happens everything in the bytedump-bash repository will be moved to
- *
- *     https://github.com/rich-drechsler/bytedump/bash
- *
- * After that the public bytedump-bash respository will be archived and all of its
- * contents will be replaced by a README file that points at the new repository.
+ * the other.
  */
 
 public
@@ -63,8 +53,8 @@ class ByteDump {
 
     //
     // The program name that appears in error or usage messages should be assigned
-    // to PROGRAM_NAME_KEY in the system properties Hashtable, but if it's not use
-    // PROGRAM_NAME_DEFAULT.
+    // to PROGRAM_NAME_KEY in the system properties Hashtable, but if it's not the
+    // error messages just use PROGRAM_NAME_DEFAULT.
     //
     // NOTE - all you have to do to add things to Java's system properties Hashtable
     // is use java's -D command line option. It's done automatically for you by the
@@ -112,7 +102,7 @@ class ByteDump {
     // in the bash version's SCRIPT_STRINGS keys with underscores. The result was
     // lots of unusual variable names. It's not a Java style I've seen before and
     // I would guess you've never encountered it either, but I believe (after lots
-    // of trial and error) that it's the best approach in this class.
+    // of trial and error) that it's the best approach for this class.
     //
     // The variable names are hard to miss and easy to connect back to strings you
     // might expect to find in the bash version's SCRIPT_STRINGS associative array.
@@ -214,7 +204,8 @@ class ByteDump {
     // different order.
     //
     // NOTE - the bash version could just look for "keys" in an associative array, but
-    // in Java we rely on reflection to find the appropriately named class variables.
+    // in this Java implementation we have to use reflection to find the appropriately
+    // named class variables.
     //
 
     private static String DEBUG_fields_prefixes = "DUMP ADDR BYTE TEXT DEBUG PROGRAM";
@@ -1232,7 +1223,7 @@ class ByteDump {
 
                 case "fields":
                     if (DEBUG_fields) {
-                        fields = getDeclaredFields();
+                        fields = getDeclaredFields();           // this uses reflection
                         buffer = new StringBuilder();
                         consumed = new HashMap<>();
                         for (String prfx : DEBUG_fields_prefixes.split(" ")) {
@@ -2470,8 +2461,8 @@ class ByteDump {
                     if ((groups = manager.matchedGroups(optarg, "^[ \\t]*(decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([0]?[1-9][0-9]*)[ \\t]*)?$")) != null) {
                         //
                         // Implementation here, and in some of the other cases, could easily be
-                        // improved, but the goal in this version of the bytedump program was
-                        // to make it resemble the bash implementation.
+                        // simplified, but the goal in this version of the bytedump program is
+                        // to make it "resemble" the bash implementation.
                         //
                         style = groups[1];
                         format_width = groups[3];
@@ -2548,8 +2539,8 @@ class ByteDump {
                     if ((groups = manager.matchedGroups(optarg, "^[ \\t]*(binary|decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$")) != null) {
                         //
                         // Implementation here, and in some of the other cases, could easily be
-                        // simplified, but the goal in this version of the bytedump program was
-                        // to make it resemble the bash implementation.
+                        // simplified, but the goal in this version of the bytedump program is
+                        // to make it "resemble" the bash implementation.
                         //
                         style = groups[1];
                         length = groups[3];
@@ -2871,8 +2862,8 @@ class ByteDump {
                     if ((groups = manager.matchedGroups(optarg, "^[ \\t]*(ascii|caret|empty|escape|unicode|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$")) != null) {
                         //
                         // Implementation here, and in some of the other cases, could easily be
-                        // simplified, but the goal in this version of the bytedump program was
-                        // to make it resemble the bash implementation.
+                        // simplified, but the goal in this version of the bytedump program is
+                        // to make it "resemble" the bash implementation.
                         //
                         style = groups[1];
                         length = groups[3];
@@ -3129,6 +3120,13 @@ class ByteDump {
 
 
     private static String
+    delimit(int arg) {
+
+        return(delimit(String.valueOf(arg)));
+    }
+
+
+    private static String
     delimit(String... args) {
 
         //
@@ -3139,13 +3137,6 @@ class ByteDump {
         //
 
         return("\"" + StringTo.joiner(" ", args) + "\"");
-    }
-
-
-    private static String
-    delimit(int arg) {
-
-        return(delimit(String.valueOf(arg)));
     }
 
 
