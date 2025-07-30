@@ -338,7 +338,7 @@ Options() {
     # argument, and all the arguments that follow it, will eventually be handed to
     # the Java class file that implements the Java application. There's no explicit
     # way to mark the end of the launcher options - the first argument that's not a
-    # a recognized launcher option (even "--") ends this loop.
+    # recognized launcher option (even "--") ends this loop.
     #
 
     argc="$#"
