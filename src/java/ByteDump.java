@@ -216,7 +216,7 @@ class ByteDump {
     // really forced to rely on an external program, like xxd, to read individual bytes
     // from an input file. This is a much better approach, but means we'll usually need
     // TEXT and BYTE field mapping arrays. The only exceptions happen when those fields
-    // are are explicitly excluded from the dump by command line options.
+    // are explicitly excluded from the dump by command line options.
     //
     // The first group of mapping arrays are for the TEXT field, and just like the bash
     // version, we want to control the expansion of Unicode escape sequences. That's why
