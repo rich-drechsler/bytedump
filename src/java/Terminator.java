@@ -452,7 +452,7 @@ class Terminator {
     class ExitException extends java.lang.RuntimeException {
 
         //
-        // An instance of this class is thrown by terminate() when it's called to stop the
+        // An instance of this class is thrown by terminate() when it's called to stop
         // the program using an extension of Java's RuntimeException class. It's a public
         // static class that you reference in a catch block as Terminator.ExitException.
         //
@@ -512,7 +512,7 @@ class Terminator {
 
         //
         // An instance of this class is thrown by terminate() when it's called to stop the
-        // the program using an extension of Java's Error class. It's a public static class
+        // program using an extension of Java's Error class. This is a public static class
         // that you reference in a catch block as Terminator.ExitError.
         //
         // NOTE - this isn't the preferred way to stop an application, but could be useful
