@@ -87,24 +87,25 @@ SOURCEDIRS := bash java
 ####################
 
 all install clean clobber testfiles :
-	@#
-	@# Loops though the source directories listed in SRCDIRS and uses the makefile
-	@# in each directory to build the target. Each directory should be a language
-	@# specific bytedump implementation with a makefile that recognizes all of the
-	@# targets of this rule.
-	@#
-	@# Exiting this recipe with a zero status when make fails in one of the source
-	@# directories is done to reduce noise. Everything needed to track the problem
-	@# down has already been explained to the user and there's nothing useful this
-	@# instance of make can add, so we just exit and pretend it all worked.
-	@#
 	@HERE="$${PWD}"; \
 	INSTALLDIR="$(realpath $(INSTALLDIR))"; \
-	if [ "$${INSTALLDIR}" ] || [ "$@" != "install" ]; then \
+	if [ -d "$${INSTALLDIR}" ] || [ "$@" != "install" ]; then \
+	    # \
+	    # Loops though the source directories listed in SRCDIRS and uses the makefile \
+	    # in each directory to build the target. Each directory should be a language \
+	    # specific bytedump implementation with a makefile that recognizes all of the \
+	    # targets of this rule. \
+	    # \
 	    for DIR in $(SOURCEDIRS); do \
 	        if [ -d "$${DIR}" ] && [ -f "$${DIR}/$(MAKEFILE)" ]; then \
 		    cd "$${DIR}"; \
 		    echo "==== Making $@ in directory $${PWD} ===="; \
+		    # \
+		    # Exiting with a zero status if the following $(MAKE) call fails is done \
+		    # to reduce noise. Everything needed to track the problem down has already \
+		    # been explained to the user and there's nothing useful this instance of \
+		    # make can add, so we just exit and pretend it all worked. \
+		    # \
 		    $(MAKE) -f "$(MAKEFILE)" INSTALLDIR="$${INSTALLDIR}" "$@" && echo || exit 0; \
 		    cd "$${HERE}"; \
 	        fi; \
