@@ -529,7 +529,7 @@ PathCanonical() {
                 path="${path@Q}"                # requires bash 4.4 and later
             fi
             if [[ $base64 == "TRUE" ]]; then
-                path="$(printf "%s" "$path" | base64 --wrap=0 2>/dev/null)"
+                path="$(printf "%s" "$path" | command -p base64 --wrap=0 2>/dev/null)"
             fi
 
             paths+="${paths:+$'\n'}${path}"
@@ -651,7 +651,7 @@ PathCanonicalBash() {
                 path="${path@Q}"                # requires bash 4.4 and later
             fi
             if [[ $base64 == "TRUE" ]]; then
-                path="$(printf "%s" "$path" | base64 --wrap=0 2>/dev/null)"
+                path="$(printf "%s" "$path" | command -p base64 --wrap=0 2>/dev/null)"
             fi
 
             paths+="${paths:+$'\n'}${path}"
