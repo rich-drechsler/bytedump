@@ -8,10 +8,9 @@ preprocesses anything it hands to the shell, so you have to know some of the rul
 it follows to figure out what the shell is really going to do.
 
 This is a tiny repository that could easily be built any way you choose - even by
-hand. I picked GNU make because I'm comfortable using it and don't mind if it won't
-work everywhere. I'm a retired programmer who's old enough to realize that make is
-ancient technology, but I still enjoy programming and understand that most of the
-people writing code today probably need some help with GNU make.
+hand. I picked GNU make for this repository because I'm comfortable using it and
+fine if it's only available on Linux systems. Make is old technology, so most of
+the people writing code today probably need some help with it.
 
 An important part of that help involved adding comments to makefiles, and that's
 where I stumbled into a minor issue that I'll discuss in more detail later in this
@@ -23,7 +22,7 @@ out that adding a comment to a makefile changed GNU make's behavior.
 My intention here isn't to write a GNU make tutorial, but instead it's to give you
 enough information so you'll have a shot at reading the makefiles and understanding
 some of the choices made when I wrote them. Those makefiles aren't complicated, so
-this shouldn't be a long document. 
+this shouldn't be a long document.
 
 ### The Manual
 
@@ -71,7 +70,7 @@ in section 16.2 of the GNU make manual
     Write the Makefile commands (and any shell scripts, such as configure) to
     run under sh (both the traditional Bourne shell and the POSIX shell), not
     csh. Don’t use any special features of ksh or bash, or POSIX features not
-    widely supported in traditional Bourne sh. 
+    widely supported in traditional Bourne sh.
 
 and write shell code that would be accepted by a POSIX.1-1992 shell, which I think
 is the standard that included the $(...) command substitution syntax.
