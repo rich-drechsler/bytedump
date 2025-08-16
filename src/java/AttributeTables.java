@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Richard L. Drechsler
+ * Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
  * License: MIT License (https://opensource.org/license/mit/)
  */
 

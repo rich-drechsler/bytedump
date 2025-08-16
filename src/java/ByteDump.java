@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Richard L. Drechsler
+ * Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
  * License: MIT License (https://opensource.org/license/mit/)
  */
 
@@ -49,7 +49,8 @@ class ByteDump {
 
     private static final String PROGRAM_VERSION = "0.9";
     private static final String PROGRAM_DESCRIPTION = "Java reproduction of the bash bytedump script";
-    private static final String PROGRAM_LICENSE = "MIT License (https://opensource.org/license/mit/)";
+    private static final String PROGRAM_COPYRIGHT = "Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)";
+    private static final String PROGRAM_LICENSE = "License: MIT License (https://opensource.org/license/mit/)";
 
     //
     // The program name that appears in error or usage messages should be assigned
@@ -1830,7 +1831,7 @@ class ByteDump {
             System.out.println();
         }
         if (license != null) {
-            System.out.println("Software License: " + license);
+            System.out.println(license);
         }
     }
 
@@ -2638,6 +2639,11 @@ class ByteDump {
                     } else {
                         userError("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters");
                     }
+                    break;
+
+                case "--copyright":
+                    System.out.println(PROGRAM_COPYRIGHT);
+                    Terminator.terminate();
                     break;
 
                 case "--debug=":

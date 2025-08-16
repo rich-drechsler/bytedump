@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2025 Richard L. Drechsler
+# Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
 # License: MIT License (https://opensource.org/license/mit/)
 #
 # This is a bash script that can be used to launch Java applications. There's a

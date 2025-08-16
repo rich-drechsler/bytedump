@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2024-2025 Richard L. Drechsler
+# Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
 # License: MIT License (https://opensource.org/license/mit/)
 #
 # This is a nontrivial program that tackles things that simply don't belong in a
@@ -737,7 +737,8 @@ declare -A SCRIPT_STRINGS=(
 
     [SCRIPT.version]="0.9"
     [SCRIPT.description]="Bash bytedump script"
-    [SCRIPT.license]="MIT License (https://opensource.org/license/mit/)"
+    [SCRIPT.copyright]="Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
+    [SCRIPT.license]="License: MIT License (https://opensource.org/license/mit/)"
     [SCRIPT.usage]="Usage: ${BASH_SOURCE[0]:-bytedump-bash} [OPTIONS] [FILE|-]"
     [SCRIPT.help.trigger]="#@#"
 
@@ -3745,6 +3746,10 @@ Options() {
                     Error "argument $(Delimit "${optarg}") in option $(Delimit "${arg}") contains unprintable characters"
                 fi;;
 
+            --copyright)
+                printf "%s\n" "${SCRIPT_STRINGS[SCRIPT.copyright]}"
+                exit 0;;
+
             #
             # Options that start with --debug are undocumented and can be changed
             # or removed without notice. In addition, any description of debugging
@@ -4588,6 +4593,7 @@ exit 0                  # skip everything else in this file
 #@#         dump. All characters in <string> must be printable or the <string> can
 #@#         be empty. The default suffix is a single colon (i.e., ":").
 #@#
+#@#     --background=<color>
 #@#     --background=<color>:<selector>
 #@#         Sets the background <color> that's used when any of the bytes selected by
 #@#         <selector> are displayed in the dump's byte or text fields.
@@ -4633,6 +4639,7 @@ exit 0                  # skip everything else in this file
 #@#         maximum length of each record in the dump. See the --length option for more
 #@#         details.
 #@#
+#@#     --byte-background=<color>
 #@#     --byte-background=<color>:<selector>
 #@#         Sets the background <color> that's used when any of the bytes selected by
 #@#         <selector> are displayed in the dump's byte field.
@@ -4641,6 +4648,7 @@ exit 0                  # skip everything else in this file
 #@#         description. The <selector> is documented below in the SELECTORS section.
 #@#         If <selector> and the colon are omitted, <color> is applied to all bytes.
 #@#
+#@#     --byte-foreground=<color>
 #@#     --byte-foreground=<color>:<selector>
 #@#         Sets the foreground <color> that's used when any of the bytes selected by
 #@#         <selector> are displayed in the dump's byte field.
@@ -4664,6 +4672,10 @@ exit 0                  # skip everything else in this file
 #@#         dump. All characters in <string> must be printable or the <string> can be
 #@#         empty. The default suffix is the empty string.
 #@#
+#@#     --copyright
+#@#         Print copyright information on standard output and then exit.
+#@#
+#@#     --foreground=<color>
 #@#     --foreground=<color>:<selector>
 #@#         Sets the foreground <color> that's used when any of the bytes selected by
 #@#         <selector> are displayed in the dump's byte or text fields.
@@ -4835,6 +4847,7 @@ exit 0                  # skip everything else in this file
 #@#         maximum length of each record in the dump. See the --length option for more
 #@#         details.
 #@#
+#@#     --text-background=<color>
 #@#     --text-background=<color>:<selector>
 #@#         Sets the background <color> that's used when any of the bytes selected by
 #@#         <selector> are displayed in the dump's text field.
@@ -4843,6 +4856,7 @@ exit 0                  # skip everything else in this file
 #@#         description. The <selector> is documented below in the SELECTORS section.
 #@#         If <selector> and the colon are omitted, <color> is applied to all bytes.
 #@#
+#@#     --text-foreground=<color>
 #@#     --text-foreground=<color>:<selector>
 #@#         Sets the foreground <color> that's used when any of the bytes selected by
 #@#         <selector> are displayed in the dump's text field.

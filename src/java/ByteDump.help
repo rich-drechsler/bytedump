@@ -138,6 +138,9 @@
          dump. All characters in <string> must be printable or the <string> can be
          empty. The default suffix is the empty string.
 
+     --copyright
+         Print copyright information on standard output and then exit.
+
      --foreground=<color>
      --foreground=<color>:<selector>
          Sets the foreground <color> that's used when any of the bytes selected by
