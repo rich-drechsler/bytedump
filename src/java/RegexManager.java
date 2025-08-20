@@ -436,7 +436,7 @@ class RegexManager {
         //
         // and both calls return null even though the match against "bbb" succeeded and
         // the match against "ccc" failed. It's really not a big deal, and in practice
-        // that regular expression probably whould have been written as
+        // that regular expression probably should have been written as
         //
         //     ((aaa)|(bbb))
         //

@@ -32,6 +32,11 @@ import java.util.Scanner;
  * building a Java class file that resembled the bytedump bash script closely enough
  * that understanding one implementation would be useful if you decided to dig into
  * the other.
+ *
+ * The organization and style I used in this class file doesn't exactly match what
+ * I typically use in Java files. Instead, it was written to emphasize similarities
+ * with the existing bash version of bytedump. Take a look at RegexManager.java if
+ * you want to see a more typical Java class file.
  */
 
 public
@@ -39,7 +44,7 @@ class ByteDump {
 
     ///////////////////////////////////
     //
-    // Class Variables
+    // ByteDump Fields
     //
     ///////////////////////////////////
 
@@ -61,6 +66,9 @@ class ByteDump {
     // is use java's -D command line option. It's done automatically for you by the
     // official bash script that runs this application.
     //
+    // NOTE - searching for PROGRAM_NAME_KEY or PROGRAM_NAME_DEFAULT is an easy way
+    // to find the four convenience methods that this class uses to handle errors.
+    //
 
     private static final String PROGRAM_NAME_DEFAULT = "bytedump";
     private static final String PROGRAM_NAME_KEY = "program.name";
@@ -79,7 +87,16 @@ class ByteDump {
     // this version uses properly typed class variables that have names that start
     // with an uppercase word that's always followed by one or more lowercase words.
     // It's not a variable naming convention you'll find in Java style guides, but
-    // after some false starts I'm convinced it's better than the alternatives.
+    // after some false starts I'm convinced it's appropriate and much better than
+    // the alternatives.
+    //
+    // The variable names are hard to miss and easy to connect back to strings you
+    // might expect to find in the bash version's SCRIPT_STRINGS associative array.
+    // There's not a one-to-one correspondence between the SCRIPT_STRINGS keys and
+    // these variables names, but there's enough overlap that I think it's a useful
+    // convention.
+    //
+
     //
     // This wasn't the approach I started with. Instead, I naively began by trying
     // to replicate the SCRIPT_STRINGS associative array that the bash version used
@@ -105,11 +122,6 @@ class ByteDump {
     // I would guess you've never encountered it either, but I believe (after lots
     // of trial and error) that it's the best approach for this class.
     //
-    // The variable names are hard to miss and easy to connect back to strings you
-    // might expect to find in the bash version's SCRIPT_STRINGS associative array.
-    // There's not a one-to-one correspondence between the SCRIPT_STRINGS keys and
-    // these variables names, but there's enough overlap that I think it's a useful
-    // convention.
 
     //
     // Overall dump settings.
@@ -613,6 +625,15 @@ class ByteDump {
     // and if either one ends up null, the associated field will be omitted from the
     // dump. Both fields can't be omitted.
     //
+    // NOTE - if you search for these variables by typing something like
+    //
+    //     /byteMap =
+    // or
+    //
+    //     /textMap =
+    //
+    // in vim, you'll quickly find the initialization code that builds them.
+    //
 
     private static String[] byteMap = null;
     private static String[] textMap = null;
@@ -628,8 +649,19 @@ class ByteDump {
     // addrMap rather than String.format(). Take a look at dumpFormattedAddress() and
     // initialize4_Maps() for more details.
     //
+    // NOTE - if you search for these variables by typing something like
+    //
+    //     /addrMap =
+    //
+    // or
+    //
+    //     /addrBuffer =
+    //
+    // and you'll quickly find the initialization code that builds them.
+    //
     // NOTE - the --debug=addresses option forces String.format() to be used by making
-    // sure addrMap is null after the all of the initialization is finished.
+    // sure addrMap remains null after all of the initialization is finished, and that
+    // "tells" dumpFormattedAddress() to use String.format().
     //
 
     private static char[] addrMap = null;
@@ -792,7 +824,7 @@ class ByteDump {
 
     ///////////////////////////////////
     //
-    // Static Methods
+    // ByteDump Methods
     //
     ///////////////////////////////////
 
@@ -1147,6 +1179,10 @@ class ByteDump {
         // that are supposed to generate immediate output and aren't explicilty handled
         // anywhere else in this class. No arguments selects the most important keys,
         // which currently happens to cover all the cases in the switch statement.
+        //
+        // NOTE - debug code in the bash version handled the dump of the background and
+        // foreground attributes. I moved that responsibility to the dumpTable() method
+        // that's defined in the attributeTables class.
         //
 
         if (args.length == 0) {
@@ -2208,7 +2244,8 @@ class ByteDump {
                 // Java replaces code points that it can't encode with a single question mark.
                 // Access to the encoder that String.valueOf() uses lets us intervene before
                 // that replacement happens, but it's really not a big deal. Java's approach
-                // is reasonable, but makes it a bit harder for us to notice problems.
+                // is reasonable, but always using one question mark makes it a little harder
+                // for us to notice encoding issues.
                 //
                 encoder = Charset.defaultCharset().newEncoder();
                 unexpanded = (TEXT_unexpanded_string.length() > 0) ? TEXT_unexpanded_string : null;
@@ -2242,14 +2279,16 @@ class ByteDump {
         // The bash version always generated the addresses that appear in the dump using
         // the printf builtin and ADDR_format. In Java, simple integer arithmetic and a
         // properly initialized buffer seem to build addresses a little faster than the
-        // String.format() method. Addresses are built by dumpFormattedAddress(), and if
-        // addrMap is null when that method is called then String.format() is used.
+        // String.format() method.
+        //
+        // NOTE - addresses are built by dumpFormattedAddress(), and if addrMap is null
+        // when that method is called then String.format() is used.
         //
         // NOTE - any improvement probably needs a large file, dumped with a relatively
         // small record size, to be measured.
         //
 
-        if (DEBUG_addresses == false) {
+        if (DEBUG_addresses == false) {         // --debug=addresses sets it to true
             if (addrMap == null) {
                 switch (ADDR_output) {
                     case "DECIMAL":
@@ -2273,8 +2312,8 @@ class ByteDump {
             if (addrMap != null) {
                 //
                 // Binary addresses aren't supported, so 21 (or 22) characters should be all
-                // that's needed for octal addresses. Using Long.SIZE definitely is overkill,
-                // but it won't impact performance and only wastes about 40 characters.
+                // that's needed for octal addresses. Using Long.SIZE is overkill, but won't
+                // impact performance and only wastes about 40 characters.
                 //
                 padding = (ADDR_padding.length() > 0) ? ADDR_padding.charAt(0) : ' ';
                 addrBuffer = new char[Long.SIZE - 1];
@@ -3005,7 +3044,7 @@ class ByteDump {
 
     ///////////////////////////////////
     //
-    // Error Handlers
+    // Error Methods
     //
     ///////////////////////////////////
 
