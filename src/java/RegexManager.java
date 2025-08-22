@@ -4,10 +4,10 @@
  */
 
 import java.util.HashMap;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.TreeSet;
 
 /*
  * This class was used to help convert the bash implementation of bytedump to a Java
