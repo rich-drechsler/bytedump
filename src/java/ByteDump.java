@@ -1402,11 +1402,19 @@ class ByteDump {
         int      index;
 
         //
-        // This is the primary dump method - it can handle all dumps except single record
-        // dumps.
+        // This is the primary dump method. Even though it can handle everything except
+        // single record dumps, I decided to use different methods to handle dumps that
+        // just print the BYTE or TEXT fields. Each one could eliminate a little bit of
+        // the overhead that's required in this method, and that could occasionally be
+        // useful. The selection of the appropriate dump method is made by Dump().
         //
 
         if (DUMP_record_length > 0) {
+            //
+            // Using local variables instead of class fields should be a little faster,
+            // but it's probably only something that you could measure in dumps of big
+            // files.
+            //
             addr_prefix = ADDR_prefix;
             addr_suffix = ADDR_suffix + ADDR_field_separator;
             byte_prefix = BYTE_indent + BYTE_prefix;
@@ -1876,8 +1884,26 @@ class ByteDump {
     initialize() {
 
         //
-        // Don't plan on using xxd in this program so none of the xxd specific "fields"
-        // will be needed.
+        // Handles the initialization that happens after all the command line options
+        // are processed. The goal is to try to honor all the user's requests and to
+        // finish as many calculations as possible before starting the dump. Some of
+        // those calculations are difficult, but I think what's done in this version
+        // of bytedump is much easier to follow than the original bash implementation.
+        //
+        // All of the initialization could have been done right here in this method,
+        // but there's so much code that splitting the work up into separate methods
+        // seemed like a way to make it a little easier to follow. The names of those
+        // methods were chosen so their (case independent) sorted order matched the
+        // order that they're called. However, no matter how the initialization code
+        // is organized, it's still the most complicated part of this script.
+        //
+        // NOTE - the good news is, if you're willing to believe this stuff works, you
+        // probably can skip all the initialization, return to main(), and still follow
+        // the rest of the program.
+        //
+        // NOTE - this program generates every dump, so there's no need to keep track
+        // of internal properties of xxd (or any other program) or do any xxd focused
+        // initialization.
         //
 
         initialize1_Fields();
@@ -1892,8 +1918,14 @@ class ByteDump {
     initialize1_Fields() {
 
         //
-        // The main job in this method is to check the output styles currently set for each
-        // field and initialize other fields that depend on them.
+        // The main job in this method is to check the output styles for the ADDR, BYTE,
+        // and TEXT fields that are set after the command line options are processed and
+        // use them to initialize all other fields that depend on the selected style.
+        //
+        // Bits set in DUMP_field_flags represent the fields that will be printed in the
+        // dump. All three fields are enabled when we start. Fields that are "EMPTY" will
+        // have their flag bits cleared and when this method returns the flag bits set in
+        // DUMP_field_flags represent the fields that are included in the dump.
         //
 
         DUMP_field_flags = ADDR_field_flag | BYTE_field_flag | TEXT_field_flag;
@@ -2479,6 +2511,19 @@ class ByteDump {
         String       format_width;
         int          newlines;
         int          next;
+
+        //
+        // A long, but straightforward method that uses Java regular expressions and an instance
+        // of the RegexManager class to process command line options. Everything was designed so
+        // this method would "resemble" the way the option handling function in the bash version
+        // of bytedump, and the RegexManager class is a fundamental part of the solution to that
+        // puzzle. Take a look at the comments in RegexManager.java for more details.
+        //
+        // Just like the bash function, the caller of this method want to know how many arguments
+        // were comsumed as options. Java programs have lots of different ways to hand that answer
+        // back to the caller, but in the interest of "similarity" with the bash version we store
+        // the number in the argumentsConsumed class variable.
+        //
 
         manager = new RegexManager();           // for parsing the arguments
         done = false;                           // for early loop exit
