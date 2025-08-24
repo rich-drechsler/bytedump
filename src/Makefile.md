@@ -1,28 +1,26 @@
 ## GNU Make
 
-This is a work in progress - still lots to do...
+This is a work in progress. Lots left to do, so don't take this too seriously...
 
 Small shell scripts do the grunt work in makefiles, but familiarity with bash (or
 any other shell) doesn't mean you'll be able to understand makefiles. Make always
 preprocesses anything it hands to the shell, so you have to know some of the rules
-it follows to figure out what the shell is really going to do.
+it follows to figure out what the shell is really going to do. My plan here is to
+discuss GNU make, but limit what's covered to things I believe will help you follow
+the makefiles in this repository. They're not complicated, so it won't be a long
+document.
 
 This is a tiny repository that could easily be built any way you choose - even by
 hand. I picked GNU make for this repository because I'm comfortable using it and
-fine if it's only available on Linux systems. Make is old technology, so most of
-the people writing code today probably need some help with it.
+fine if the programs only build on Linux systems. Make is old technology, so most
+people writing code today probably need some help with it.
 
 An important part of that help involved adding comments to makefiles, and that's
-where I stumbled into a minor issue that I'll discuss in more detail later in this
-document. It happened because I wanted to put a comment on the same line as a GNU
-make variable assignment, and that eventually caused problems when the variable was
-referenced later in the makefile. I was, to say the least, surprised when I figured
-out that adding a comment to a makefile changed GNU make's behavior.
-
-My intention here isn't to write a GNU make tutorial, but instead it's to give you
-enough information so you'll have a shot at reading the makefiles and understanding
-some of the choices made when I wrote them. Those makefiles aren't complicated, so
-this shouldn't be a long document.
+where I stumbled into an annoying issue that I'll discuss in more detail near the
+end of this document. It happened when I put a comment on the same line as a GNU
+make variable assignment and that eventually caused problems when the variable was
+used later in the makefile. I was surprised when I eventually noticed that adding
+what looked like a legitimate comment to a makefile changed GNU make's behavior.
 
 ### The Manual
 
@@ -64,13 +62,13 @@ POSIX shell, and if so what version of POSIX does it support?
 They're all legitimate questions that you probably can't answer when you're writing
 a makefile. So instead of trying to point at the shell I might like to use, I don't
 set SHELL in GNU makefiles (despite what the manual recommends in section 16.1) and
-instead I use whatever GNU make selects. After that I just trust the advice that's
-in section 16.2 of the GNU make manual
+instead use whatever GNU make selects. After that I just trust the advice that's in
+section 16.2 of the GNU make manual
 
-    Write the Makefile commands (and any shell scripts, such as configure) to
-    run under sh (both the traditional Bourne shell and the POSIX shell), not
-    csh. Don’t use any special features of ksh or bash, or POSIX features not
-    widely supported in traditional Bourne sh.
+  > Write the Makefile commands (and any shell scripts, such as configure) to
+  > run under sh (both the traditional Bourne shell and the POSIX shell), not
+  > csh. Don’t use any special features of ksh or bash, or POSIX features not
+  > widely supported in traditional Bourne sh.
 
 and write shell code that would be accepted by a POSIX.1-1992 shell, which I think
 is the standard that included the $(...) command substitution syntax.
@@ -85,23 +83,47 @@ help you need.
 If you poke around in the GNU make manual you'll find the following description of
 variable names
 
-    A variable name may be any sequence of characters not containing ‘:’, ‘#’,
-    ‘=’, or whitespace. However, variable names containing characters other than
-    letters, numbers, and underscores should be considered carefully, as in some
-    shells they cannot be passed through the environment to a sub-make.
+  > A variable name may be any sequence of characters not containing ‘:’, ‘#’,
+  > ‘=’, or whitespace. However, variable names containing characters other than
+  > letters, numbers, and underscores should be considered carefully, as in some
+  > shells they cannot be passed through the environment to a sub-make.
 
 in section 6.
 
-I was surprised - the huge character set allowed in variable names is something I
-had never noticed (or maybe just never remembered). I can't think of a good reason
-to use the entire character set, so I'll continue to choose makefile variable names
-that a shell would accept. Leaning on the environment as the reason to "shrink the
-character set" is as questionable today as it was when that sentence was added to
-the manual.
+I was surprised - the "huge" character set allowed in variable names is something I
+never noticed. I can't think of one good reason to use the entire character set, so
+all of the variables in these makefiles have names that a shell would also be happy
+with. Leaning on the environment as the excuse to "shrink the character set" is as
+questionable today as it was when that sentence was added to the manual.
 
-### Variable Assignments
+Check the man page for any shell (e.g., dash.1) and you'll undoubtedly find wording
+something like,
 
-### Variable References
+  > Variables set by the user must have a name consisting solely of alphabetics,
+  > numerics, and underscores - the first of which must not be numeric.
+
+as the description of characters that are allowed in shell variable names. I don't
+recall ever needing a makefile variable name that wasn't covered by this character
+set.
+
+### Setting Variables
+
+After you've picked a name for a makefile variable you'll want to assign a value to
+it. GNU make supports a pretty confusing collection of assignment operators that are
+listed together in the first paragraph in section 6.5 of the GNU manual
+
+  > To set a variable from the makefile, write a line starting with the variable
+  > name followed by one of the assignment operators ‘=’, ‘:=’, ‘::=’, or ‘:::=’.
+  > Whatever follows the operator and any initial whitespace on the line becomes
+  > the value.
+
+The discussion of variables in section 6 of GNU manual leaves much to be desired and
+adjectives, like recursively, simply, or immediately, that are attached to "expanded
+variable assignment" never helped me understand what's going on. Fortunately, the only
+assignment operator I use in the makefiles in this repository is ":=" and if you just
+pretend it works something like a shell's assignment operator you'll probably be fine.
+
+### Using Variables
 
 GNU make lets you use `$(VARNAME)` or `${VARNAME}` to reference makefile variables.
 Two visually similar choices, particularly when one of them is claimed by every
@@ -126,15 +148,12 @@ and how it's supposed to be done (recipes). The GNU make manual discusses all th
 components, so that's where to go for all the details. I'm only going to talk about
 recipes, because that's where you'll find the shell code that does the real work.
 
-The recipes are where make's infamous tabs comes into play. The lines that follow
-the targets and start with a tab are included in the rule's recipes, which end when
-make finds a line that doesn't start with a tab. No tab indented lines means there's
-nothing for make to do - it's allowed, but GNU make lets you know when that happens.
-
 ### Recipes
 
-A recipe is a "block" of one or more tab indented lines that GNU make is supposed
-to use to build the targets.
+Recipes are where make's infamous tabs comes into play. Lines that follow the targets
+and start with a tab are included in the rule's recipes, which end when make finds a
+line that doesn't start with a tab. No tab indented lines means there's nothing for
+make to do - it's allowed, but GNU make lets you know when that happens.
 
 ### Comments
 
