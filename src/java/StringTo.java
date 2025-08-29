@@ -4,6 +4,12 @@
  */
 
 /*
+ * There's no package statement in this source file because I didn't want to impose
+ * a directory structure on the files used to build the Java version of the bytedump
+ * application. Feel free to add a package statement and reorganize if you prefer.
+ */
+
+/*
  * A pretty simple collection of static methods that operate on Strings. The methods
  * that convert numeric string literals to Java ints or longs and make sure they fit
  * in a specific range can be useful when you're dealing with numbers set by command
