@@ -12,6 +12,10 @@ import java.util.HashMap;
  * to generate consistent one-line messages for users and then, if appropriate, shut
  * the application down gracefully by throwing a custom RuntimeException (or Error)
  * instead of using System.exit().
+ *
+ * NOTE - in Java source files I only use block style comments, like the one you're
+ * reading right now, outside class definitions, because that means they're usually
+ * available for temporarily commenting out one or more lines of Java code.
  */
 
 public

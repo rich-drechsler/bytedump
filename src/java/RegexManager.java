@@ -109,6 +109,10 @@ import java.util.TreeSet;
  * only class files that might be useful in completely unrelated Java applications.
  * Feel free to grab them if you want. Terminator.java and StringTo.java currently
  * use this class, but removing that dependence would not be difficult.
+ *
+ * NOTE - in Java source files I only use block style comments, like the one you're
+ * reading right now, outside class definitions, because that means they're usually
+ * available for temporarily commenting out one or more lines of Java code.
  */
 
 public

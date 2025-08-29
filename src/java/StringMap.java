@@ -11,6 +11,10 @@ import java.util.HashMap;
  * to this class, but now the varargs constructor is about all that's left, and only
  * because it can build a StringMap in a way that resembles how the bash version of
  * bytedump declared and initialized one large associative array.
+ *
+ * NOTE - in Java source files I only use block style comments, like the one you're
+ * reading right now, outside class definitions, because that means they're usually
+ * available for temporarily commenting out one or more lines of Java code.
  */
 
 public

@@ -37,6 +37,10 @@ import java.util.Scanner;
  * I typically use in Java files. Instead, it was written to emphasize similarities
  * with the existing bash version of bytedump. Take a look at RegexManager.java if
  * you want to see a more typical Java class file.
+ *
+ * NOTE - in Java source files I only use block style comments, like the one you're
+ * reading right now, outside class definitions, because that means they're usually
+ * available for temporarily commenting out one or more lines of Java code.
  */
 
 public
@@ -143,6 +147,9 @@ class ByteDump {
     // Values associated with the ADDR, BYTE, and TEXT fields in our dump. Some of
     // them are changed by command line options, while many others are used or set
     // by the initialization code that runs after all of the options are processed.
+    //
+    // NOTE - there's only one variable with "xxd" in it's name and it's only used
+    // to tell String.format() the default width of the address field in xxd dumps.
     //
 
     private static String ADDR_output = "HEX-LOWER";
@@ -1335,8 +1342,9 @@ class ByteDump {
 
         //
         // Responsible for important initialization, like the buffering of the input and
-        // output streams, followed by the selection of the final method that's used to
-        // dump the bytes read from the input stream.
+        // output streams, seeking to the right spot in the InputStream, loading the right
+        // number of bytes whenever the user wants to read a fixed number from that stream,
+        // and then selecting the final method that's used to generate the dump.
         //
         // NOTE - unlike the original bash version that usually postprocessed xxd output,
         // this program handles all the low level details and does care quite a bit about
@@ -1344,7 +1352,7 @@ class ByteDump {
         // ones that want everything displayed as a single record or just want to see the
         // BYTE or TEXT fields. None of those methods make much of a difference, but some
         // careful code duplication, that's compiled by javac, seemed worthwhile. If you
-        // disagree it should be simple to make dumpAll() handle almost everything.
+        // disagree it should be trivial to make dumpAll() handle almost everything.
         //
 
         try {
@@ -1403,17 +1411,29 @@ class ByteDump {
 
         //
         // This is the primary dump method. Even though it can handle everything except
-        // single record dumps, I decided to use different methods to handle dumps that
-        // just print the BYTE or TEXT fields. Each one could eliminate a little bit of
-        // the overhead that's required in this method, and that could occasionally be
-        // useful. The selection of the appropriate dump method is made by Dump().
+        // single record dumps, I decided to use separate methods (i.e., dumpByteField()
+        // and dumpTextField()) to the generate dumps that only include the BYTE or TEXT
+        // fields. Each of those methods try to eliminate a little of the overhead that
+        // this method needs, and there's a chance that could occasionally be useful.
+        //
+        // NOTE - local variables are used to save frequently accessed values. They're an
+        // attempt to squeeze out a little performance, because accessing local variables
+        // should be a little faster than class fields. It's a small optimization that I
+        // only reliably measured when I dumped big files.
+        //
+        // NOTE - the selection of the method that's used to generate the actual dump is
+        // made by dump(), so that's where to go if you want to modify my choices.
         //
 
         if (DUMP_record_length > 0) {
             //
-            // Using local variables instead of class fields should be a little faster,
-            // but it's probably only something that you could measure in dumps of big
-            // files.
+            // Compute strings used in the loop and make sure only local variables are used
+            // in that loop. Accessing local variables should be slightly faster than class
+            // fields.
+            //
+            // NOTE - actually, several class fields are referenced in the while loop, but
+            // all of them should only be used once - on the last iteration of the loop and
+            // only when the number of bytes read didn't completely fill the last record.
             //
             addr_prefix = ADDR_prefix;
             addr_suffix = ADDR_suffix + ADDR_field_separator;
@@ -1903,7 +1923,8 @@ class ByteDump {
         //
         // NOTE - this program generates every dump, so there's no need to keep track
         // of internal properties of xxd (or any other program) or do any xxd focused
-        // initialization.
+        // initialization. That means the two bash initialization functions that dealt
+        // directly with xxd didn't have to be ported to this version.
         //
 
         initialize1_Fields();
@@ -2260,6 +2281,14 @@ class ByteDump {
         int            codepoint;
         int            index;
 
+        //
+        // Makes sure the BYTE and TEXT field mapping arrays referenced by BYTE_map and
+        // TEXT_map exist and, in the case of the TEXT field mapping array, is properly
+        // initialized. After that it builds the addrMap and addrBuffer arrays, which
+        // are the arrays that dumpFormattedAddress() uses to generate addresses without
+        // using String.format().
+        //
+
         if (BYTE_map.length() > 0) {
             if ((byteMap = (String[])getNamedStaticObject(BYTE_map)) == null) {
                 internalError(delimit(BYTE_map), "is not a recognized byte mapping array name");
@@ -2287,6 +2316,11 @@ class ByteDump {
                 manager = new RegexManager();
                 for (index = 0; index < textMap.length; index++) {
                     if ((element = textMap[index]) != null) {
+                        //
+                        // If element looks like a Unicode escape we need to deal with it. This
+                        // will be where all of the escapes used in the TEXT field initializers
+                        // are expanded.
+                        //
                         if ((groups = manager.matchedGroups(element, "^(.*)(\\\\u([0123456789abcdefABCDEF]{4}))$")) != null) {
                             codepoint = Integer.parseInt(groups[3], 16);
                             //
@@ -2417,7 +2451,7 @@ class ByteDump {
                             if (index <= last) {
                                 if (byte_table[index] != null && index < field_map.length) {
                                     //
-                                    // Only apply attributes if DEBUG_charclass_regex isn't set or
+                                    // Only apply attributes if DEBUG_charclass_regex wasn't set or
                                     // when the character with index as its code point matches that
                                     // regular expression.
                                     //
@@ -2515,14 +2549,19 @@ class ByteDump {
         //
         // A long, but straightforward method that uses Java regular expressions and an instance
         // of the RegexManager class to process command line options. Everything was designed so
-        // this method would "resemble" the way the option handling function in the bash version
+        // this method would "resemble" the option handling function in the bash implementation
         // of bytedump, and the RegexManager class is a fundamental part of the solution to that
-        // puzzle. Take a look at the comments in RegexManager.java for more details.
+        // puzzle. Take a look at the comments in RegexManager.java for all the details.
         //
-        // Just like the bash function, the caller of this method want to know how many arguments
-        // were comsumed as options. Java programs have lots of different ways to hand that answer
-        // back to the caller, but in the interest of "similarity" with the bash version we store
-        // the number in the argumentsConsumed class variable.
+        // Just like the bash version, main() needs to know how many arguments were consumed as
+        // options. That number is stored in the argumentsConsumed class variable right before
+        // this method returns, but only because that approach "resembles" how the bash version
+        // does it. There are many other ways this could be handled in a Java program.
+        //
+        // NOTE - the options that set prefixes, separators, and suffixes let the user provide
+        // strings that will appear in the dump we generate. That means the arguments of those
+        // options are checked using a character class that accepts any character that the user
+        // would consider printable.
         //
 
         manager = new RegexManager();           // for parsing the arguments
@@ -3082,7 +3121,7 @@ class ByteDump {
         //
         // This is where initialization that needs to happen before the command line
         // are processed could be done. Java's a much better language than bash, and
-        // at this point there's nothing that needs to be done in this method.
+        // as things stand there's nothing this method needs to do.
         //
 
     }

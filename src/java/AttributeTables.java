@@ -17,6 +17,10 @@ import java.util.TreeSet;
  * you get the String array that's associated with that name. That's basically all
  * there is to this class - whatever goes in those tables and how it ends up being
  * used makes no difference here.
+ *
+ * NOTE - in Java source files I only use block style comments, like the one you're
+ * reading right now, outside class definitions, because that means they're usually
+ * available for temporarily commenting out one or more lines of Java code.
  */
 
 public

@@ -10,6 +10,10 @@
  * line options. Methods that combine strings in various ways can be useful when you
  * want to make sure null arguments are ignored, rather than translated to "null" and
  * included in the String that's returned to the caller.
+ *
+ * NOTE - in Java source files I only use block style comments, like the one you're
+ * reading right now, outside class definitions, because that means they're usually
+ * available for temporarily commenting out one or more lines of Java code.
  */
 
 public abstract
@@ -151,11 +155,10 @@ class StringTo {
         // If the quote argument is true, the string that's returned to the caller will
         // be surrounded by double quotes.
         //
-        // NOTE - this is sometimes used to quote strings that appear in error messages
-        // (typically during option processing). I'm not convinced that quoting them as
-        // Java literals is the best approach, but it's pretty easy and seems reasonable
-        // because it's primarily used to isolate the string that triggered the problem
-        // from the rest of the error message that tries to explain the mistake.
+        // NOTE - this method was originally used in error handlers to isolate a string
+        // that triggered a problem from the rest fo the error message that explains the
+        // mistake. Surrounding the problem string with double quotes seems better than
+        // trying to turn it into a Java String literal, so this method is hardly used.
         //
 
         buffer = new StringBuilder();
