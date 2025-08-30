@@ -92,13 +92,13 @@ class ByteDump {
     // managed data that could be used anywhere in the bytedump bash script without
     // creating lots of new global variables.
     //
-    // It was convenient in a bash script where performance was never the goal, but
-    // it's definitely not an approach that belongs in a Java application. Instead,
-    // this version uses properly typed class variables that have names that start
-    // with an uppercase word that's always followed by one or more lowercase words.
-    // It's not a variable naming convention you'll find in Java style guides, but
-    // after some false starts I'm convinced it's appropriate and much better than
-    // the alternatives.
+    // It was convenient in a bash script where performance was never a realistic
+    // goal, but it's definitely not an approach that belongs in a Java application.
+    // Instead, this implementation uses properly typed class variables with names
+    // that are underscore separated words that start with an uppercase word and are
+    // always followed by one or more lowercase words. It's not a naming convention
+    // you'll find mentioned in Java style guides, but after some false starts I'm
+    // convinced it's appropriate and significantly better than the alternatives.
     //
     // The variable names are hard to miss and easy to connect back to strings you
     // might expect to find in the bash version's SCRIPT_STRINGS associative array.
@@ -130,7 +130,8 @@ class ByteDump {
     // in the bash version's SCRIPT_STRINGS keys with underscores. The result was
     // lots of unusual variable names. It's not a Java style I've seen before and
     // I would guess you've never encountered it either, but I believe (after lots
-    // of trial and error) that it's the best approach for this class.
+    // of trial and error) that it's the best approach for this class. Remember, my
+    // goal was a Java implementation that "resembles" the existing bash version.
     //
 
     //
@@ -249,8 +250,8 @@ class ByteDump {
     // two backslashes introduce each Unicode escape sequence that appears in the string
     // literals that initialize TEXT field mapping arrays. They postpone the expansions
     // so they don't happen when javac runs, but that delay means any TEXT field mapping
-    // array must be postprocessed (by initialize4_Maps()) before it can be used to map
-    // bytes to the character strings that appear in the dump's TEXT field.
+    // array always must be postprocessed (by initialize4_Maps()) before it can be used
+    // to map bytes to the character strings that appear in the dump's TEXT field.
     //
     // If you're a little confused by the last paragraph, take a look at
     //
@@ -654,8 +655,9 @@ class ByteDump {
     //
     // The addrMap array, which is set during initialization, provides an alternative
     // to using String.format() to build the addresses that are displayed in the dump.
-    // It seems to be a little faster, but that speed improvement probably can only be
-    // measured when big files are dumped using a relatively small record length.
+    // That approach seems to be a little faster, but the speed improvement probably
+    // can only be measured when big files are dumped using a relatively small record
+    // length.
     //
     // The addrBuffer array is created and filled with the appropriate padding (spaces
     // or zeros) during initialization and used when address fields are built by using
@@ -670,7 +672,7 @@ class ByteDump {
     //
     //     /addrBuffer =
     //
-    // and you'll quickly find the initialization code that builds them.
+    // in vim, you'll quickly find the initialization code that builds them.
     //
     // NOTE - the --debug=addresses option forces String.format() to be used by making
     // sure addrMap remains null after all of the initialization is finished, and that
@@ -816,10 +818,11 @@ class ByteDump {
     );
 
     //
-    // The real Java rewrite of the bytedump program will be put in a separate class
-    // file, and that's where the data structures used here will likely be modified.
-    // This class is designed to be a working Java implementation that intentionally
-    // resembles the original bash program, so this approach isn't a drastic change.
+    // The AttributeTables class was written quickly and only designed for superficial
+    // cleanup of the four arrays that the bash vesion used to manage the "attributes"
+    // (think colors) that could be applied to the BYTE and TEXT fields using command
+    // line options. I can imagine spending more time on a better design, but I think
+    // that's a job that belongs in a different Java implementation of bytedump.
     //
 
     private static AttributeTables attributeTables = new AttributeTables(
@@ -2492,7 +2495,7 @@ class ByteDump {
         //
         //     /errorHandler(
         //
-        // (in vim) you'll find errorHandler calls in the four error handling convenience
+        // in vim, you'll find errorHandler calls in the four error handling convenience
         // methods that are defined near the end of this class. They're all trivial, but
         // notice that "+exit" is an argument in each errorHandler call. Next look at the
         // last few lines in Terminator.errorHandler(). If it's supposed to exit, rather
