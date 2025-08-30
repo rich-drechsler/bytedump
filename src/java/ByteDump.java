@@ -6,7 +6,8 @@
 /*
  * There's no package statement in this source file because I didn't want to impose
  * a directory structure on the files used to build the Java version of the bytedump
- * application. Feel free to add a package statement and reorganize if you prefer.
+ * application. If you add a package statement and reorganize things you undoubtedly
+ * will also have to modify the makefile.
  */
 
 import java.io.BufferedInputStream;
