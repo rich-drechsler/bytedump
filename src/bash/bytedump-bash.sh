@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
-# License: MIT License (https://opensource.org/license/mit/)
+# SPDX-License-Identifier: MIT
 #
 # This is a nontrivial program that tackles things that simply don't belong in a
 # shell script. It started as a few lines that post-processed xxd output, but it
@@ -738,7 +738,7 @@ declare -A SCRIPT_STRINGS=(
     [SCRIPT.version]="0.9"
     [SCRIPT.description]="Bash bytedump script"
     [SCRIPT.copyright]="Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
-    [SCRIPT.license]="License: MIT License (https://opensource.org/license/mit/)"
+    [SCRIPT.license]="SPDX-License-Identifier: MIT"
     [SCRIPT.usage]="Usage: ${BASH_SOURCE[0]:-bytedump-bash} [OPTIONS] [FILE|-]"
     [SCRIPT.help.trigger]="#@#"
 
@@ -2635,7 +2635,7 @@ Help() {
     #
 
     if [[ -f ${BASH_SOURCE[0]} ]] && [[ -r ${BASH_SOURCE[0]} ]]; then
-        HelpScanner -trigger="${SCRIPT_STRINGS[SCRIPT.help.trigger]}" +connected -copyright +license <"${BASH_SOURCE[0]}"
+        HelpScanner -trigger="${SCRIPT_STRINGS[SCRIPT.help.trigger]}" +connected -copyright -license <"${BASH_SOURCE[0]}"
     elif [[ -n ${SCRIPT_STRINGS[SCRIPT.usage]} ]]; then
         printf "%s\n" "${SCRIPT_STRINGS[SCRIPT.usage]}"
     fi
@@ -4095,17 +4095,21 @@ HelpScanner() {
             fi
         elif [[ $connected == "FALSE" ]] || (( ${#help_content[@]} == 0 )); then
             #
-            # Can't get here if help_trigger is empty.
+            # This is only used to try to recognize comments in the source file that
+            # look like copyright or license information and then grab the first one
+            # that precedes the lines tagged by ${help_trigger}. Can't get here when
+            # help_trigger is empty, because in that case every line would match the
+            # regular expression that looked for ${help_trigger}.
             #
             if [[ $line =~ ^[#]+[$' \t']+("Copyright "(.+))$ ]]; then
-                value="${BASH_REMATCH[1]}"
+                value="${BASH_REMATCH[2]}"
                 if [[ -n ${help_footnote[Copyright]} ]]; then
-                    help_footnote[Copyright]="${value}"
+                    help_footnote[Copyright]="Copyright: ${value}"
                 fi
-            elif [[ $line =~ ^[#]+[$' \t']+("License: "(.+))$ ]]; then
-                value="${BASH_REMATCH[1]}"
+            elif [[ $line =~ ^[#]+[$' \t']+("SPDX-License-Identifier: "(.+))$ ]]; then
+                value="${BASH_REMATCH[2]}"
                 if [[ -n ${help_footnote[License]} ]]; then
-                    help_footnote[License]="${value}"
+                    help_footnote[License]="License: ${value}"
                 fi
             fi
         else

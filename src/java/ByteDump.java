@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
- * License: MIT License (https://opensource.org/license/mit/)
+ * SPDX-License-Identifier: MIT
  */
 
 /*
@@ -65,7 +65,7 @@ class ByteDump {
     private static final String PROGRAM_VERSION = "0.9";
     private static final String PROGRAM_DESCRIPTION = "Java reproduction of the bash bytedump script";
     private static final String PROGRAM_COPYRIGHT = "Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)";
-    private static final String PROGRAM_LICENSE = "License: MIT License (https://opensource.org/license/mit/)";
+    private static final String PROGRAM_LICENSE = "SPDX-License-Identifier: MIT";
 
     //
     // The program name that appears in error or usage messages should be assigned
@@ -1866,8 +1866,6 @@ class ByteDump {
 
         InputStream input;
         Scanner     scanner;
-        String      license;
-        String      line;
 
         //
         // Nothing fancy to do here - what's displayed (on standard output) is the contents
@@ -1884,24 +1882,15 @@ class ByteDump {
         // file eliminates that chore.
         //
 
-        license = PROGRAM_LICENSE;
-
         if ((input = getNamedResourceAsStream(getThisClassName() + ".help")) != null) {
             scanner = new Scanner(input);
             while (scanner.hasNextLine()) {
-                line = scanner.nextLine();
-                if (license != null && line.endsWith(license)) {
-                    license = null;
-                }
-                System.out.println(line);
+                System.out.println(scanner.nextLine());
             }
             scanner.close();
         } else if (PROGRAM_USAGE != null) {
             System.out.println(PROGRAM_USAGE);
             System.out.println();
-        }
-        if (license != null) {
-            System.out.println(license);
         }
     }
 
