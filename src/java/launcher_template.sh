@@ -598,8 +598,11 @@ PathCanonicalBash() {
         arg="$1"
         if [[ -n $arg ]]; then
             #
-            # Need to hand readlink an absolute path if we expect it to print the
-            # raw target of a symlink (without any options).
+            # Need to start with an absolute path if we expect to handle symlinks
+            # using readlink (without any options) and return an absolute path to
+            # the caller. Not relying on readlink options, like --canonicalize or
+            # -f, should let us assume that a nonzero return from readlink means
+            # the argument wasn't a symlink and not a complaint about an option.
             #
             if [[ $arg =~ ^[/] ]]; then
                 target="${arg}"
@@ -639,6 +642,9 @@ PathCanonicalBash() {
                                 unset "components[-1]"
                             fi
                         else
+                            #
+                            # Wasn't a symlink so we can just "append" element to the path.
+                            #
                             path+="/${element}"
                             components+=("${element}")
                         fi

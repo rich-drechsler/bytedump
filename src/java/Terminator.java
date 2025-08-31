@@ -18,7 +18,8 @@ import java.util.HashMap;
  * This class represents an error handling framework that Java applications can use
  * to generate consistent one-line messages for users and then, if appropriate, shut
  * the application down gracefully by throwing a custom RuntimeException (or Error)
- * instead of using System.exit().
+ * instead of using System.exit(). It was modeled after the error handling code that
+ * was included in the bash implementation of the bytedump application.
  *
  * NOTE - in Java source files I only use block style comments, like the one you're
  * reading right now, outside class definitions, because that means they're usually
