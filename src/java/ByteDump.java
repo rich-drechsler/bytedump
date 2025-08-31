@@ -3355,7 +3355,19 @@ class ByteDump {
     private static Class<?>
     getThisClass() {
 
-        return(new Object(){}.getClass().getEnclosingClass());
+        //
+        // Getting the class that "owns" a static method (from that method) is tricky.
+        // What's done here uses an anonymous class and reflection to grab it, rather
+        // than trying to find it in the current thread's stack trace (which is how I
+        // got it when I started - quite a while ago).
+        //
+        // NOTE - hardcoding the class name is another possibility, but I didn't find
+        // that approach at all attractive, particularly because it wasn't hard for me
+        // to imagine a different Java implementation that wasn't closely tied to the
+        // bash version.
+        //
+
+        return(new Object(){}.getClass().getEnclosingClass());          // anonymous class
     }
 
 
