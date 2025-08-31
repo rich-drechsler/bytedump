@@ -602,7 +602,8 @@ PathCanonicalBash() {
             # using readlink (without any options) and return an absolute path to
             # the caller. Not relying on readlink options, like --canonicalize or
             # -f, should let us assume that a nonzero return from readlink means
-            # the argument wasn't a symlink and not a complaint about an option.
+            # the argument wasn't a working symlink and not a complaint about an
+            # option.
             #
             if [[ $arg =~ ^[/] ]]; then
                 target="${arg}"
@@ -641,9 +642,18 @@ PathCanonicalBash() {
                                 readarray -td/ components <<< "${path:1}/"
                                 unset "components[-1]"
                             fi
+                        elif [[ -L "$path/${element}" ]]; then
+                            #
+                            # If anything goes wrong readlink apparently always seems to exit
+                            # with status 1. In this case the readlink failure could have been
+                            # caused by a symlink loop, permissions, or other issues, so we set
+                            # the status to 2 and break out of the loop.
+                            #
+                            status="2"
+                            break
                         else
                             #
-                            # Wasn't a symlink so we can just "append" element to the path.
+                            # Wasn't a symlink so just "append" element to the path.
                             #
                             path+="/${element}"
                             components+=("${element}")
@@ -651,16 +661,20 @@ PathCanonicalBash() {
                     fi
                 fi
             done
-            path="${path:-/}"
+            if (( status == 0 )); then
+                path="${path:-/}"
 
-            if [[ $quote == "TRUE" ]]; then
-                path="${path@Q}"                # requires bash 4.4 and later
-            fi
-            if [[ $base64 == "TRUE" ]]; then
-                path="$(printf "%s" "$path" | command -p base64 --wrap=0 2>/dev/null)"
-            fi
+                if [[ $quote == "TRUE" ]]; then
+                    path="${path@Q}"                # requires bash 4.4 and later
+                fi
+                if [[ $base64 == "TRUE" ]]; then
+                    path="$(printf "%s" "$path" | command -p base64 --wrap=0 2>/dev/null)"
+                fi
 
-            paths+="${paths:+$'\n'}${path}"
+                paths+="${paths:+$'\n'}${path}"
+            else
+                break
+            fi
         fi
         shift
     done
