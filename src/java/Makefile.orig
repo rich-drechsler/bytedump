@@ -25,7 +25,7 @@
 ####################
 
 #
-# This makefile manages the Java version of bytedump. It understands the following
+# This makefile manages the java version of bytedump. It understands the following
 # targets, which currently work in every makefile in this repository:
 #
 #         all - builds the java version of bytedump, but leaves everything in
@@ -67,17 +67,6 @@
 #
 #   testfiles - builds test files that might occasionally be useful.
 #
-# NOTE - even though ByteDump.java is the only working Java bytedump implementation,
-# the makefile included in the original release anticipated different Java versions.
-# Initially I just wanted to end up with a readable makefile, but I got sidetracked
-# and unnecessarily complicated the makefile by trying to support "phantom" bytedump
-# versions. It was tricky code that I'm certain confused almost anyone who tried to
-# follow it, so I backed it out and now ByteDump.java is the only implementation of
-# bytedump this makefile can deal with.
-#
-# NOTE - the complicated version of the makefile is currently available in the file
-# named Makefile.orig, but that file may eventually be deleted.
-#
 
 ####################
 #
@@ -104,22 +93,32 @@ JAVAC := javac
 JAVACFLAGS := -Xlint -Xdiags:verbose
 JDEPS := jdeps
 
-MAINFILE := ByteDump.java
-MAINCLASS := $(MAINFILE:.java=)
-HELPFILE := $(MAINFILE:.java=.help)
-JAVAFILES := $(MAINFILE) AttributeTables.java RegexManager.java StringMap.java StringTo.java Terminator.java
-CLASSFILES := $(JAVAFILES:.java=.class)
+#
+# A second Java implementation of bytedump could be packaged in this jar file and
+# launched by its own bash script that's listed in COMMAND_SCRIPTS. New launchers
+# are all built by making a few simple changes to the launcher_template.sh script.
+# All you should have to do is add the name of that class file to MAINFILES and
+# also include an appropriately named "help" file to this directory.
+#
+
+MAINFILES := ByteDump.java
+HELPFILES := $(MAINFILES:.java=.help)
+JAVAFILES := $(MAINFILES) AttributeTables.java RegexManager.java StringMap.java StringTo.java Terminator.java
+CLASSFILES_JAVA := $(JAVAFILES:.java=.class)
 CLASSFILES_INTERNAL := ByteDump$$1.class Terminator$$ExitError.class Terminator$$ExitException.class
 
 JARFILE := bytedump-java.jar
-JARCLASSES := $(CLASSFILES) $(CLASSFILES_INTERNAL)
+JARCLASSES := $(CLASSFILES_JAVA) $(CLASSFILES_INTERNAL)
 
 COMMAND_LAUNCHER := launcher_template.sh
-COMMAND_SCRIPT := bytedump-java
 
 #
-# Only one test file to build and that's probably the way it will always be.
+# The substitutions here are undone (to get the Java class name) in the rule that
+# builds command scripts from the Java app launcher. Overkill, but it should just
+# work if a ByteDump.java class file is ever added to MAINFILES.
 #
+
+COMMAND_SCRIPTS := $(subst .java,-java,$(subst ByteDump,bytedump,$(subst Bash,_bash,$(MAINFILES))))
 
 TESTFILES := sorted_bytes
 
@@ -140,7 +139,7 @@ clean :
 	fi
 
 clobber : clean
-	rm -f $(JARFILE) $(COMMAND_SCRIPT)
+	rm -f $(JARFILE) $(COMMAND_SCRIPTS)
 
 install : all
 	@set -e; \
@@ -148,8 +147,8 @@ install : all
 	    echo "++++ Installing files under directory $(INSTALLDIR) ++++"; \
 	    echo '$(INSTALL) -d -m755 "$(INSTALLDIR)/bin"'; \
 	    $(INSTALL) -d -m755 "$(INSTALLDIR)/bin"; \
-	    echo '$(INSTALL) -m755 $(COMMAND_SCRIPT) "$(INSTALLDIR)/bin"'; \
-	    $(INSTALL) -m755 $(COMMAND_SCRIPT) "$(INSTALLDIR)/bin"; \
+	    echo '$(INSTALL) -m755 $(COMMAND_SCRIPTS) "$(INSTALLDIR)/bin"'; \
+	    $(INSTALL) -m755 $(COMMAND_SCRIPTS) "$(INSTALLDIR)/bin"; \
 	    echo '$(INSTALL) -d -m755 "$(INSTALLDIR)/lib"'; \
 	    $(INSTALL) -d -m755 "$(INSTALLDIR)/lib"; \
 	    echo '$(INSTALL) -m644 $(JARFILE) "$(INSTALLDIR)/lib"'; \
@@ -172,13 +171,13 @@ jar : $(JARFILE)
 
 classes : $(JARCLASSES)
 
-commands : $(COMMAND_SCRIPT)
+commands : $(COMMAND_SCRIPTS)
 
 #
 # Rules that do the real work.
 #
 
-$(JARFILE) : $(JARCLASSES) $(HELPFILE) $(MAKEFILE)
+$(JARFILE) : $(JARCLASSES) $(HELPFILES) $(MAKEFILE)
 	@echo "++++ Building $@ ++++"
 	$(JAR) cf '$@' *.class *.help
 	@$(JAR) tf '$@' | sed -e '/^META/d' -e 's/^/    added: /'
@@ -191,10 +190,10 @@ $(JARCLASSES) : $(JAVAFILES) $(MAKEFILE)
 	$(JAVAC) $(JAVACFLAGS) $(JAVAFILES)
 	@echo
 
-$(COMMAND_SCRIPT) : $(COMMAND_LAUNCHER) $(MAKEFILE)
+$(COMMAND_SCRIPTS) : $(COMMAND_LAUNCHER) $(MAKEFILE)
 	@echo "++++ Building $@ ++++"
 	sed \
-	    -e 's#^declare[ ][ ]*SCRIPT_MAINCLASS=.*#declare SCRIPT_MAINCLASS="$(MAINCLASS)"#' \
+	    -e 's#^declare[ ][ ]*SCRIPT_MAINCLASS=.*#declare SCRIPT_MAINCLASS="$(subst -java,,$(subst bytedump,ByteDump,$(subst _bash,Bash,$@)))"#' \
 	    -e 's#^declare[ ][ ]*SCRIPT_JARNAME=.*#declare SCRIPT_JARNAME="$(JARFILE)"#' \
 	    -e 's#^declare[ ][ ]*SCRIPT_JARPATH=.*#declare SCRIPT_JARPATH="../lib:."#' \
 	< $< > $@
