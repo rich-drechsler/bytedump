@@ -32,6 +32,18 @@
 #               this directory. The executable is named bytedump-bash and it
 #               should run if you point your shell at it.
 #
+#               This is the first target in the makefile that doesn't start with
+#               a period, so it's also the target that's built when there aren't
+#               any targets mentioned on the command line. In other words
+#
+#                   make all
+#
+#               and
+#
+#                   make
+#
+#               accomplish exactly the same thing.
+#
 #     install - builds the "all" target and then copies whatever's necessary to
 #               the right place under the directory assigned to the INSTALLDIR
 #               variable. That directory must exist, but any directories under

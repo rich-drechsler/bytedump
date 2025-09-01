@@ -35,6 +35,18 @@
 #         all - build the bytedump application in each directory that's listed
 #               in SRCDIRS, but everything is left in those directories.
 #
+#               This is the first target in the makefile that doesn't start with
+#               a period, so it's also the target that's built when there aren't
+#               any targets mentioned on the command line. In other words
+#
+#                   make all
+#
+#               and
+#
+#                   make
+#
+#               accomplish exactly the same thing.
+#
 #     install - builds the bytedump applications named in SRCDIRS and installs
 #               each one in the directory assigned to the INSTALLDIR variable.
 #               That directory must exist, but any directories under it, like
