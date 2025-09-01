@@ -51,11 +51,13 @@
 #
 #               Command line arguments that are handed to GNU make normally are
 #               the targets that you want built, however an argument containing
-#               an equal sign is treated as a variable assignment. For example,
+#               an equal sign is treated as a variable assignment that overrides
+#               any existing definition of that variable. For example,
 #
 #                   make INSTALLDIR=/tmp/bytedump install
 #
-#               will try to install everything in directory /tmp/bytedump.
+#               will install everything in directory /tmp/bytedump, provided that
+#               directory already exists.
 #
 #       clean - removes files created by this makefile that aren't needed to run
 #               this application.
@@ -108,7 +110,7 @@ CLASSFILES_INTERNAL := ByteDump$$1.class Terminator$$ExitError.class Terminator$
 JARFILE := bytedump-java.jar
 JARCLASSES := $(CLASSFILES_JAVA) $(CLASSFILES_INTERNAL)
 
-COMMAND_LAUNCHER := launcher_template.sh	# custom Java app launcher
+COMMAND_LAUNCHER := launcher_template.sh
 
 #
 # The substitutions here are undone (to get the Java class name) in the rule that
