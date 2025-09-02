@@ -2027,7 +2027,7 @@ Debug() {
                         printf "[Debug] Possible Leaked Locals:\n"
                         declare | LC_ALL=C command -p grep -- '^[a-z][a-z_]*=' | command -p sed -e 's/^/[Debug]    /'
                         printf "\n"
-                    fi
+                    fi >&2
                 fi;;
 
              *) DebugHandler "$@";;

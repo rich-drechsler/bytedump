@@ -174,7 +174,7 @@ Arguments() {
         printf "%s\n" "Java Command:"
         printf "    %s\n" "CLASSPATH=${SCRIPT_JARFILE@Q} ${SCRIPT_JAVA@Q} ${SCRIPT_JAVA_OPTIONS[*]@Q} -Dprogram.name=${SCRIPT_BASENAME@Q} ${SCRIPT_MAINCLASS@Q} ${*@Q}"
         printf "\n"
-    fi
+    fi >&2
 
     CLASSPATH="${SCRIPT_JARFILE}" "${SCRIPT_JAVA}" "${SCRIPT_JAVA_OPTIONS[@]}" -D"program.name=${SCRIPT_BASENAME}" "${SCRIPT_MAINCLASS}" "$@"
 }
@@ -297,7 +297,7 @@ Initialize() {
         printf "    SCRIPT_JARFILE=%s\n" "$SCRIPT_JARFILE"
         printf "    SCRIPT_JAVA=%s\n" "$SCRIPT_JAVA"
         printf "\n"
-    fi
+    fi >&2
 
     if [[ -n "$SCRIPT_JARFILE" ]]; then
         if [[ -f "$SCRIPT_JARFILE" && -r "$SCRIPT_JARFILE" ]]; then
