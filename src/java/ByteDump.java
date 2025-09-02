@@ -69,21 +69,47 @@ class ByteDump {
     private static final String PROGRAM_LICENSE = "SPDX-License-Identifier: MIT";
 
     //
-    // The program name that appears in error or usage messages should be assigned
-    // to PROGRAM_NAME_KEY in the system properties Hashtable, but if it's not the
-    // error messages just use PROGRAM_NAME_DEFAULT.
+    // The string assigned to PROGRAM_NAME constant is only used in error and usage
+    // messages. It's supposed to be the system property that's associated with the
+    // "program.name" key, but if it's not defined we use "bytedump" as the name of
+    // this program.
     //
-    // NOTE - all you have to do to add things to Java's system properties Hashtable
-    // is use java's -D command line option. It's done automatically for you by the
-    // official bash script that runs this application.
+    // NOTE - the java command's -D option exists so system properties can be added
+    // from the command line that's used to launch a Java application. Once that's
+    // done, the launched Java application can just use various System.getProperty()
+    // methods to recover system properties that were added by the java command.
     //
-    // NOTE - searching for PROGRAM_NAME_KEY or PROGRAM_NAME_DEFAULT is an easy way
-    // to find the four convenience methods that this class uses to handle errors.
+    // If you want to see this in action type
+    //
+    //     make
+    //
+    // to build this Java application and then run it by typing
+    //
+    //     ./bytedump-java --launcher-debug /etc/hosts
+    //
+    // and you'll see debugging output that includes a java command line that looks
+    // something like
+    //
+    //     CLASSPATH='/.../bytedump-java.jar' 'java' -Dprogram.name='bytedump-java' 'ByteDump' '/etc/hosts'
+    //
+    // Notice the -D option that associates the "program.name" key with the basename
+    // of the bash script that built the command line. That's how the program's name
+    // ends up in Java's system properties Hashtable.
+    //
+    // If you want to experiment some more just take Java command line that printed
+    // on your terminal (not the command line in these comments) and run it. Make an
+    // intentional mistake, like dumping a non-existent file or using an unsupported
+    // option, and that should trigger an error message.
     //
 
-    private static final String PROGRAM_NAME_DEFAULT = "bytedump";
-    private static final String PROGRAM_NAME_KEY = "program.name";
-    private static final String PROGRAM_USAGE = "Usage: " + getSystemProperty(PROGRAM_NAME_KEY, PROGRAM_NAME_DEFAULT) + " [OPTIONS] [FILE|-]";
+    private static final String PROGRAM_NAME = getSystemProperty("program.name", "bytedump");
+
+    //
+    // Right now PROGRAM_USAGE is only used if there's no help file in the jar file
+    // that was used to launch this application.
+    //
+
+    private static final String PROGRAM_USAGE = "Usage: " + PROGRAM_NAME + " [OPTIONS] [FILE|-]";
 
     //
     // The next "block" of field definitions correspond to many of the elements that
@@ -3139,7 +3165,7 @@ class ByteDump {
         //
 
         Terminator.errorHandler(
-            "-prefix=" + getSystemProperty(PROGRAM_NAME_KEY, PROGRAM_NAME_DEFAULT),
+            "-prefix=" + PROGRAM_NAME,
             "-tag=InternalError",
             "-info=location",
             "+exit",
@@ -3158,7 +3184,7 @@ class ByteDump {
         //
 
         Terminator.errorHandler(
-            "-prefix=" + getSystemProperty(PROGRAM_NAME_KEY, PROGRAM_NAME_DEFAULT),
+            "-prefix=" + PROGRAM_NAME,
             "-tag=JavaError",
             "-info=location",
             "+exit",
@@ -3177,7 +3203,7 @@ class ByteDump {
         //
 
         Terminator.errorHandler(
-            "-prefix=" + getSystemProperty(PROGRAM_NAME_KEY, PROGRAM_NAME_DEFAULT),
+            "-prefix=" + PROGRAM_NAME,
             "-tag=RangeError",
             "-info",
             "+exit",
@@ -3196,7 +3222,7 @@ class ByteDump {
         //
 
         Terminator.errorHandler(
-            "-prefix=" + getSystemProperty(PROGRAM_NAME_KEY, PROGRAM_NAME_DEFAULT),
+            "-prefix=" + PROGRAM_NAME,
             "-tag=Error",
             "-info",
             "+exit",
