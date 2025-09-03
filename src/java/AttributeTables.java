@@ -5,9 +5,12 @@
 
 /*
  * There's no package statement in this source file because I didn't want to impose
- * a directory structure on the files used to build the Java version of the bytedump
- * application. If you add a package statement and reorganize things you undoubtedly
- * will also have to modify the makefile.
+ * a directory structure on the source files used to build the Java version of the
+ * bytedump application.
+ *
+ * NOTE - if you add a package statement and reorganize things you undoubtedly will
+ * also have to modify the makefile. If I get time I probably will provide an example
+ * makefile that deals with Java packages.
  */
 
 import java.util.HashMap;
@@ -102,7 +105,7 @@ class AttributeTables extends HashMap<String, String[]> {
         //
         // NOTE - can't tell how many non-null entries are in each array until we've had
         // a chance to count them, so the info about each non-null byte is collected in a
-        // string and written to standard error after that counting is complete.
+        // string that's written to standard error after that counting is complete.
         //
 
         if ((table = get(key)) != null) {
@@ -134,7 +137,8 @@ class AttributeTables extends HashMap<String, String[]> {
         //
         // Returns the table that is (or soon will be) associated with key, but only if
         // key is in registeredKeys. The table is created and added to this HashMap if
-        // it's not there yet, which only happens on the first request for key's table.
+        // it's not there yet, which should only happen on the first request for key's
+        // table.
         //
 
         if (registeredKeys.contains(key)) {

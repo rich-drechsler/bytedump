@@ -71,9 +71,9 @@
 # the makefile included in the original release anticipated different Java versions.
 # Initially I just wanted to end up with a readable makefile, but I got sidetracked
 # and unnecessarily complicated the makefile by trying to support "phantom" bytedump
-# versions. It was tricky code that I'm certain confused almost anyone who tried to
-# follow it, so I backed it out and now ByteDump.java is the only implementation of
-# bytedump this makefile can deal with.
+# implementations. It was tricky code that I'm sure confused almost anyone who tried
+# to follow it, so I backed it out and now ByteDump.java is the only implementation
+# of bytedump this makefile can deal with.
 #
 # NOTE - the complicated version of the makefile is currently available in the file
 # named Makefile.orig, but that file may eventually be deleted.

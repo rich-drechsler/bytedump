@@ -1644,7 +1644,7 @@ ByteSelector() {
     #     [:ascii:]      [:latin1:]     [:all:]
     #
     # The first four rows are the 12 character classes that are defined in the
-    # POSIX standard. The last row are 3 character classes that we decided to
+    # POSIX standard. The last row are 3 character classes that I decided to
     # support because they seemed like a convenient way to select familiar (or
     # otherwise obvious) blocks of contiguous bytes. This script only deals with
     # bytes, so it's easy to enumerate their members using integers and integer

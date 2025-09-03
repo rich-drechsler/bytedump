@@ -5,9 +5,12 @@
 
 /*
  * There's no package statement in this source file because I didn't want to impose
- * a directory structure on the files used to build the Java version of the bytedump
- * application. If you add a package statement and reorganize things you undoubtedly
- * will also have to modify the makefile.
+ * a directory structure on the source files used to build the Java version of the
+ * bytedump application.
+ *
+ * NOTE - if you add a package statement and reorganize things you undoubtedly will
+ * also have to modify the makefile. If I get time I probably will provide an example
+ * makefile that deals with Java packages.
  */
 
 import java.util.ArrayList;

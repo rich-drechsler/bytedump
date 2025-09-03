@@ -5,9 +5,12 @@
 
 /*
  * There's no package statement in this source file because I didn't want to impose
- * a directory structure on the files used to build the Java version of the bytedump
- * application. If you add a package statement and reorganize things you undoubtedly
- * will also have to modify the makefile.
+ * a directory structure on the source files used to build the Java version of the
+ * bytedump application.
+ *
+ * NOTE - if you add a package statement and reorganize things you undoubtedly will
+ * also have to modify the makefile. If I get time I probably will provide an example
+ * makefile that deals with Java packages.
  */
 
 import java.io.BufferedInputStream;
@@ -689,7 +692,7 @@ class ByteDump {
     // The addrBuffer array is created and filled with the appropriate padding (spaces
     // or zeros) during initialization and used when address fields are built by using
     // addrMap rather than String.format(). Take a look at dumpFormattedAddress() and
-    // initialize4_Maps() for more details.
+    // the end of initialize4_Maps() for more details.
     //
     // NOTE - if you search for these variables by typing something like
     //
@@ -715,9 +718,12 @@ class ByteDump {
     // of character strings displayed in the BYTE and TEXT fields.
     //
     // NOTE - StringMap is a HashMap extension that requires keys and values that are
-    // Strings and has a varargs constructor. There was much more to the class when I
-    // began converting the bash version to Java, but now this is the only place it's
-    // used.
+    // Strings and has a varargs constructor. That constructor is why initialization
+    // of ANSI_ESCAPE and the SCRIPT_ANSI_ESCAPE bash associative array resemble each
+    // other.
+    //
+    // NOTE - there was much more to the StringMap class when I began converting the
+    // bash version to Java, but now this is the only place StringMap is used.
     //
 
     private static final StringMap ANSI_ESCAPE = new StringMap(
@@ -846,7 +852,7 @@ class ByteDump {
 
     //
     // The AttributeTables class was written quickly and only designed for superficial
-    // cleanup of the four arrays that the bash vesion used to manage the "attributes"
+    // cleanup of the four arrays that the bash version used to manage the "attributes"
     // (think colors) that could be applied to the BYTE and TEXT fields using command
     // line options. I can imagine spending more time on a better design, but I think
     // that's a job that belongs in a different Java implementation of bytedump.
@@ -883,6 +889,12 @@ class ByteDump {
         // arguments or when "-" is the only argument. A representation of the bytes
         // in the input file are written to standard output in a style controlled by
         // the command line options.
+        //
+        // Treating "-" as an abbreviation for standard input, before checking to see
+        // if it's the name of a readable file or directory in the current directory,
+        // matches the way Linux commands typically handle it. A pathname containing
+        // at least one "/" (e.g., ./-) is how to reference a file named "-" on the
+        // command line.
         //
 
         if (args.length <= 1) {
@@ -981,7 +993,7 @@ class ByteDump {
         //     [:ascii:]      [:latin1:]     [:all:]
         //
         // The first four rows are the 12 character classes that are defined in the
-        // POSIX standard. The last row are 3 character classes that we decided to
+        // POSIX standard. The last row are 3 character classes that I decided to
         // support because they seemed like a convenient way to select familiar (or
         // otherwise obvious) blocks of contiguous bytes. This program only deals with
         // bytes, so it's easy to enumerate their members using integers and integer
@@ -1007,6 +1019,10 @@ class ByteDump {
 
         manager = new RegexManager();
         base = 0;
+
+        //
+        // First check for the optional base prefix.
+        //
 
         if ((groups = manager.matchedGroups(input, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")) != null) {
             prefix = groups[1];
@@ -1582,7 +1598,7 @@ class ByteDump {
         // NOTE - in the bash implementation of this program there's a single function that
         // handles all of the dumps that xxd can't produce. It works by postprocessing xxd
         // output, but doing it all using bash is a painfully slow operation and accepting
-        // a little code duplication, the way it's done here, would not make a significant
+        // a little code duplication, the way it's done here, would not make any measurable
         // difference in the performance of that bash function.
         //
 
@@ -3385,7 +3401,7 @@ class ByteDump {
         // Getting the class that "owns" a static method (from that method) is tricky.
         // What's done here uses an anonymous class and reflection to grab it, rather
         // than trying to find it in the current thread's stack trace (which is how I
-        // got it when I started - quite a while ago).
+        // got that class when I started - quite a while ago).
         //
         // NOTE - hardcoding the class name is another possibility, but I didn't find
         // that approach at all attractive, particularly because it wasn't hard for me
