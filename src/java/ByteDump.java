@@ -1014,7 +1014,8 @@ class ByteDump {
         // are valid selectors that represent exactly the same string. Any character,
         // except null, can appear in a raw string that's used as a selector, and the
         // selected bytes are the Unicode code points of the characters in the string
-        // that are less than 256.
+        // that are less than 256. Two quoting styles are supported because the quote
+        // delimiters have to be protected from your shell on the command line.
         //
 
         manager = new RegexManager();
@@ -2361,6 +2362,10 @@ class ByteDump {
                         // If element looks like a Unicode escape we need to deal with it. This
                         // will be where all of the escapes used in the TEXT field initializers
                         // are expanded.
+                        //
+                        // NOTE - we only need the four hex digits that represent code points,
+                        // so their representation as Unicode escape sequences in the strings
+                        // in TEXT field mapping array initializers is "useful overhead".
                         //
                         if ((groups = manager.matchedGroups(element, "^(.*)(\\\\u([0123456789abcdefABCDEF]{4}))$")) != null) {
                             codepoint = Integer.parseInt(groups[3], 16);

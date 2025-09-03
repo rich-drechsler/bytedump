@@ -1665,7 +1665,8 @@ ByteSelector() {
     # are valid selectors that represent exactly the same string. Any character,
     # except null, can appear in a raw string that's used as a selector, and the
     # selected bytes are the Unicode code points of the characters in the string
-    # that are less than 256.
+    # that are less than 256. Two quoting styles are supported because the quote
+    # delimiters have to be protected from your shell on the command line.
     #
     # NOTE - selector_first and selector_last need to be integers, because we use
     # bash's base conversion syntax to convert hex and octal numbers to decimal.
