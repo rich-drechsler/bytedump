@@ -9,8 +9,8 @@
  * bytedump application.
  *
  * NOTE - if you add a package statement and reorganize things you undoubtedly will
- * also have to modify the makefile. If I get time I probably will provide an example
- * makefile that deals with Java packages.
+ * also have to modify the makefile. If I have time and there's any interest, I may
+ * provide an example makefile that deals with Java packages.
  */
 
 import java.io.BufferedInputStream;
