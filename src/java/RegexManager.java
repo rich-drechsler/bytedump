@@ -30,7 +30,7 @@ import java.util.TreeSet;
  * out some of the "structural" differences is why this class was built.
  *
  * Matching a string against a bash regular expression is an operation that returns
- * an integer that reflects what happened, and as a bonus, successful matches also
+ * an integer that reflects what happened and, as a bonus, successful matches also
  * populate the BASH_REMATCH array with all of the matched subexpressions. It leads
  * to a style in the bash bytedump script where regular expressions are matched in
  * an if statement, the true branch handles a successful match, often using strings

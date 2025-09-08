@@ -15,6 +15,9 @@ My guess is everything will be finished in about a month (by early September 202
 but until then expect frequent updates (mostly to README files and the comments in
 makefiles and Java class files).
 
+Haven't been able to devote much time to this stuff, so my estimate now is that I'll
+finish the "documentation" by the end of September. Sorry for the delay.
+
 # Directories
 
 You'll find the following directories in this repository:

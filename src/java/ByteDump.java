@@ -3,16 +3,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-/*
- * There's no package statement in this source file because I didn't want to impose
- * a directory structure on the source files used to build the Java version of the
- * bytedump application.
- *
- * NOTE - if you add a package statement and reorganize things you undoubtedly will
- * also have to modify the makefile. If I have time and there's any interest, I may
- * provide an example makefile that deals with Java packages.
- */
-
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -45,12 +35,49 @@ import java.util.Scanner;
  *
  * The organization and style I used in this class file doesn't exactly match what
  * I typically use in Java files. Instead, it was written to emphasize similarities
- * with the existing bash version of bytedump. Take a look at RegexManager.java if
- * you want to see a more typical Java class file.
+ * with the existing bash version of bytedump.
  *
- * NOTE - in Java source files I only use block style comments, like the one you're
- * reading right now, outside class definitions, because that means they're usually
- * available for temporarily commenting out one or more lines of Java code.
+ *   About Comments
+ *      In Java source files I only use C-style block comments, like the one you're
+ *      reading right now, outside class definitions. That means they'll usually be
+ *      available to quickly (and temporarily) comment out chunks of Java code. It's
+ *      something I occasionally find useful during development or debugging.
+ *
+ *      NOTE - this is a restriction that doesn't mesh well with javadoc, but it's
+ *      just a convention that I follow when I work on new Java files. If javadoc
+ *      comments really are appropriate (for developer documentation) then I would
+ *      definitely add them. The only classes where javadoc comments would make any
+ *      sense are RegexManager.java, Terminator.java, and perhaps StringTo.java.
+ *
+ *   About Package
+ *      I wanted a flat directory structure and simple makefile, so none of the Java
+ *      files used to build this version of bytedump include a package statement.
+ *
+ *      NOTE - if you reorganize things and add a package statement you'll also have
+ *      to modify the makefile. If I have time and nothing else interesting to do, I
+ *      may add an example makefile that deals with Java packages.
+ *
+ *   ByteDump Fields
+ *      These are the static fields that belong to this class. Instance fields would
+ *      also be found here, but there aren't any constructors, so everything defined
+ *      in this class is static.
+ *
+ *      NOTE - some of the field names in this class don't follow normal Java naming
+ *      conventions. The exceptions are very unusual names that are discussed in the
+ *      comments right before they're used in declarations. If you're curious don't
+ *      worry - you won't be able to miss the strange names.
+ *
+ *   ByteDump Methods
+ *      These are the Java methods that "correspond" to functions that can be found
+ *      in the "Script Functions" section of the bash version of bytedump. Those two
+ *      sets are similar, but they're not identical because there's a really big gap
+ *      separating the capabilities of Java and bash.
+ *
+ *   Error Methods
+ *
+ *
+ *   Helper Methods
+ *
  */
 
 public
@@ -161,7 +188,8 @@ class ByteDump {
     // lots of unusual variable names. It's not a Java style I've seen before and
     // I would guess you've never encountered it either, but I believe (after lots
     // of trial and error) that it's the best approach for this class. Remember, my
-    // goal was a Java implementation that "resembles" the existing bash version.
+    // goal is a Java implementation that "resembles" the existing bash version of
+    // bytedump.
     //
 
     //
@@ -240,7 +268,9 @@ class ByteDump {
     //
     // NOTE - dropped debugging keys found in the bash version that aren't needed or
     // just don't make sense in this version. The DEBUG_fields key is responsible for
-    // generating the kind of output that "DEBUG.strings" did in the bash version.
+    // generating the kind of output that "DEBUG.strings" did in the bash version. It
+    // relies on reflection to access all the class fields and then uses the prefixes
+    // (defined below in DEBUG_fields_prefixes) to pick the interesting fields.
     //
 
     private static boolean DEBUG_addresses = false;
@@ -3409,9 +3439,9 @@ class ByteDump {
         // got that class when I started - quite a while ago).
         //
         // NOTE - hardcoding the class name is another possibility, but I didn't find
-        // that approach at all attractive, particularly because it wasn't hard for me
-        // to imagine a different Java implementation that wasn't closely tied to the
-        // bash version.
+        // that approach attractive, mostly because it wasn't hard to imagine another
+        // Java implementation of bytedump that could benefit by "borrowing" chunks of
+        // code from this class. Definitely not a big deal, but this is really easy.
         //
 
         return(new Object(){}.getClass().getEnclosingClass());          // anonymous class

@@ -11,7 +11,7 @@ Two working programs that you can build, install, and run is an absolute minimum
 requirement and not the final product. There's lots I still need to explain, so
 expect frequent updates over the next month or two. My hope is that the missing
 documentation (mostly comments in makefiles and the Java source code) can all be
-finished by September 2025.
+finished by the end of September 2025.
 
 # Makefiles
 
