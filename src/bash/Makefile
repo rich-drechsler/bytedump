@@ -59,13 +59,16 @@
 #               will install everything in directory /tmp/bytedump, provided that
 #               directory already exists.
 #
-#       clean - removes files created by this makefile that aren't needed to run
-#               this application.
+#       clean - removes any files created by this makefile that aren't needed to
+#               run this application.
 #
 #     clobber - removes all of the files created by this makefile, including the
 #               ones needed to run this application.
 #
 #   testfiles - builds test files that might occasionally be useful.
+#
+#    validate - builds the "all" target and then checks the bash implementation of
+#               bytedump using shellcheck.
 #
 
 ####################
@@ -87,8 +90,14 @@ MAKEFILE := $(lastword $(MAKEFILE_LIST))
 ROOT := ..
 INSTALLDIR := ../$(ROOT)/image
 INSTALL := install
+SHELLCHECK := shellcheck
 
-BYTEDUMP := bytedump-bash
+BYTEDUMP-BASH := bytedump-bash
+
+#
+# Only one test file to build and that's probably the way it will always be.
+#
+
 TESTFILES := sorted_bytes
 
 ####################
@@ -97,17 +106,17 @@ TESTFILES := sorted_bytes
 #
 ####################
 
-all : $(BYTEDUMP)
-	@# A comment eliminates make's "Nothing to be done ..." message.
+all : $(BYTEDUMP-BASH)
+	@# A comment to eliminate make's "Nothing to be done ..." message.
 
 clean :
 	@if [ "$(TESTFILES)" ]; then \
-	    echo "rm -f $(TESTFILES)"; \
-	    rm -f $(TESTFILES); \
+	    echo "rm -f -- $(TESTFILES)"; \
+	    rm -f -- $(TESTFILES); \
 	fi
 
 clobber : clean
-	rm -f $(BYTEDUMP)
+	rm -f -- "$(BYTEDUMP-BASH)"
 
 install : all
 	@set -e; \
@@ -115,8 +124,8 @@ install : all
 	    echo "++++ Installing files under directory $(INSTALLDIR) ++++"; \
 	    echo '$(INSTALL) -d -m755 "$(INSTALLDIR)/bin"'; \
 	    $(INSTALL) -d -m755 "$(INSTALLDIR)/bin"; \
-	    echo '$(INSTALL) -m755 $(BYTEDUMP) "$(INSTALLDIR)/bin"'; \
-	    $(INSTALL) -m755 $(BYTEDUMP) "$(INSTALLDIR)/bin"; \
+	    echo '$(INSTALL) -m755 "$(BYTEDUMP-BASH)" "$(INSTALLDIR)/bin"'; \
+	    $(INSTALL) -m755 "$(BYTEDUMP-BASH)" "$(INSTALLDIR)/bin"; \
 	else \
 	    if [ "$(INSTALLDIR)" ]; \
 	        then echo "Skipping install because installation directory '$(INSTALLDIR)' doesn't exist"; \
@@ -125,17 +134,29 @@ install : all
 	fi
 
 testfiles : $(TESTFILES)
-	@# A comment eliminates make's "Nothing to be done ..." message.
+	@# A comment to eliminate make's "Nothing to be done ..." message.
+
+validate : all
+	@if command -v "$(SHELLCHECK)" >/dev/null; then \
+	    echo "++++ Validating $(BYTEDUMP-BASH) ++++"; \
+	    echo '    $(SHELLCHECK) "$(BYTEDUMP-BASH)"'; \
+	    if $(SHELLCHECK) "$(BYTEDUMP-BASH)"; then \
+		echo "    $(BYTEDUMP-BASH) - validated"; \
+	    else \
+		exit 1; \
+	    fi; \
+	fi
 
 #
 # Not using make's implicit .sh rule, but only because I wanted consistent "build
 # messages" from makefiles.
 #
 
-$(BYTEDUMP) : $(BYTEDUMP).sh
+$(BYTEDUMP-BASH) : $(BYTEDUMP-BASH).sh
 	@echo "++++ Building $@ ++++"
-	cat $< >$@
-	chmod a+x $@
+	cat '$<' >'$@'
+	chmod a+x '$@'
+	@echo
 
 ####################
 #
@@ -146,6 +167,8 @@ $(BYTEDUMP) : $(BYTEDUMP).sh
 #
 # The sorted_bytes target builds a 256 byte file (named sorted_bytes) where each
 # byte in the file contains the 8-bit binary representation of the byte's offset.
+# It's a binary test file that was occasionally useful, but it's an easy file to
+# build with a few lines of shell.
 #
 
 sorted_bytes : $(MAKEFILE)

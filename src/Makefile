@@ -3,7 +3,7 @@
 ## listed in the SRCDIRS variables. It's really just a "helper" makefile that runs a
 ## small shell script that finds the makefiles that build things. Doing it this way
 ## (in a makefile) obviously isn't necessary, but it means makefiles are responsible
-## for building everything, and I kind of like that consistency. Take a look at
+## for building everything, and I like that consistency. Take a look at
 ##
 ##     https://www.gnu.org/software/make/manual/make.html
 ##
@@ -62,13 +62,16 @@
 #               will install everything in directory /tmp/bytedump, provided that
 #               directory already exists.
 #
-#       clean - removes files created by this makefile that aren't needed to run
-#               this application.
+#       clean - removes any files created by this makefile that aren't needed to
+#               run this application.
 #
 #     clobber - removes all of the files created by this makefile, including the
 #               ones needed to run this application.
 #
 #   testfiles - builds test files that might occasionally be useful.
+#
+#    validate - builds and then validates each of the bytedump applications named
+#               in SRCDIRS. Uses shellcheck on bash scripts and jdeps on jar files.
 #
 
 ####################
@@ -99,10 +102,34 @@ SOURCEDIRS := bash java
 #
 ####################
 
-all install clean clobber testfiles :
-	@HERE="$${PWD}"; \
-	INSTALLDIR="$(realpath $(INSTALLDIR))"; \
-	if [ -d "$${INSTALLDIR}" ] || [ "$@" != "install" ]; then \
+all install clean clobber testfiles validate :
+	@#
+	@# The output of the GNU make realpath function is assigned to the bash INSTALLDIR
+	@# variable in the first non-comment line of this recipe, but change that line to
+	@#
+	@#     INSTALLDIR="$$(realpath $(INSTALLDIR))";
+	@#
+	@# and instead you would be asking the shell to use the realpath command to do the
+	@# work. It's a subtle difference that probably won't be immediately obvious, but
+	@# the extra dollar sign prevents GNU make from using its realpath function.
+	@#
+	@# NOTE - if you want to tackle a little GNU make challenge, surround the argument
+	@# that's handed to realpath with double quotes; then see if you can explain what
+	@# happens when you type something like
+	@#
+	@#     mkdir /tmp/QWERT
+	@#     make INSTALLDIR=/tmp/QWERT install
+	@#
+	@# and use one or two dollar signs in the expression that executes realpath.
+	@#
+	@# Remember that make preprocesses recipes before handing anything to the shell and
+	@# that two dollar signs are an "escape sequence" that's used when the recipe wants
+	@# to hand a single dollar sign to the shell. Also, remove the '@' that's the first
+	@# character on that line and make will show you what it's going to hand the shell.
+	@#
+	@INSTALLDIR="$(realpath $(INSTALLDIR))"; \
+	HERE="$${PWD}"; \
+	if [ "$@" != "install" ] || [ -d "$${INSTALLDIR}" ]; then \
 	    # \
 	    # Loops though the source directories listed in SRCDIRS and uses the makefile \
 	    # in each directory to build the target. Each directory should be a language \

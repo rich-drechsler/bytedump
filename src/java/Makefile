@@ -59,13 +59,16 @@
 #               will install everything in directory /tmp/bytedump, provided that
 #               directory already exists.
 #
-#       clean - removes files created by this makefile that aren't needed to run
-#               this application.
+#       clean - removes any files created by this makefile that aren't needed to
+#               run this application.
 #
 #     clobber - removes all of the files created by this makefile, including the
 #               ones needed to run this application.
 #
 #   testfiles - builds test files that might occasionally be useful.
+#
+#    validate - builds the "all" target and then checks the launcher script using
+#               shellcheck and examines the jar file using jdeps.
 #
 # NOTE - even though ByteDump.java is the only working Java bytedump implementation,
 # the makefile included in the original release anticipated different Java versions.
@@ -98,6 +101,7 @@ MAKEFILE := $(lastword $(MAKEFILE_LIST))
 ROOT := ..
 INSTALLDIR := ../$(ROOT)/image
 INSTALL := install
+SHELLCHECK := shellcheck
 
 JAR := jar
 JAVAC := javac
@@ -114,8 +118,15 @@ CLASSFILES_INTERNAL := ByteDump$$1.class Terminator$$ExitError.class Terminator$
 JARFILE := bytedump-java.jar
 JARCLASSES := $(CLASSFILES) $(CLASSFILES_INTERNAL)
 
-COMMAND_LAUNCHER := launcher_template.sh
-COMMAND_SCRIPT := bytedump-java
+BYTEDUMP-JAVA := bytedump-java
+
+#
+# This is the name of bash script template that's used to create the command that
+# launches the Java version of bytedump. It's a generic Java launcher that should
+# be easy to use elsewhere.
+#
+
+LAUNCHER_TEMPLATE := launcher_template.sh
 
 #
 # Only one test file to build and that's probably the way it will always be.
@@ -129,18 +140,18 @@ TESTFILES := sorted_bytes
 #
 ####################
 
-all : jar commands
-	@# A comment eliminates make's "Nothing to be done ..." message.
+all : $(JARFILE) $(BYTEDUMP-JAVA)
+	@# A comment to eliminate make's "Nothing to be done ..." message.
 
 clean :
-	rm -f *.class
+	rm -f -- *.class
 	@if [ "$(TESTFILES)" ]; then \
-	    echo "rm -f $(TESTFILES)"; \
-	    rm -f $(TESTFILES); \
+	    echo "rm -f -- $(TESTFILES)"; \
+	    rm -f -- $(TESTFILES); \
 	fi
 
 clobber : clean
-	rm -f $(JARFILE) $(COMMAND_SCRIPT)
+	rm -f -- "$(JARFILE)" "$(BYTEDUMP-JAVA)"
 
 install : all
 	@set -e; \
@@ -148,12 +159,12 @@ install : all
 	    echo "++++ Installing files under directory $(INSTALLDIR) ++++"; \
 	    echo '$(INSTALL) -d -m755 "$(INSTALLDIR)/bin"'; \
 	    $(INSTALL) -d -m755 "$(INSTALLDIR)/bin"; \
-	    echo '$(INSTALL) -m755 $(COMMAND_SCRIPT) "$(INSTALLDIR)/bin"'; \
-	    $(INSTALL) -m755 $(COMMAND_SCRIPT) "$(INSTALLDIR)/bin"; \
+	    echo '$(INSTALL) -m755 "$(BYTEDUMP-JAVA)" "$(INSTALLDIR)/bin"'; \
+	    $(INSTALL) -m755 "$(BYTEDUMP-JAVA)" "$(INSTALLDIR)/bin"; \
 	    echo '$(INSTALL) -d -m755 "$(INSTALLDIR)/lib"'; \
 	    $(INSTALL) -d -m755 "$(INSTALLDIR)/lib"; \
-	    echo '$(INSTALL) -m644 $(JARFILE) "$(INSTALLDIR)/lib"'; \
-	    $(INSTALL) -m644 $(JARFILE) "$(INSTALLDIR)/lib"; \
+	    echo '$(INSTALL) -m644 "$(JARFILE)" "$(INSTALLDIR)/lib"'; \
+	    $(INSTALL) -m644 "$(JARFILE)" "$(INSTALLDIR)/lib"; \
 	else \
 	    if [ "$(INSTALLDIR)" ]; \
 	        then echo "Skipping install because installation directory '$(INSTALLDIR)' doesn't exist"; \
@@ -162,17 +173,35 @@ install : all
 	fi;
 
 testfiles : $(TESTFILES)
-	@# A comment eliminates make's "Nothing to be done ..." message.
+	@# A comment to eliminate make's "Nothing to be done ..." message.
 
-#
-# Several convenient rules.
-#
-
-jar : $(JARFILE)
-
-classes : $(JARCLASSES)
-
-commands : $(COMMAND_SCRIPT)
+validate : all
+	@if command -v "$(SHELLCHECK)" >/dev/null; then \
+	    echo "++++ Validating $(BYTEDUMP-JAVA) ++++"; \
+	    echo '    $(SHELLCHECK) "$(BYTEDUMP-JAVA)"'; \
+	    if $(SHELLCHECK) "$(BYTEDUMP-JAVA)"; then \
+		echo "    $(BYTEDUMP-JAVA) - validated"; \
+	    else \
+		exit 1; \
+	    fi; \
+	fi
+	@if command -v "$(JDEPS)" >/dev/null; then \
+	    # \
+	    # Uses the jdeps Java class dependency analyzer to look for classes that, \
+	    # for some reason, may not be included in the jar file. grep is used to look \
+	    # through the jdeps output, so nothing is guaranteed and it's probably only \
+	    # been tested using the 1.8 version of jdeps. \
+	    # \
+	    echo "++++ Validating $(JARFILE) ++++"; \
+	    NOT_FOUND=$$($(JDEPS) -verbose "$(JARFILE)" | grep '[^ ][^ ]*[ ][ ]*[ ]->[ ][^ ][^ ]*[ ][ ]*not found'); \
+	    if [ -n "$${NOT_FOUND}" ]; then \
+		echo "    $(JARFILE) contains unresolved references:"; \
+		echo "$${NOT_FOUND}" | sed -e 's/^  *//' -e 's/^/        /' -e's/  *->/ ->/' -e 's/  *not found//'; \
+		exit 1; \
+	    else \
+		echo "    $(JARFILE) - validated"; \
+	    fi; \
+	fi
 
 #
 # Rules that do the real work.
@@ -187,18 +216,18 @@ $(JARFILE) : $(JARCLASSES) $(HELPFILE) $(MAKEFILE)
 
 $(JARCLASSES) : $(JAVAFILES) $(MAKEFILE)
 	@echo "++++ Building Class Files ++++"
-	@rm -f *.class
+	@rm -f -- *.class
 	$(JAVAC) $(JAVACFLAGS) $(JAVAFILES)
 	@echo
 
-$(COMMAND_SCRIPT) : $(COMMAND_LAUNCHER) $(MAKEFILE)
+$(BYTEDUMP-JAVA) : $(LAUNCHER_TEMPLATE) $(MAKEFILE)
 	@echo "++++ Building $@ ++++"
 	sed \
 	    -e 's#^declare[ ][ ]*SCRIPT_MAINCLASS=.*#declare SCRIPT_MAINCLASS="$(MAINCLASS)"#' \
 	    -e 's#^declare[ ][ ]*SCRIPT_JARNAME=.*#declare SCRIPT_JARNAME="$(JARFILE)"#' \
 	    -e 's#^declare[ ][ ]*SCRIPT_JARPATH=.*#declare SCRIPT_JARPATH="../lib:."#' \
-	< $< > $@
-	chmod a+x $@
+	< '$<' > '$@'
+	chmod a+x '$@'
 	@echo
 
 ####################
@@ -210,6 +239,8 @@ $(COMMAND_SCRIPT) : $(COMMAND_LAUNCHER) $(MAKEFILE)
 #
 # The sorted_bytes target builds a 256 byte file (named sorted_bytes) where each
 # byte in the file contains the 8-bit binary representation of the byte's offset.
+# It's a binary test file that was occasionally useful, but it's an easy file to
+# build with a few lines of shell.
 #
 
 sorted_bytes : $(MAKEFILE)
@@ -218,32 +249,5 @@ sorted_bytes : $(MAKEFILE)
 	    for lsd in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
 		/bin/echo -en "\\x$${msd}$${lsd}"; \
 	    done; \
-	done > "$@"
-
-####################
-#
-# An Experiment
-#
-####################
-
-#
-# A hastily written rule that tries to use the jdeps Java class dependency analyzer
-# to look for classes that, for some reason, may not be included in $(JARFILE). It
-# uses grep to identify possible problems in the jdeps output, but it's an approach
-# that probably has only been tested on output produced by the 1.8 version of jdeps.
-#
-
-validate : $(JARFILE)
-	@if command -v "$(JDEPS)" >/dev/null; then \
-	    echo "++++ Validating $< ++++"; \
-	    NOT_FOUND=$$($(JDEPS) -verbose $< | grep '[^ ][^ ]*[ ][ ]*[ ]->[ ][^ ][^ ]*[ ][ ]*not found'); \
-	    if [ -n "$${NOT_FOUND}" ]; then \
-		echo "    $< contains unresolved references:"; \
-		echo "$${NOT_FOUND}" | sed -e 's/^  *//' -e 's/^/        /' -e's/  *->/ ->/' -e 's/  *not found//'; \
-		exit 1; \
-	    else \
-		echo "    $< - validated"; \
-		echo; \
-	    fi; \
-	fi
+	done > '$@'
 
