@@ -78,9 +78,6 @@
 # to follow it, so I backed it out and now ByteDump.java is the only implementation
 # of bytedump this makefile can deal with.
 #
-# NOTE - the complicated version of the makefile is currently available in the file
-# named Makefile.orig, but that file may eventually be deleted.
-#
 
 ####################
 #
