@@ -113,6 +113,15 @@ all install clean clobber testfiles validate :
 	@# work. It's a subtle difference that probably won't be immediately obvious, but
 	@# the extra dollar sign prevents GNU make from using its realpath function.
 	@#
+	@# NOTE - make always preprocesses recipes before handing anything to the shell. Two
+	@# dollar signs are the "escape sequence" that recipes have to use when they need to
+	@# hand a single dollar sign to the shell.
+	@#
+	@# NOTE - GNU make normally prints each recipe after it's been preprocessed, but a
+	@# recipe that starts with an '@' character suppresses that output. Removing the '@'
+	@# character lets you see exactly what the shell is going to execute and is usually
+	@# something you have to do when you're debugging makefile problems.
+	@#
 	@# NOTE - if you want to tackle a little GNU make challenge, surround the argument
 	@# that's handed to realpath with double quotes; then see if you can explain what
 	@# happens when you type something like
@@ -120,12 +129,10 @@ all install clean clobber testfiles validate :
 	@#     mkdir /tmp/QWERT
 	@#     make INSTALLDIR=/tmp/QWERT install
 	@#
-	@# and use one or two dollar signs in the expression that executes realpath.
-	@#
-	@# Remember that make preprocesses recipes before handing anything to the shell and
-	@# that two dollar signs are an "escape sequence" that's used when the recipe wants
-	@# to hand a single dollar sign to the shell. Also, remove the '@' that's the first
-	@# character on that line and make will show you what it's going to hand the shell.
+	@# and use one or two dollar signs in that quoted argument. Incidentally, you would
+	@# be correct if you assumed I stumbled into this problem and I didn't even notice
+	@# the mistake for quite a while. It could be an instructive exercise, which is why
+	@# I included this strange block of comments.
 	@#
 	@INSTALLDIR="$(realpath $(INSTALLDIR))"; \
 	HERE="$${PWD}"; \
