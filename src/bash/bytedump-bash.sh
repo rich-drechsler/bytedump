@@ -578,7 +578,7 @@
 #
 #                        ------------------------------
 #
-# Finally, few words about the regular expressions used in this script. If you take
+# Finally, a few words about regular expressions used in this script. If you take
 # a close look at older versions you would be right to wonder exactly how I decided
 # to use character classes versus enumerating target characters or selecting them
 # using ranges. The regular expressions all seemed to work, but their inconsistency
