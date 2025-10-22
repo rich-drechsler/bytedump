@@ -586,7 +586,7 @@
 #
 # This is another long (locale related) block of comments that I think is useful,
 # but probably won't help much if you're just interested in reading the code. If
-# that's the case then the advice from the perevious section to just skip to the
+# that's the case then the advice from the previous section to just skip to the
 # next block of comments also holds here.
 #
 #                        ------------------------------
