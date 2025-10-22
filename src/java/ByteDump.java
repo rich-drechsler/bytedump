@@ -33,29 +33,86 @@ import java.util.Scanner;
  * that understanding one implementation would be useful if you decided to dig into
  * the other.
  *
- * The organization and style I used in this class file doesn't exactly match what
- * I typically use in Java files. Instead, it was written to emphasize similarities
- * with the existing bash version of bytedump.
+ * The organization and style I used in this file doesn't match what I typically use
+ * in Java files. Instead, this file was designed to emphasize similarities with the
+ * existing bash version of bytedump.
  *
  *   About Comments
- *      In Java source files I only use C-style block comments, like the one you're
- *      reading right now, outside class definitions. That means they'll usually be
- *      available to quickly (and temporarily) comment out chunks of Java code. It's
- *      something I occasionally find useful during development or debugging.
+ *      I usually only use C-style block comments, like the one you're reading right
+ *      now, outside class definitions. It's a habit I got into in the last century
+ *      because it meant a single C-style comment could usually "erase" large chunks
+ *      of Java code, and that was often convenient during debugging or development.
  *
- *      NOTE - this is a restriction that doesn't mesh well with javadoc, but it's
- *      just a convention that I follow when I work on new Java files. If javadoc
- *      comments really are appropriate (for developer documentation) then I would
- *      definitely add them. The only classes where javadoc comments would make any
- *      sense are RegexManager.java, Terminator.java, and perhaps StringTo.java.
+ *      NOTE - this doesn't mesh well with javadoc, but it's just a convention that
+ *      I would not follow if javadoc comments (for developer documentation) really
+ *      made sense. Nothing in this class file deserves javadoc comments, but they
+ *      could make sense in RegexManager.java, Terminator.java, and StringTo.java.
  *
- *   About Package
- *      I wanted a flat directory structure and simple makefile, so none of the Java
- *      files used to build this version of bytedump include a package statement.
+ *   About No Package Statement
+ *      I wanted a flat directory structure and relatively simple makefile, so none
+ *      of these Java files include a package statement. That means everything used
+ *      to build the Java version of bytedump lives in this directory, so it's the
+ *      only place to look if you want to understand how the Java version works.
  *
  *      NOTE - if you reorganize things and add a package statement you'll also have
  *      to modify the makefile. If I have time and nothing else interesting to do, I
- *      may add an example makefile that deals with Java packages.
+ *      may include an example makefile that deals with Java packages.
+ *
+ *   About Locales
+ *      When the JVM starts it initializes the default locale based on what it finds
+ *      in its environment - after that calling Java's
+ *
+ *          Locale.setDefault()
+ *
+ *      method is the only way I know to change it. It's a brute force approach that
+ *      would have far-reaching effects across the entire JVM, and it's a method I've
+ *      never used (or seen used) in any Java application. Instead, applications that
+ *      need custom localization can create a properly initialized instance of Java's
+ *      Locale class and hand it to methods, like
+ *
+ *          String.format()
+ *
+ *      that use it instead of the JVM's default locale. It's such a clean approach,
+ *      particularly compared to how bash handles localization, that I really don't
+ *      think there's much more to say about it. However, even though this is Java,
+ *      a few words about localization in bash scripts might help you appreciate the
+ *      difference.
+ *
+ *      In bash scripts, localization depends on the values assigned to global shell
+ *      variables like LC_ALL or LC_CTYPE, and the script itself is responsible for
+ *      setting them (often just LC_ALL) whenever it needs to use a specific locale.
+ *      Those global shell variables are initialized when bash starts, using values
+ *      that it finds in its environment. So locale settings, even the ones that are
+ *      inherited from the environment, can be modified anywhere in a bash script and
+ *      that can affect the script in ways that often aren't obvious.
+ *
+ *      For example, suppose a bash script uses a character class, like [:print:], in
+ *      a regular expression to validate user input. Whether that regular expression
+ *      works (or not) depends on what your script considers "printable" and whether
+ *      global locale variables, like LC_ALL, that control what [:print:] matches are
+ *      exactly aligned with what your script wants (whenever that regular expression
+ *      is used). Unfortunately, just examining the code that's "close to" the regular
+ *      expression usually won't tell you what's stored in the global locale variables
+ *      that decide what [:print:] matches.
+ *
+ *   About Regular Expressions
+ *
+ *      The bash version of bytedump listed a few "rules" that it imposed on regular
+ *      expressions. The ultimate goal of those rules was to restrict the syntax used
+ *      to write individual bash regular expressions to a syntax that would "resemble"
+ *      the way corresponding regular expressions in bytedump implementations written
+ *      in different languages, like Java.
+ *
+ *      More...
+ *
+ * Just like the bash version, the source code in this class file is organized into
+ * sections that are discussed next. All of the top-level headings in the next block
+ * of comments are also used in comments that mark where each section starts in the
+ * source code. Search for any heading and you'll find it in these comments and the
+ * comment that shows you where that section starts in the source code.
+ *
+ * So here are the sections, listed in the same order that you'll find them in the
+ * source code, along with some of the "rules" I tried to follow in this class file:
  *
  *   ByteDump Fields
  *      These are the static fields that belong to this class. Instance fields would
@@ -74,7 +131,6 @@ import java.util.Scanner;
  *      separating the capabilities of Java and bash.
  *
  *   Error Methods
- *
  *
  *   Helper Methods
  *
@@ -117,19 +173,20 @@ class ByteDump {
     //
     //     ./bytedump-java --launcher-debug /etc/hosts
     //
-    // and you'll see debugging output that includes a java command line that looks
-    // something like
+    // and you'll see debugging output that precedes the actual dump and includes a
+    // java command line that looks something like
     //
-    //     CLASSPATH='/.../bytedump-java.jar' 'java' -Dprogram.name='bytedump-java' 'ByteDump' '/etc/hosts'
+    //     CLASSPATH='/some/where/bytedump-java.jar' 'java' -Dprogram.name='bytedump-java' 'ByteDump' '/etc/hosts'
     //
     // Notice the -D option that associates the "program.name" key with the basename
     // of the bash script that built the command line. That's how the program's name
     // ends up in Java's system properties Hashtable.
     //
     // If you want to experiment some more just take Java command line that printed
-    // on your terminal (not the command line in these comments) and run it. Make an
-    // intentional mistake, like dumping a non-existent file or using an unsupported
-    // option, and that should trigger an error message.
+    // on your terminal (not the command line I included in these comments) and run
+    // it. Make an intentional mistake, like dumping a non-existent file or using an
+    // unsupported option, and you should see an error message that uses the string
+    // that the -D option assigned to the program.name key.
     //
 
     private static final String PROGRAM_NAME = getSystemProperty("program.name", "bytedump");
@@ -163,6 +220,11 @@ class ByteDump {
     // these variables names, but there's enough overlap that I think it's a useful
     // convention.
     //
+    // NOTE - debugging code that dumped the contents of STRING_STRINGS in the bash
+    // version was important and pretty easy to implement. Something like it in this
+    // version was also useful, but reflection was used to identify and inspect the
+    // appropriate class variables.
+    //
 
     //
     // This wasn't the approach I started with. Instead, I naively began by trying
@@ -174,12 +236,12 @@ class ByteDump {
     //
     // The real problem was that lots of strings stored in SCRIPT_STRINGS represent
     // numbers. Bash happily converts those strings to integers when they're used
-    // in an arithmetic expression, but that "trick" doesn't work in Java. Instead,
+    // in arithmetic expressions, but that "trick" doesn't work in Java. Instead,
     // StringMap needed getters and setters to deal with strings that represented
-    // integers, expressions that used or modified values stored in that StringMap
-    // were much uglier than the corresponding bash expressions, but perhaps the
-    // the worst result was that javac couldn't help by detecting many (otherwise
-    // obvious) mistakes.
+    // integers, so expressions that used (or modified) them were much uglier than
+    // the corresponding bash expressions. However, the worst result was that using
+    // a StringMap pushed compile-time errors, that javac could easily detect, to
+    // runtime mistakes that had to be executed to be noticed.
     //
     // In hindsight, the StringMap approach was such an obvious mistake that I just
     // can't believe how long I stuck with it. Eventually I decided to use properly
@@ -187,9 +249,7 @@ class ByteDump {
     // in the bash version's SCRIPT_STRINGS keys with underscores. The result was
     // lots of unusual variable names. It's not a Java style I've seen before and
     // I would guess you've never encountered it either, but I believe (after lots
-    // of trial and error) that it's the best approach for this class. Remember, my
-    // goal is a Java implementation that "resembles" the existing bash version of
-    // bytedump.
+    // of trial and error) that it's the best approach for this class.
     //
 
     //
@@ -1435,7 +1495,7 @@ class ByteDump {
         // ones that want everything displayed as a single record or just want to see the
         // BYTE or TEXT fields. None of those methods make much of a difference, but some
         // careful code duplication, that's compiled by javac, seemed worthwhile. If you
-        // disagree it should be trivial to make dumpAll() handle almost everything.
+        // disagree it should be trivial to have dumpAll() handle almost everything.
         //
 
         try {
@@ -1987,7 +2047,7 @@ class ByteDump {
         // seemed like a way to make it a little easier to follow. The names of those
         // methods were chosen so their (case independent) sorted order matched the
         // order that they're called. However, no matter how the initialization code
-        // is organized, it's still the most complicated part of this script.
+        // is organized, it's still difficult to follow.
         //
         // NOTE - the good news is, if you're willing to believe this stuff works, you
         // probably can skip all the initialization, return to main(), and still follow
@@ -2221,7 +2281,8 @@ class ByteDump {
         //
         // All we use BYTE_field_width for is to decide whether the BYTE field in the
         // dump's last record needs space padding, after the final byte, to make sure
-        // its TEXT field starts in the correct column.
+        // its TEXT field starts in the correct column. It's only used in dumpAll(),
+        // so that's where to look for more details.
         //
         // NOTE - even though the value stored in BYTE_field_width is correct, all we
         // really care about in this class is whether it's zero or not. A zero value
@@ -2421,13 +2482,18 @@ class ByteDump {
         // The bash version always generated the addresses that appear in the dump using
         // the printf builtin and ADDR_format. In Java, simple integer arithmetic and a
         // properly initialized buffer seem to build addresses a little faster than the
-        // String.format() method.
+        // String.format() method. Any speed improvement needs a large file, dumped with
+        // a relatively small record size, to be measured.
         //
-        // NOTE - addresses are built by dumpFormattedAddress(), and if addrMap is null
-        // when that method is called then String.format() is used.
+        // NOTE - addresses are built by dumpFormattedAddress(), so that's where to look
+        // for more details. If addrMap is null when this method returns, which currently
+        // only happens when --debug=addresses was a command line option, String.format()
+        // will be used to build all addresses.
         //
-        // NOTE - any improvement probably needs a large file, dumped with a relatively
-        // small record size, to be measured.
+        //
+        // NOTE - addresses are built by dumpFormattedAddress(), so that's where to look
+        // for more details. When addrMap is null, which happens when --debug=addresses
+        // is used on the commamd line, dumpFormattedAddress() uses String.format().
         //
 
         if (DEBUG_addresses == false) {         // --debug=addresses sets it to true

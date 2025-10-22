@@ -576,46 +576,201 @@
 # also are a few instances where LC_ALL is explicitly set to C for commands, like
 # grep or sort, but none of them affect the locale that the script itself is using.
 #
+
+##############################
+#
+# Regular Expressions
+#
+##############################
+
+#
+# This is another long (locale related) block of comments that I think is useful,
+# but probably won't help much if you're just interested in reading the code. If
+# that's the case then the advice from the perevious section to just skip to the
+# next block of comments also holds here.
+#
 #                        ------------------------------
 #
-# Finally, a few words about regular expressions used in this script. If you take
-# a close look at older versions you would be right to wonder exactly how I decided
-# to use character classes versus enumerating target characters or selecting them
-# using ranges. The regular expressions all seemed to work, but their inconsistency
-# was ugly and difficult to explain. They needed attention, but messing around with
-# lots of working regular expressions would be painful and wasn't something I wanted
-# to tackle without a plan.
+# Regular expressions pop up all over the place in this bash script and they'll be
+# needed in every new bytedump implementation. Right now bash and Java are the only
+# versions that are available - the bash script came first and the Java application
+# eventually followed. My goal in the Java version was to end up with a program that
+# produced the same output as this bash script using source code that "resembled" it
+# closely enough that understanding either one would be useful if you decide to dig
+# into the other.
 #
-# That changed after I started work on a Java version of this bash script. My goal
-# was to end up with a Java program that resembled the bytedump bash script closely
-# enough that understanding one implementation would be useful if you decide to dig
-# into the other. Whether I succeeded or not isn't my call, but the goal eventually
-# did force me to settle on the following regular expression "rules" that I could
-# apply to both versions:
+# Trying to "synchronize" regular expression matching in the bash and Java versions
+# was an important part of my goal and there really were two separate pieces to that
+# puzzle. One involved building an API for Java programmers that would handle regular
+# expression matching in a Java program in a way that looked like what's done in bash
+# scripts. All of that work happened in the Java source code, so that's where to look
+# if you want more details.
 #
-#   Character Classes
-#     Don't use them in the C locale and otherwise avoid them except to validate
-#     strings set by command line options that are supposed to appear, as is, in
-#     the dump we produce. Options, like --addr-prefix or --byte-separator, are
-#     examples where a character class is appropriate, but it only happens after
-#     we switch out of the C locale (by changing LC_ALL).
+# The second piece of that puzzle was figuring out how to write corresponding regular
+# expressions so their bash and Java forms resembled each other. Regular expressions
+# are tiny programs that are usually written in a cryptic language where absolutely
+# every character is important. High level programming languages that support regular
+# expressions often provide the same basic capabilities (using identical syntax), so
+# sticking to those basics is the approach I'll try to take in every implementation
+# of bytedump.
 #
-#     Restricting the use of character classes in this bash script was a choice I
-#     made primarily because alternatives (i.e., using character ranges in the C
-#     locale) seemed like a better way to sync bash and Java regular expressions
-#     in the two implementations of the bytedump program.
+# With a little discipline a Java and bash regular expression can be written in a way
+# that makes their connection obvious. That should mean if you understand one of the
+# regular expressions it probably will be easy to figure out what the other is doing.
+# Java regular expressions are pretty well "locked down" and don't impose any special
+# constraints on the syntax that bytedump implementations in other languages can use.
 #
-#   Character Ranges
-#     Use them in the C locale in place of character classes or enumerated lists
-#     of consecutive characters in bracket expressions.
+# Bash regular expressions are different and the real problem is that you often can't
+# read them (in a script) and be certain you know exactly what's being matched. It's
+# annoying behavior that's important to explain. After that I'll discuss some "rules"
+# that regular expressions in this script will follow and that (in the interest of
+# aligning regular expressions across bytedump implementations) are also applied in
+# the existing Java version of bytedump.
 #
-#     Avoid ranges and instead list the characters that a bracket expression is
-#     supposed to match whenever the regular expression might not be executed in
-#     the C locale.
+# Character classes and ranges supported by bash regular expressions are affected by
+# values assigned to global locale variables (like LC_CTYPE, LC_COLLATE, and LC_ALL)
+# that can be set anywhere in a bash script, so they have to be used carefully. For
+# example, in the C locale a regular expression that uses a character class,
 #
-# The rules, as written, are for this bash script. Java regular expressions don't
-# depend on locales, but instead flags that are used when regular expressions are
-# compiled provide the required control.
+#     [[:lower:]]
+#
+# a character range,
+#
+#     [a-z]
+#
+# and a list of characters (in any order)
+#
+#     [abcdefghijklmnopqrstuvwxyz]
+#
+# all match exactly same set of characters, but in other locales they probably won't.
+#
+# If you don't know what's stored in your script's locale variables (when a regular
+# expression is used) then [:lower:] is the only reliable way to look for lowercase
+# letters. However, if a bash script uses [:lower:] as a synonym for lowercase ASCII
+# characters then every regular expression making that assumption should only be used
+# in locales, like C or POSIX, where that's guaranteed. As far as I know, [:xdigit:]
+# is the only locale-independent POSIX character class, so using character classes to
+# match specific sets of characters without also considering the script's locale is
+# usually wrong.
+#
+# In many locales a range, like [a-z], with ASCII characters as endpoints behaves the
+# way you might expect. However, it's not guaranteed and it ultimately depends on the
+# locale's collation order (i.e., the "alphabetic" order that's applied to all of the
+# locale's characters), which is controlled by bash's LC_COLLATE or LC_ALL variables.
+# It's another annoying instance where global shell variables that aren't explicitly
+# initialized and can be changed anywhere in a bash script control what's matched by
+# bash regular expressions.
+#
+# Using a character range like [a-z] in a bash regular expression may or may not be
+# the right thing to do, and the only way to decide is to understand as much as you
+# can about the script's locale every time that regular expression is used. If the
+# script forces a locale, often by setting LC_ALL to C, and does it in a way that
+# guarantees it's still set when the regular expression is used, then you can figure
+# out exactly which characters are matched. However, if a range like [a-z] appears in
+# a regular expression and you're not sure about the locale (probably because it was
+# inherited from the user's environment) then there's really no way for you to list
+# the characters that [a-z] matches until bash runs the script.
+#
+# Character classes and ranges are convenient ways to represent sets of characters,
+# but hopefully the last few paragraphs convinced you they're not always appropriate
+# in a bash script. When character classes and ranges aren't guaranteed to match the
+# set of characters you're interested in, explicitly listing those characters in a
+# bracket expression is always a locale-agnostic way to match them. It's an approach
+# that addresses bash locale issues, but bracket expressions have been around for a
+# very long time, so it's notation that should also work in any programming language
+# that also supports regular expressions.
+#
+# A takeaway from all of this is that the C locale is really convenient and if it's
+# the only one that a bash regular expression has to worry about then it's safe to
+# use any combination of character classes, ranges, or lists and be confident they
+# will behave the way you expect. Most bash scripts just ignore the locale (except
+# perhaps when they use commands like grep) or set LC_ALL to C when they start and
+# never worry about it again. But this script isn't normal, and even though most of
+# it is perfectly happy in the C locale, there are several regular expressions that
+# explicitly list characters (rather than using ranges) because they're part of some
+# tricky bash specific code that has to run in the user's locale.
+#
+#                        ------------------------------
+#
+# With the background details out of the way, what I want to do next is list a few
+# "rules" that I followed when I wrote the bash regular expressions that appear in
+# this script. They're not meant to be rules that apply to other bash scripts, but
+# instead they're primarily supposed to provide some regular expression consistency
+# when bytedump is implemented in different programing languages.
+#
+# I also don't want you to think these "rules" existed before I wrote the original
+# bash version of bytedump. That's definitely not true, as you can easily verify by
+# looking through the original version of this script (which should be available in
+# in public archived GitHub repository). Instead, these "rules" are just an attempt
+# to summarize some regular expression choices I made when I tried to "synchronize"
+# the original bash version with the new Java implementation. Hopefully the "rules"
+# will help a little if you decide to take a close look at the regular expressions
+# in either version.
+#
+#     Rule 1 - C Locale
+#         Even though bash character class matching in the C locale is predictable,
+#         character class syntax (and behavior) across programming languages isn't
+#         consistent. It's definitely not a big deal, but in the C locale it's easy
+#         to replicate most of the POSIX character classes with character ranges and
+#         lists that use a syntax that looks and behaves the same across all of the
+#         programming languages that I plan on using to implement bytedump.
+#
+#         So the first regular expression "rule" I'm going to follow in this script
+#         is to avoid character classes when the regular expression matching happens
+#         in the C locale. Instead, try to replace bash character classes with ranges
+#         and lists built using ASCII characters. It's not a big deal if it can't be
+#         done or is inconvenient and potentially error prone, like for [:cntrl:] or
+#         [:punct:], but in the C locale the other bash character classes are pretty
+#         simple and they should always be rewritten.
+#
+#     Rule 2 - User's Locale
+#         Right now there are eight separate command line options that let the user
+#         specify strings that will be used as prefixes, suffixes, and separators in
+#         the ADDR, BYTE, and TEXT fields in the final dump. Rather than restricting
+#         those strings to ASCII, all that's required is they consist of characters
+#         that are printable in the user's locale. It guarantees the initialization
+#         code can just count characters (in the user's local) and be certain each
+#         one will be printed in the final dump - it's an important assumption that
+#         simplifies the job of aligning columns and calculating the exact width of
+#         each bytedump field.
+#
+#         The user's locale could be anything, so the only reasonable way to check
+#         is with character classes. In this script that means using bash's [:print:]
+#         character class to validate the arguments that the user supplied to those
+#         options. Java regular expressions would use a character class that looked
+#         something like \p{Print} to accomplish the same thing.
+#
+#         NOTE - if you're curious take a look at the code that handles command line
+#         options like --addr-prefix or --byte-separator. In fact, comparing how the
+#         bash and Java bytedump implementations handle those eight options is easy
+#         and probably would also be a useful exercise.
+#
+#     Rule 3 - User's Locale
+#         The first two rules cover almost all of the regular expressions that you'll
+#         find in this script. I'm pretty sure there are only three left - two match
+#         a string of hex digits and the other matches a decimal number. All three of
+#         them are in bash-specific code that's not in the Java version and won't be
+#         needed in any other version of bytedump. The [:xdigit:] character class is
+#         always locale-independent, but that guarantee doesn't extend to [:digit:]
+#         or character ranges, so in the interest of consistency I use explicit lists
+#         of ASCII characters in all three regular expressions.
+#
+#         NOTE - an easy way to find the three regular expressions is to type
+#
+#             /EXTERNAL
+#
+#         in vim and keep searching until you find all of the blocks of code that use
+#         regular expressions that run in the user's locale. That search also matches
+#         the code that handles the eight command line options (mentioned in the last
+#         rule) that have to run in the user's locale.
+#
+# Finally, I want to end this section by emphasizing the fact that if you're reading
+# a bash script that uses regular expressions but doesn't deal with locales, then you
+# may not know what those regular expressions are matching. It's subtle and doesn't
+# necessarily mean you have to be able to list every matched character, but it also
+# shouldn't be particularly reassuring if the script used bash regular expressions to
+# validate user input. Anyway, that's all I'm going to say on this subject, because
+# I'm just not qualified to take it any farther.
 #
 
 ##############################
@@ -2797,7 +2952,7 @@ Initialize2_Fields() {
 
     #
     # Need to use the right locale if we're going to count characters in strings
-    # that are part of the dump we generate.
+    # that are part of the dump we generate (using parameter length expansion).
     #
 
     LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"
@@ -2845,7 +3000,7 @@ Initialize2_Fields() {
 
     #
     # Need to use the right locale if we're going to count characters in strings
-    # that are part of the dump we generate.
+    # that are part of the dump we generate (using parameter length expansion).
     #
 
     LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"
@@ -2956,7 +3111,7 @@ Initialize2_Fields() {
 
     #
     # Need to use the right locale if we're going to count characters in strings
-    # that are part of the dump we generate.
+    # that are part of the dump we generate (using parameter length expansion).
     #
 
     LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"
@@ -3648,6 +3803,9 @@ Options() {
                 fi;;
 
             --addr-prefix=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[ADDR.prefix]="$optarg"
                 else
@@ -3655,6 +3813,9 @@ Options() {
                 fi;;
 
             --addr-suffix=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[ADDR.suffix]="$optarg"
                 else
@@ -3727,6 +3888,9 @@ Options() {
                 fi;;
 
             --byte-prefix=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[BYTE.prefix]="$optarg"
                 else
@@ -3734,6 +3898,9 @@ Options() {
                 fi;;
 
             --byte-separator=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[BYTE.separator]="$optarg"
                 else
@@ -3741,6 +3908,9 @@ Options() {
                 fi;;
 
             --byte-suffix=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[BYTE.suffix]="$optarg"
                 else
@@ -3906,6 +4076,9 @@ Options() {
                 fi;;
 
             --text-prefix=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[TEXT.prefix]="$optarg"
                 else
@@ -3913,6 +4086,9 @@ Options() {
                 fi;;
 
             --text-suffix=)
+                #
+                # Intentionally uses a subshell to make sure LC_ALL change isn't permanent.
+                #
                 if (LC_ALL="${SCRIPT_LC_ALL[EXTERNAL]}"; [[ $optarg =~ ^([[:print:]])*$ ]]); then
                     SCRIPT_STRINGS[TEXT.suffix]="$optarg"
                 else
