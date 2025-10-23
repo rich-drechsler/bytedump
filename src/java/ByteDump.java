@@ -2490,11 +2490,6 @@ class ByteDump {
         // only happens when --debug=addresses was a command line option, String.format()
         // will be used to build all addresses.
         //
-        //
-        // NOTE - addresses are built by dumpFormattedAddress(), so that's where to look
-        // for more details. When addrMap is null, which happens when --debug=addresses
-        // is used on the commamd line, dumpFormattedAddress() uses String.format().
-        //
 
         if (DEBUG_addresses == false) {         // --debug=addresses sets it to true
             if (addrMap == null) {
