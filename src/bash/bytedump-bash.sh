@@ -579,7 +579,7 @@
 
 ##############################
 #
-# Regular Expressions
+# About Regular Expressions
 #
 ##############################
 
@@ -669,7 +669,7 @@
 # out exactly which characters are matched. However, if a range like [a-z] appears in
 # a regular expression and you're not sure about the locale (probably because it was
 # inherited from the user's environment) then there's really no way for you to list
-# the characters that [a-z] matches until bash runs the script.
+# the characters that [a-z] matches until someone runs the bash script.
 #
 # Character classes and ranges are convenient ways to represent sets of characters,
 # but hopefully the last few paragraphs convinced you they're not always appropriate

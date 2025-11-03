@@ -92,16 +92,25 @@ import java.util.Scanner;
  *      global locale variables, like LC_ALL, that control what [:print:] matches are
  *      exactly aligned with what your script wants (whenever that regular expression
  *      is used). Unfortunately, just examining the code that's "close to" the regular
- *      expression usually won't tell you what's stored in the global locale variables
+ *      expression likely won't tell you what's stored in the global locale variables
  *      that decide what [:print:] matches.
  *
  *   About Regular Expressions
+ *      Java regular expressions are solid and well behaved, and they're not plagued
+ *      by annoying locale issues that can affect bash regular expressions. They also
+ *      support the common regular expression syntax that's discussed in the block of
+ *      comments that you'll find by searching for "About Regular Expressions" in the
+ *      bash version of bytedump.
  *
- *      The bash version of bytedump listed a few "rules" that it imposed on regular
- *      expressions. The ultimate goal of those rules was to restrict the syntax used
- *      to write individual bash regular expressions to a syntax that would "resemble"
- *      the way corresponding regular expressions in bytedump implementations written
- *      in different languages, like Java.
+ *      The goal, that's hopefully explained in that block of comments, was to end up
+ *      with lots of bash regular expressions that were trivial to translate directly
+ *      into Java regular expressions. Most regular expressions in the bash version
+ *      fit into this category, and in each one the differences between corresponding
+ *      Java and bash regular expressions can be traced to how they're represented in
+ *      each language. In Java version of bytedump they're all string literals, while
+ *      in the bash version they're all built from the characters that follow the =~
+ *      regex matching operator. If you're comfortable reading bash and Java code then
+ *      differences, like escapes and quoting, should be pretty easy to understand.
  *
  *      More...
  *
