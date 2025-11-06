@@ -100,19 +100,37 @@ import java.util.Scanner;
  *      by annoying locale issues that can affect bash regular expressions. They also
  *      support the common regular expression syntax that's discussed in the block of
  *      comments that you'll find by searching for "About Regular Expressions" in the
- *      bash version of bytedump.
+ *      bash bytedump script. One thing to keep in mind is that the bash version came
+ *      first and I didn't put much thought into writing regular expressions in other
+ *      languages until I started working on the Java version. In fact, everything in
+ *      that block of comments was written after I had a working Java implementation,
+ *      so it just documents what exists rather than outlining a "master plan".
  *
  *      The goal, that's hopefully explained in that block of comments, was to end up
  *      with lots of bash regular expressions that were trivial to translate directly
  *      into Java regular expressions. Most regular expressions in the bash version
  *      fit into this category, and in each one the differences between corresponding
  *      Java and bash regular expressions can be traced to how they're represented in
- *      each language. In Java version of bytedump they're all string literals, while
- *      in the bash version they're all built from the characters that follow the =~
- *      regex matching operator. If you're comfortable reading bash and Java code then
- *      differences, like escapes and quoting, should be pretty easy to understand.
+ *      each language. In the Java version of bytedump they're string literals, while
+ *      in the bash implementation almost all regular expressions are built from the
+ *      characters that follow the =~ regex matching operator. If you're comfortable
+ *      reading bash and Java code then differences, like escape sequences and quotes,
+ *      should be pretty easy to understand.
  *
- *      More...
+ *      Despite any complaints, I really do appreciate how convenient bash's regular
+ *      expression matching can be. In a single bash if-statement a script can match
+ *      a string against a regular expression, find out whether that match succeeded
+ *      or failed, choose exactly what's executed based on the result of that match,
+ *      and as a bonus, automatically collect all the matched subexpressions. That's
+ *      a lot, and even though Java regular expressions can handle each piece, doing
+ *      all of them in a single Java if-statement that "resembles" the bash approach
+ *      was an enjoyable puzzle that I think turned out reasonably well.
+ *
+ *      My answer to that puzzle can be found in the RegexManager.java file, and if
+ *      you want more details take a look at the big block of comments at the start
+ *      of that file. In fact, there are so many places where regular expressions are
+ *      used that a careful look at RegexManager.java might be worthwhile if you're
+ *      really interested in understanding the Java implementation of bytedump.
  *
  * Just like the bash version, the source code in this class file is organized into
  * sections that are discussed next. All of the top-level headings in the next block
@@ -121,7 +139,7 @@ import java.util.Scanner;
  * comment that shows you where that section starts in the source code.
  *
  * So here are the sections, listed in the same order that you'll find them in the
- * source code, along with some of the "rules" I tried to follow in this class file:
+ * source code, along with a few sentences about each section:
  *
  *   ByteDump Fields
  *      These are the static fields that belong to this class. Instance fields would
@@ -140,8 +158,36 @@ import java.util.Scanner;
  *      separating the capabilities of Java and bash.
  *
  *   Error Methods
+ *      The Java code that was designed to handle errors in this application can be
+ *      found in Terminator.java, so that's where to look for the low level details.
+ *      The methods defined in this section are simple convenience methods that make
+ *      sure the Terminator.errorHandler() method is called with the arguments that
+ *      arrange to print the appropriate error message right before the application
+ *      exits.
+ *
+ *      The low level details involved in gracefully shutting down a Java application
+ *      are a little trickier than you might expect. If you're curious take a look at
+ *      the methods defined in this section, the main() method defined in this class,
+ *      and the Terminator.errorHandler() method that's defined in Terminator.java.
  *
  *   Helper Methods
+ *      Some short methods that are occasionally useful in this class, but don't have
+ *      counterparts in the bash version of bytedump. They're all fairly simple, but
+ *      about half of them rely on Java reflection, and if that's a topic you're not
+ *      familiar with then you'll probably find some of these methods confusing.
+ *
+ *      My guess is most Java programmers have never used reflection, so don't worry
+ *      if you belong to that set - I doubt you really need a solid understanding of
+ *      it to read this class. However, if you have a strong Java foundation and just
+ *      want to learn more about reflection then
+ *
+ *          https://docs.oracle.com/javase/tutorial/reflect/index.html
+ *
+ *      and
+ *
+ *          https://docs.oracle.com/javase/8/docs/api/
+ *
+ *      should be good references.
  *
  */
 
@@ -814,14 +860,24 @@ class ByteDump {
     //
     // Values stored in the ANSI_ESCAPE StringMap are the ANSI escape sequences used
     // to selectively change the foreground and background attributes (think colors)
-    // of character strings displayed in the BYTE and TEXT fields.
+    // of character strings displayed in the BYTE and TEXT fields. They're used in
+    // initialize5_Attributes() to surround individual character strings in the BYTE
+    // or TEXT field mapping arrays with the ANSI escape sequences that enable and
+    // then disable (i.e., reset) the requested attribute.
+    //
+    // Values assigned to the keys defined in ANSI_ESCAPE that start with FOREGROUND
+    // are ANSI escape sequences that set foreground attributes, while values assigned
+    // to the keys that start with BACKGROUND are ANSI escapes that set the background
+    // attributes. Take a look at
+    //
+    //     https://en.wikipedia.org/wiki/ANSI_escape_code
+    //
+    // if you want more information about ANSI escape codes.
     //
     // NOTE - StringMap is a HashMap extension that requires keys and values that are
     // Strings and has a varargs constructor. That constructor is why initialization
     // of ANSI_ESCAPE and the SCRIPT_ANSI_ESCAPE bash associative array resemble each
-    // other.
-    //
-    // NOTE - there was much more to the StringMap class when I began converting the
+    // other. There was much more to the StringMap class when I began converting the
     // bash version to Java, but now this is the only place StringMap is used.
     //
 
@@ -2148,6 +2204,12 @@ class ByteDump {
             }
         }
 
+        //
+        // Unlike the bash version, counting the extra characters that print in the ADDR
+        // field of the dump is trivial and locale independent, but only because we made
+        // sure (in the option handling code) that all those characters are printable.
+        //
+
         ADDR_prefix_size = ADDR_prefix.length();
         ADDR_suffix_size = ADDR_suffix.length();
         ADDR_field_separator_size = ADDR_field_separator.length();
@@ -2203,6 +2265,12 @@ class ByteDump {
                 internalError("text output", delimit(TEXT_output), "has not been implemented");
                 break;
         }
+
+        //
+        // Unlike the bash version, counting the extra characters that print in the TEXT
+        // field of the dump is trivial and locale independent, but only because we made
+        // sure (in the option handling code) that all those characters are printable.
+        //
 
         TEXT_prefix_size = TEXT_prefix.length();
         TEXT_suffix_size = TEXT_suffix.length();
@@ -2271,6 +2339,12 @@ class ByteDump {
                 internalError(delimit(BYTE_map), "is not recognized as a BYTE field mapping array name");
             }
         }
+
+        //
+        // Unlike the bash version, counting the extra characters that print in the TEXT
+        // field of the dump is trivial and locale independent, but only because we made
+        // sure (in the option handling code) that all those characters are printable.
+        //
 
         BYTE_prefix_size = BYTE_prefix.length();
         BYTE_suffix_size = BYTE_suffix.length();
@@ -2733,6 +2807,11 @@ class ByteDump {
                         // Implementation here, and in some of the other cases, could easily be
                         // simplified, but the goal in this version of the bytedump program is
                         // to make it "resemble" the bash implementation.
+                        //
+                        // NOTE - most Java programs would use defined String constants instead
+                        // of String literals in code like this. This approach keeps everything
+                        // much closer to the bash version, which was my main goal, even though
+                        // it eliminates some pretty easy compile time error checking.
                         //
                         style = groups[1];
                         format_width = groups[3];
@@ -3514,7 +3593,7 @@ class ByteDump {
         // code from this class. Definitely not a big deal, but this is really easy.
         //
 
-        return(new Object(){}.getClass().getEnclosingClass());          // anonymous class
+        return(new Object(){}.getClass().getEnclosingClass());          // an anonymous class
     }
 
 

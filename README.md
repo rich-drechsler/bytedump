@@ -113,7 +113,8 @@ the files that I think might be most interesting and/or easiest come first.
         Error support class that's used to "gracefully" stop a Java application.
 
     src/java/launcher_template.sh
-        Bash script that "launches" a Java application.
+        Bash script that "launches" a Java application - I believe it's a decent
+        example of what bash really should be used for.
 
     src/java/ByteDump.java
         The Java bytedump version - it "resembles" the bash version.
@@ -126,4 +127,6 @@ the script are comments that I hope help anyone who decides to take a closer loo
 the source code. Many of the comments try to explain what I was thinking when I wrote
 portions of the bash script, so if you don't agree with my thoughts you won't have to
 waste time deciphering chunks of bash code just to decide the author really was crazy.
+There really are enough comments, particularly at the start of `bytedump-bash.sh`, that
+you probably can make that decision without looking at any bash code.
 

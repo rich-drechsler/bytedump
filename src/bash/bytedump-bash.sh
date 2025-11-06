@@ -568,7 +568,7 @@
 # the script works and it tries hard to check any input that comes from the command
 # line and generate useful output that's not always ASCII. LC_ALL is used to manage
 # locales, but it has to be adjusted in places that aren't at all obvious. An easy
-# way for you to find where I decided to change LC_ALL is to type
+# way for you to find where I decided to toggle LC_ALL is to type
 #
 #     /LC_ALL="
 #
@@ -770,7 +770,7 @@
 # necessarily mean you have to be able to list every matched character, but it also
 # shouldn't be particularly reassuring if the script used bash regular expressions to
 # validate user input. Anyway, that's all I'm going to say on this subject, because
-# I'm just not qualified to take it any farther.
+# I'm really not qualified to take it any farther.
 #
 
 ##############################
@@ -1324,11 +1324,11 @@ declare -a SCRIPT_BYTE_MAP=()
 #
 # The values assigned to the keys defined in SCRIPT_ANSI_ESCAPE that start with
 # FOREGROUND are ANSI escape sequences that set foreground attributes, while the
-# the values assigned to the keys that start with BACKGROUND are the ANSI escapes
-# that set background attributes. Values are all strings that are created using
-# Bash's ANSI-C style quoting (i.e., $'string'), which automatically translates
-# each occurrence of \e into the unprintable escape character that starts every
-# ANSI escape sequence. Take a look at
+# values assigned to the keys that start with BACKGROUND are ANSI escapes that
+# set background attributes. Values are all strings that are created using Bash's
+# ANSI-C style quoting (i.e., $'string'), which will automatically translate each
+# occurrence of \e into the unprintable escape character that starts every ANSI
+# escape sequence. Take a look at
 #
 #     https://en.wikipedia.org/wiki/ANSI_escape_code
 #
@@ -2451,9 +2451,9 @@ Dump() {
     # it probably could be done.
     #
     # NOTE - the selection of the "handler" was originally done by modifying the
-    # the value stored in SCRIPT_STRINGS[DEBUG.dump]. That approach got a little
-    # more complicated after I decided the SCRIPT_STRINGS array would be readonly
-    # after all the initialization finished. No big deal either way.
+    # value stored in SCRIPT_STRINGS[DEBUG.dump]. That approach got a little more
+    # complicated after I decided the SCRIPT_STRINGS array would be readonly after
+    # all the initialization finished. No big deal either way.
     #
 
     if [[ -n ${SCRIPT_STRINGS[DUMP.handler]} ]]; then
@@ -2851,9 +2851,9 @@ Initialize1_Begin() {
     #
     # We're completely finished with the command line options, so we can combine
     # the foreground and background attributes stored in separate arrays in the
-    # the global SCRIPT_ATTRIBUTES array. Combining all of the attributes in one
-    # array simplifies the code that eventually has to apply the attributes, but
-    # also means we can set fields (BYTE.has.attributes and TEXT.has.attributes)
+    # global SCRIPT_ATTRIBUTES array. Combining all of the attributes in an array
+    # simplifies the code that eventually has to apply the attributes, but also
+    # means we can set fields (i.e., BYTE.has.attributes and TEXT.has.attributes)
     # in SCRIPT_STRINGS that Initialize2_Fields uses to help decide if a mapping
     # array is needed.
     #
