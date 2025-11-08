@@ -94,7 +94,7 @@ MAKEFLAGS := --no-print-directory
 INSTALLDIR := ../image
 INSTALL := install
 
-SOURCEDIRS := bash java
+SRCDIRS := bash java
 
 ####################
 #
@@ -143,7 +143,7 @@ all install clean clobber testfiles validate :
 	    # specific bytedump implementation with a makefile that recognizes all of the \
 	    # targets of this rule. \
 	    # \
-	    for DIR in $(SOURCEDIRS); do \
+	    for DIR in $(SRCDIRS); do \
 	        if [ -d "$${DIR}" ] && [ -f "$${DIR}/$(MAKEFILE)" ]; then \
 		    cd "$${DIR}"; \
 		    echo "==== Making $@ in directory $${PWD} ===="; \
