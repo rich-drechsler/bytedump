@@ -1,4 +1,4 @@
-## GNU Make
+# GNU Make
 
 Small shell scripts do the grunt work in makefiles, but familiarity with bash (or
 any other shell) doesn't mean you'll be able to understand makefiles. Make always
@@ -18,7 +18,7 @@ used the makefiles. They were subtle problems that I just didn't notice for quit
 a while - I'll provide more details when I discuss makefile comments later in this
 document.
 
-### The Manual
+## The Manual
 
 The GNU make manual, which can be found at the URL
 
@@ -32,7 +32,7 @@ sure it knows you want information about GNU make (aka gmake). In this document,
 section references and quotations can currently (11/10/25) be found by pointing
 your browser at the manual's URL.
 
-### The SHELL Variable
+## The SHELL Variable
 
 I don't remember when I first encountered make, but it probably happened in 1981
 or 1982, so it must have been a direct descendant of AT&T's original version. At
@@ -75,7 +75,7 @@ but you may not agree or even know what you can and can't say to a Bourne or POS
 shell. In that case I expect almost any chatbot you choose could give you all the
 help you need.
 
-### Variable Names
+## Variable Names
 
 If you poke around in the GNU make manual you'll find the following description of
 variable names
@@ -92,16 +92,16 @@ I was surprised - the "huge" character set allowed in variable names is somethin
 had never noticed. However, I can't think of one reason to use the entire character
 set, so all of the variables in these makefiles have names that a shell would also
 be happy with. If you need a refresher, check the man page for a shell (e.g., sh.1)
-and you'll undoubtedly find wording something like,
+and you should find wording something like,
 
   > Variables set by the user must have a name consisting solely of alphabetics,
   > numerics, and underscores - the first of which must not be numeric.
 
 as the description of characters that are allowed in shell variable names. I don't
-recall ever needing a makefile variable name that wasn't included in this character
+recall ever needing a makefile variable name that wasn't covered by this character
 set.
 
-### Setting Variables
+## Setting Variables
 
 After you've picked a name for a makefile variable you'll want to assign a value to
 it. GNU make supports a pretty confusing collection of assignment operators that are
@@ -124,22 +124,22 @@ in this document. Fortunately, the only assignment operator used by the makefile
 this repository is `:=`, and if you just pretend it works something like the shell's
 assignment operator (without any quoting) you'll probably be fine.
 
-### Using Variables
+## Using Variables
 
 GNU make lets you use `$(VARNAME)` or `${VARNAME}` to reference makefile variables,
 but two visually similar choices, particularly when `${VARNAME}` was claimed by the
-Bourne shell in 1979, seems like a lousy idea.
+original Bourne shell (in 1979), seems like a lousy idea.
 
 According to ChatGPT, the `${VARNAME}` syntax was added to GNU make (in about 1997)
 to align it with POSIX standards for `make`. Before that, `$(VARNAME)` was the only
 way to reference makefile variables, and it's the only syntax that the makefiles in
-this repository use to access the value stored in a makefile variable. So if you see
-`${VARNAME}` in a makefile, it's either a careless mistake or it's in a recipe (i.e.,
+this repository use to access the value stored in a makefile variable. So, if you see
+`${VARNAME}` in a makefile it's either a careless mistake or it's in a recipe (i.e.,
 shell code) and when you "zoom out a bit" you should see `$${VARNAME}` - two dollar
 signs are the escape sequence that you have to use in makefile recipes whenever you
 want to pass a single dollar sign to the shell.
 
-### Rules
+## Rules
 
 Most of what you see in a makefile are "rules" that look like
 
@@ -149,16 +149,17 @@ Most of what you see in a makefile are "rules" that look like
 They're what make uses to decide what to do (targets), when to do it (prerequisites),
 and how it's supposed to be done (recipes). The GNU make manual discusses all three
 components, so that's where to go for all the details. I'm only going to talk about
-recipes, because that's where you'll find the shell code that does the real work.
+recipes in this document, because that's where you'll find the shell code that does
+the real work.
 
-### Recipes
+## Recipes
 
 Recipes are where make's infamous tabs comes into play. Lines that follow the targets
 and start with a tab are included in the rule's recipes, which end when make finds a
 line that doesn't start with a tab. No tab indented lines means there's nothing for
 make to do - it's allowed, but GNU make lets you know when that happens.
 
-### Comments
+## Comments
 
 Makefiles contain text that's either consumed by make or just preprocessed before
 it's handed to the shell. Both programs (GNU make and the shell) support comments
@@ -168,7 +169,7 @@ in a makefile that ends with an unescaped backslash is continued on the next lin
 It's a difference between make and shell comments that's documented in the manual,
 but isn't something that's used in any of the makefiles in this repository.
 
-### Comments In Variable Definitions
+## Comments In Variable Definitions
 
 More annoying is what happens when you add a comment to the end of a line, like
 the definition of a makefile variable. For example, adding a short comment on the
