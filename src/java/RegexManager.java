@@ -21,7 +21,7 @@ import java.util.TreeSet;
 
 /*
  * This class was used to help convert the bash implementation of bytedump to a Java
- * version. My goal, when I eventually started working on the conversion was a Java
+ * version. My goal, when I eventually started working on the conversion, was a Java
  * class (currently ByteDump) that resembled the bytedump bash script closely enough
  * that understanding one implementation would be useful if you decided to dig into
  * the other. Regular expressions pop up all over the place in the bash version of

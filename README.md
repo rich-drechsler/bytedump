@@ -14,14 +14,13 @@ than the bash script. Both versions are available in this repository and if I ge
 time I plan on adding implementations in a few more languages (e.g., Python, Rust,
 or C).
 
-Unfortunately I haven't been able to spend more than a day or two each week (for
-about the last month) working on bytedump "documentation", so everything's taking
-much longer than I had estimated. My apologies for the delay, but at this point
-Thanksgiving (11/27/25) looks like a realistic date. The existing bash and Java
-implementations seem to work well and I don't expect to make significant changes
-to any of the source code in this repository. What I think is missing are comments
-and Markdown "documentation" that I hope will help if you choose to look at any of
-the source code.
+Unfortunately I'm still having trouble finding time to finish the documentation. At
+this point my best estimate is I'll need a few more weeks, so Christmas sounds like
+a realistic date. My apologies for all the delays, but the existing bash and Java
+implementations seem to work well and I don't expect to make significant changes to
+any of the source code in this repository. What I think is missing are comments and
+Markdown "documentation" that I hope will help if you choose to look at any of the
+source code.
 
 # Directories
 
