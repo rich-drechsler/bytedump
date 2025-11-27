@@ -1,4 +1,4 @@
-# Bytedump Source Directory
+## Bytedump Source Directory
 
 This is the source directory where you'll find the Java and bash implementations
 of an application named bytedump. The bash version has been available on GitHub
@@ -13,15 +13,15 @@ expect frequent updates over the next month or two. My hope is that the missing
 documentation (mostly comments in makefiles and the Java source code) can all be
 finished by the end of September 2025.
 
-# Makefiles
+## Makefiles
 
 More...
 
-# Bash Version
+## Bash Version
 
 More...
 
-# Java Version
+## Java Version
 
 I think what's here works and I'm reasonably satisfied with the new Java version,
 but you'll undoubtedly have to work harder than I originally hoped to follow the
@@ -45,14 +45,14 @@ and
 files - even though they're completely different languages I think you'll be able
 see some similarity.
 
-# Coming Someday (maybe)...
+## Coming Someday (maybe)...
 
 Implementations in languages, like Python, Rust, or C, but the bash constraint
 that I imposed on the existing Java version will undoubtedly be dropped. Right
 now my only plans are to finish the Java and makefile documentation. After that
 I may try another language.
 
-# Chatbot Inquisitions
+## Chatbot Inquisitions
 
 One thing I originally wanted to do was see how well chatbots handled the job of
 "translating" the bash version into Java. I wasn't at all interested in watching

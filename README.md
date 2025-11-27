@@ -1,4 +1,4 @@
-# ByteDump
+## ByteDump
 
 Right now, what you'll find in this repository are the Java and bash implementations
 of a program that can be used to dump the bytes in a file. My purpose here isn't to
@@ -22,7 +22,7 @@ any of the source code in this repository. What I think is missing are comments 
 Markdown "documentation" that I hope will help if you choose to look at any of the
 source code.
 
-# Directories
+### Directories
 
 You'll find the following directories in this repository:
 
@@ -34,7 +34,7 @@ You'll find the following directories in this repository:
 Implementations in any additional languages will be stored in directories that, just
 like the bash and Java versions, identify the language.
 
-# Makefiles
+### Makefiles
 
 The makefiles
 
@@ -57,7 +57,7 @@ every makefile in this repository assumes you meant
 That's often what happens in makefiles, but the choice of the "default target" is
 always completely controlled by each makefile.
 
-## Executables
+### Executables
 
 You can use any of the makefiles, but you have to be in the same directory as the
 one you plan on using. For example (assuming you're in the same directory as this
@@ -78,7 +78,7 @@ and you'll get the default dump of that file. If you want documentation type
 and a pretty complete description of the bytedump program and the supported command
 line options will print on standard output.
 
-## Installation
+### Installation
 
 Being able to build and run different language dependent bytedump implementations
 from their source directories is convenient if you're a programmer, but being able
@@ -100,7 +100,7 @@ The name of the top level installation directory doesn't matter. There's no reco
 of it in any of the installed files, so you can move it anywhere you want and all
 the installed bytedump executables will continue to work.
 
-# Source Files
+### Source Files
 
 Here are a few source files that you may want to look at. I've ordered the list so
 the files that I think might be most interesting and/or easiest come first.

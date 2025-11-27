@@ -1,4 +1,4 @@
-# Bytedump - Bash Version
+## Bytedump - Bash Version
 
 This is a big bash script, filled with comments, that basically just postprocesses
 the output of xxd. Even though it works (on Linux) it's definitely not supposed to
@@ -7,7 +7,7 @@ is that parts of the source code might be useful to people writing bash scripts.
 think there are some worthwhile things in the script - maybe some of those comments
 will help you find and follow them.
 
-# Why Bash?
+### Why Bash?
 
 Several years ago I wanted a quick way to illustrate what's stored on a hard drive
 (i.e., ones and zeros) without having to resort to the hex or octal representation
@@ -23,7 +23,7 @@ that I occasionally write for my own systems. The whole thing turned into a puzz
 and a real challenge - the bytedump-bash.sh script in this directory is my solution
 to that puzzle.
 
-# Where Did It Come From?
+### Where Did It Come From?
 
 This is a trivially modified version of the bytedump bash script that was stored in
 my public GitHub repository

@@ -1,11 +1,11 @@
-# Bytedump - Java Version
+## Bytedump - Java Version
 
 The Java version works and I'm satisfied with it, but I'm not at all happy with
 the state of the documentation (mostly comments in Java files and the makefile).
 My guess is I'll be able to finish all of the documentation by early September.
 Until then, expect frequent updates.
 
-# Interesting Files
+### Interesting Files
 
 The most interesting source code files probably are
 
@@ -31,7 +31,7 @@ need to look at the Makefile to see how it's used to build the
 
 bash script that launches the Java version of bytedump.
 
-# Building The Java Version
+### Building The Java Version
 
 Type
 
