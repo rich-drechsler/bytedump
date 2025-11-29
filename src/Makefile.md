@@ -145,25 +145,42 @@ They're what make uses to decide what to do (targets), when to do it (prerequisi
 and how it's supposed to be done (recipes). Prerequisites and recipes can be empty,
 but targets can't be. If a rule doesn't have any prerequisites make always runs its
 recipes; if a rule doesn't have any recipes make lets you know there's nothing to
-do - before it actually does nothing.
+do - before it actually does nothing. Eliminating that annoying noise is why rules
+in these makefiles that don't do anything contain a one line comment that explains
+the comment.
 
 The GNU make manual discusses all three components in great detail. Identifying and
 understanding a rule's targets and prerequisites isn't particularly difficult, so my
 plan is to ignore them and instead focus on how to decipher the makefile recipes that
 you'll find in this repository. Recipes end up as the shell code that does the real
-work, so if you can read makefile recipes you have a decent chance of understanding
-what a makefile is trying to do.
+work, so if you can read them recipes you have a decent chance of understanding what
+a makefile is trying to do.
 
 ### Recipes
 
-Reading makefile recipes can be difficult because they're a noisy mix of make and
+The makefile that you'll find in the same directory as this document is really just
+a small shell script that's masquerading as a makefile, and there's nothing it does
+that couldn't be easily handled by a standalone shell script. Despite that, I think
+it's an excellent reference for this section's topic and it's the makefile I'll use
+when I want to point you at recipe code that's available (so you can fiddle around
+with it) and really does work.
+
+There's only one rule in that makefile and I recommend you take a look at it as you
+read this section. Find that rule (it's simple) and make sure you recognize that it
+has 6 targets, no prerquisites, and about 60 lines of indented text that look like
+they "belong" to the rule. If forced, I'm sure you would guess that those 60 lines
+are the rule's "recipes", but to certain you need to verify that each indented line
+starts with a tab character. It's a check you can do in an editor like vim (as long
+as it's not automatically converting tabs into spaces) or by typing something like
+
+    cat -T Makefile | less
+
+and then looking for the character sequence ^I at the start of each indented line.
+
+Reading makefile recipes can be difficult because they're a strange mix of make and
 shell code that GNU make has to preprocess before anything is handed to the shell.
-So to understand recipes you have to know how GNU make translates them into shell
-code. The makefile that you'll find in the same directory as this document is just
-a small shell script that's masquerading as a makefile. Despite that, I think it's
-a very useful reference for this section's topic. It's the makefile I'll use when
-I want to point you at recipe code that really does work, so I recommend you look
-at that makefile while you're reading this section.
+A 60 line recipe is unusual, even if most of the lines are comments, but if you're
+not sure what's happening tackle one line at a time, starting at the first line.
 
 ### Comments
 
