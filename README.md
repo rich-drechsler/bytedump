@@ -14,13 +14,16 @@ than the bash script. Both versions are available in this repository and if I ge
 time I plan on adding implementations in a few more languages (e.g., Python, Rust,
 or C).
 
-Unfortunately I'm still having trouble finding time to finish the documentation. At
-this point my best estimate is I'll need a few more weeks, so Christmas sounds like
-a realistic date. My apologies for all the delays, but the existing bash and Java
-implementations seem to work well and I don't expect to make significant changes to
-any of the source code in this repository. What I think is missing are comments and
-Markdown "documentation" that I hope will help if you choose to look at any of the
-source code.
+Apparently I've found yet another convenient detour around the bytedump documentation
+that I eventually will finish. Sometime around 12/8/25 I decided to experiment a bit
+with Google's Gemini 3 and I was pleasantly surprised by what I found. At that time
+I probably was about 75% finished with the Makefile.md Markdown documentation, but
+since then I've been primarily focused on trying to decide whether Gemini 3 (with my
+guidance) could produce a Python implementation of bytedump that I would be willing
+to include in this repository. I don't know the answer yet, because I probably would
+insist that Gemini's Python implementation meet some unusual source code constraints.
+Anyway, at this point I'm not going to even try predict a date, and instead all I'll
+promise is that I will update this file when I know more.
 
 ### Directories
 
