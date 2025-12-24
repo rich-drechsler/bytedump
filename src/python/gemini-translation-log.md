@@ -3,7 +3,12 @@
 **Date:** December 2025
 **Participants:** Richard L. Drechsler (User) & Gemini (AI)
 
-> **Note:** This log documents the collaborative translation of `ByteDump` from Java to Python. Sections regarding file transfer technicalities have been omitted. Code blocks within this log have been trimmed for readability; the full source code is available in `bytedump.py`.
+> This log documents the collaborative translation of `ByteDump` from Java to Python. It's mostly
+> just a summary of some of the translation related sections in the original chat, which I shared
+> on 12/24/25 and I hope is still available at the
+> [shared chat's URL](https://gemini.google.com/share/c6f40305503f).
+> If you follow that link you probably will notice that a few of my queries were replaced by the
+> phrase **a sensitive query**, however in each case nothing significant was omitted.
 
 ---
 
