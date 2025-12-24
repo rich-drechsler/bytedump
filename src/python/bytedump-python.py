@@ -1123,9 +1123,10 @@ class ByteDump:
     @classmethod
     def dump_all(cls, input_stream, output) -> None:
         #
-        # This is the primary dump method.
+        # OPTIMIZED: Vectorized using list comprehensions and str.join()
         #
         if cls.DUMP_record_length > 0:
+            # Localize lookups for speed
             addr_prefix = cls.ADDR_prefix
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
             byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
@@ -1135,49 +1136,46 @@ class ByteDump:
             text_separator = cls.TEXT_separator
             text_suffix = cls.TEXT_suffix
             record_separator = cls.DUMP_record_separator
-
+            record_len = cls.DUMP_record_length
+            
             addr_enabled = (cls.ADDR_format is not None and len(cls.ADDR_format) > 0)
             byte_enabled = (cls.byteMap is not None)
             text_enabled = (cls.textMap is not None)
-
+            
             byte_map = cls.byteMap
             text_map = cls.textMap
+            
+            # Pre-calculate padding width per byte
+            byte_pad_width = 0
+            if byte_enabled and cls.BYTE_field_width > 0:
+                byte_pad_width = cls.BYTE_digits_per_octet + cls.BYTE_separator_size
 
-            # buffer = new byte[DUMP_record_length];
-            # In Python we read chunks
             address = cls.DUMP_output_start
 
             while True:
-                buffer = input_stream.read(cls.DUMP_record_length)
+                buffer = input_stream.read(record_len)
                 count = len(buffer)
                 if count <= 0:
                     break
                 
+                # 1. Address
                 if addr_enabled:
                     output.write(addr_prefix)
                     cls.dump_formatted_address(address, output)
                     output.write(addr_suffix)
 
+                # 2. Bytes
                 if byte_enabled:
                     output.write(byte_prefix)
-                    output.write(byte_map[buffer[0]])
-                    for index in range(1, count):
-                        output.write(byte_separator)
-                        output.write(byte_map[buffer[index]])
-                    
-                    if count < cls.DUMP_record_length and cls.BYTE_field_width > 0:
-                        # Need space padding
-                        padding_len = (cls.DUMP_record_length - count) * (cls.BYTE_digits_per_octet + cls.BYTE_separator_size)
-                        output.write(f"{'':>{padding_len}}")
-                    
+                    output.write(byte_separator.join([byte_map[b] for b in buffer]))
+                    if count < record_len and byte_pad_width > 0:
+                        output.write(" " * ((record_len - count) * byte_pad_width))
                     output.write(byte_suffix)
 
+                # 3. Text
                 if text_enabled:
                     output.write(text_prefix)
-                    output.write(text_map[buffer[0]])
-                    for index in range(1, count):
-                        output.write(text_separator)
-                        output.write(text_map[buffer[index]])
+                    output.write(text_separator.join([text_map[b] for b in buffer]))
                     output.write(text_suffix)
 
                 output.write(record_separator)
@@ -1190,23 +1188,24 @@ class ByteDump:
     @classmethod
     def dump_all_single_record(cls, input_stream, output) -> None:
         #
-        # Dumps the entire input file as a single record.
+        # OPTIMIZED: Single record dump
         #
         from io import StringIO
 
         output_byte = output
-        # If both enabled, buffer text output
+        # If both enabled, we must buffer text to print it AFTER all bytes
         output_text = StringIO() if (cls.byteMap is not None and cls.textMap is not None) else output
 
         if cls.DUMP_record_length == 0:
             addr_prefix = cls.ADDR_prefix
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
-            byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
+            
+            # These variables update as we loop (prefix becomes separator)
+            current_byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
             byte_separator = cls.BYTE_separator
-            byte_suffix = cls.BYTE_suffix + cls.BYTE_field_separator
-            text_prefix = cls.TEXT_indent + cls.TEXT_prefix
+            
+            current_text_prefix = cls.TEXT_indent + cls.TEXT_prefix
             text_separator = cls.TEXT_separator
-            text_suffix = cls.TEXT_suffix
 
             addr_enabled = (cls.ADDR_format is not None and len(cls.ADDR_format) > 0)
             byte_enabled = (cls.byteMap is not None)
@@ -1215,49 +1214,43 @@ class ByteDump:
             byte_map = cls.byteMap
             text_map = cls.textMap
 
-            # buffer = new byte[4096];
             chunk_size = 4096
             address = cls.DUMP_output_start
             looped = False
 
             while True:
                 buffer = input_stream.read(chunk_size)
-                count = len(buffer)
-                if count <= 0:
+                if not buffer:
                     break
                 
+                # Address prints only once at the very start
                 if addr_enabled:
                     output.write(addr_prefix)
                     cls.dump_formatted_address(address, output)
                     output.write(addr_suffix)
-                    addr_enabled = False # one record ==> one address
+                    addr_enabled = False 
 
                 if byte_enabled:
-                    output_byte.write(byte_prefix)
-                    output_byte.write(byte_map[buffer[0]])
-                    for index in range(1, count):
-                        output_byte.write(byte_separator)
-                        output_byte.write(byte_map[buffer[index]])
-                    byte_prefix = byte_separator
+                    output_byte.write(current_byte_prefix)
+                    output_byte.write(byte_separator.join([byte_map[b] for b in buffer]))
+                    # After first chunk, the prefix for the next chunk is the separator
+                    current_byte_prefix = byte_separator
 
                 if text_enabled:
-                    output_text.write(text_prefix)
-                    output_text.write(text_map[buffer[0]])
-                    for index in range(1, count):
-                        output_text.write(text_separator)
-                        output_text.write(text_map[buffer[index]])
-                    text_prefix = text_separator
+                    output_text.write(current_text_prefix)
+                    output_text.write(text_separator.join([text_map[b] for b in buffer]))
+                    current_text_prefix = text_separator
                 
                 looped = True
 
             if looped:
                 if byte_enabled:
-                    output.write(byte_suffix)
+                    output.write(cls.BYTE_suffix + cls.BYTE_field_separator)
                     if text_enabled:
                         output.write(output_text.getvalue())
-                        output.write(text_suffix)
+                        output.write(cls.TEXT_suffix)
                 else:
-                    output.write(text_suffix)
+                    output.write(cls.TEXT_suffix)
                 
                 output.write(cls.DUMP_record_separator)
                 output.flush()
@@ -1266,40 +1259,39 @@ class ByteDump:
 
     @classmethod
     def dump_byte_field(cls, input_stream, output) -> None:
+        #
+        # OPTIMIZED: Dump only byte field
+        #
         if cls.DUMP_record_length > 0:
             if cls.byteMap is not None:
                 byte_map = cls.byteMap
-                # buffer = new byte[DUMP_record_length]
+                record_len = cls.DUMP_record_length
                 
-                if (len(cls.BYTE_separator) > 0 or len(cls.BYTE_prefix) > 0 or 
-                    len(cls.BYTE_indent) > 0 or len(cls.BYTE_suffix) > 0):
-                    
+                # Check if we have complex formatting (prefixes, suffixes, etc.)
+                complex_fmt = (len(cls.BYTE_separator) > 0 or len(cls.BYTE_prefix) > 0 or 
+                               len(cls.BYTE_indent) > 0 or len(cls.BYTE_suffix) > 0)
+                
+                if complex_fmt:
                     byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
                     byte_separator = cls.BYTE_separator
                     byte_suffix = cls.BYTE_suffix + cls.DUMP_record_separator
                     
                     while True:
-                        buffer = input_stream.read(cls.DUMP_record_length)
-                        count = len(buffer)
-                        if count <= 0:
-                            break
+                        buffer = input_stream.read(record_len)
+                        if not buffer: break
                         
                         output.write(byte_prefix)
-                        output.write(byte_map[buffer[0]])
-                        for index in range(1, count):
-                            output.write(byte_separator)
-                            output.write(byte_map[buffer[index]])
+                        output.write(byte_separator.join([byte_map[b] for b in buffer]))
                         output.write(byte_suffix)
                 else:
+                    # Super fast path: no separators, just join bytes directly
                     record_separator = cls.DUMP_record_separator
                     while True:
-                        buffer = input_stream.read(cls.DUMP_record_length)
-                        count = len(buffer)
-                        if count <= 0:
-                            break
+                        buffer = input_stream.read(record_len)
+                        if not buffer: break
                         
-                        for index in range(count):
-                            output.write(byte_map[buffer[index]])
+                        # Join with empty string
+                        output.write("".join([byte_map[b] for b in buffer]))
                         output.write(record_separator)
                 
                 output.flush()
@@ -1316,34 +1308,34 @@ class ByteDump:
         if cls.addrMap is not None:
             length = len(cls.addrBuffer)
             offset = length - cls.ADDR_digits
-            
+
             # Reset buffer to padding character (simulated by copying)
             # In Python, lists are mutable, so we can use that.
             # Java: addrBuffer[index] = ...
-            
+
             # We need a fresh copy or reset of logic because Python strings immutable
             # But cls.addrBuffer is a list of characters in our translation?
             # Step 1 didn't init it, Step 2 defined it as Optional[List[str]].
             # Initialize4_Maps will fill it.
-            
+
             # Assuming addrBuffer is a list of characters like ['0', '0', ...]
-            local_buffer = list(cls.addrBuffer) 
+            local_buffer = list(cls.addrBuffer)
 
             if address > 0:
                 index = length
                 radix = cls.ADDR_radix
-                
+
                 # Logic mirroring the switch(ADDR_radix)
                 while address > 0:
                     index -= 1
                     local_buffer[index] = cls.addrMap[int(address % radix)]
                     address //= radix
-                
+
                 if offset < index:
                     output.write("".join(local_buffer[offset : offset + cls.ADDR_digits]))
                 else:
                     output.write("".join(local_buffer[index : length]))
-            
+
             elif address == 0:
                 local_buffer[length - 1] = '0'
                 output.write("".join(local_buffer[offset : offset + cls.ADDR_digits]))
@@ -1357,39 +1349,36 @@ class ByteDump:
 
     @classmethod
     def dump_text_field(cls, input_stream, output) -> None:
+        #
+        # OPTIMIZED: Dump only text field
+        #
         if cls.DUMP_record_length > 0:
             if cls.textMap is not None:
                 text_map = cls.textMap
+                record_len = cls.DUMP_record_length
                 
-                if (len(cls.TEXT_separator) > 0 or len(cls.TEXT_prefix) > 0 or 
-                    len(cls.TEXT_indent) > 0 or len(cls.TEXT_suffix) > 0):
-                    
+                complex_fmt = (len(cls.TEXT_separator) > 0 or len(cls.TEXT_prefix) > 0 or 
+                               len(cls.TEXT_indent) > 0 or len(cls.TEXT_suffix) > 0)
+                
+                if complex_fmt:
                     text_prefix = cls.TEXT_indent + cls.TEXT_prefix
                     text_separator = cls.TEXT_separator
                     text_suffix = cls.TEXT_suffix + cls.DUMP_record_separator
                     
                     while True:
-                        buffer = input_stream.read(cls.DUMP_record_length)
-                        count = len(buffer)
-                        if count <= 0:
-                            break
+                        buffer = input_stream.read(record_len)
+                        if not buffer: break
                         
                         output.write(text_prefix)
-                        output.write(text_map[buffer[0]])
-                        for index in range(1, count):
-                            output.write(text_separator)
-                            output.write(text_map[buffer[index]])
+                        output.write(text_separator.join([text_map[b] for b in buffer]))
                         output.write(text_suffix)
                 else:
                     record_separator = cls.DUMP_record_separator
                     while True:
-                        buffer = input_stream.read(cls.DUMP_record_length)
-                        count = len(buffer)
-                        if count <= 0:
-                            break
+                        buffer = input_stream.read(record_len)
+                        if not buffer: break
                         
-                        for index in range(count):
-                            output.write(text_map[buffer[index]])
+                        output.write("".join([text_map[b] for b in buffer]))
                         output.write(record_separator)
                 
                 output.flush()
