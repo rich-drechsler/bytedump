@@ -43,7 +43,7 @@ class AttributeTables(dict):
     def __init__(self, *keys: str):
         super().__init__()
         self.registered_keys = set()
-        
+
         if len(keys) > 0:
             for key in keys:
                 if key is not None:
@@ -62,7 +62,7 @@ class AttributeTables(dict):
             prefix = prefix if prefix is not None else ""
             elements = ""
             separator = ""
-            
+
             for index in range(len(table)):
                 value = table[index]
                 if value is not None:
@@ -71,7 +71,7 @@ class AttributeTables(dict):
                     elements += f"{separator}{prefix}  {'[' + str(index) + ']':>5}=\"{value}\""
                     separator = "\n"
                     count += 1
-            
+
             if count > 0:
                 sys.stderr.write(f"{prefix}{key}[{count}]:\n")
                 sys.stderr.write(f"{elements}\n")
@@ -89,7 +89,7 @@ class AttributeTables(dict):
                 raise ValueError("Key cannot be None")
         else:
             raise ValueError(f"{key} is not a key that was registered by the constructor.")
-        
+
         return table
 
 ################################################################################
@@ -100,7 +100,7 @@ class RegexManager:
     """
     Mirrors RegexManager.java: Wraps regex operations to resemble Java/Bash behavior.
     """
-    
+
     # Python 're' doesn't support Java's \p{Prop} syntax. We map commonly used ones.
     UNICODE_CHARACTER_CLASS = 0  # Placeholder, not strictly needed in Python 're'
     FLAGS_DEFAULT = 0
@@ -133,7 +133,7 @@ class RegexManager:
         """
         if text is None or regex is None:
             return None
-        
+
         regex = self._convert_regex(regex)
         match = re.search(regex, text)
         if match:
@@ -157,9 +157,9 @@ class RegexManager:
         """
         if text is None or regex is None:
             return False
-        
+
         regex = self._convert_regex(regex)
-        # We ignore flags implementation for now as Python defaults are sufficient 
+        # We ignore flags implementation for now as Python defaults are sufficient
         # for the current use case, but method signature matches.
         return re.search(regex, text) is not None
 
@@ -175,13 +175,13 @@ class Terminator:
         def __init__(self, message: str, status: int):
             self.message = message
             self.status = status
-        
+
         def get_message(self) -> str:
             return self.message
-        
+
         def get_cause(self) -> Optional[BaseException]:
             return self.__cause__
-            
+
         def get_status(self) -> int:
             return self.status
 
@@ -197,7 +197,7 @@ class Terminator:
         prefix = ""
         message_parts = []
         should_exit = False
-        
+
         # Primitive parsing of the varargs used in ByteDump
         for arg in args:
             if arg.startswith("-prefix="):
@@ -208,9 +208,9 @@ class Terminator:
                 continue
             elif not arg.startswith("-") and not arg.startswith("+"):
                 message_parts.append(arg)
-        
+
         full_message = f"{prefix}: {' '.join(message_parts)}" if prefix else " ".join(message_parts)
-        
+
         if should_exit:
             # We raise this exception to be caught in main(), mimicking Java structure
             raise Terminator.ExitException(full_message, 1)
@@ -236,8 +236,8 @@ class ByteDump:
     # Program information.
     #
 
-    PROGRAM_VERSION: str = "0.9"
-    PROGRAM_DESCRIPTION: str = "Java reproduction of the bash bytedump script"
+    PROGRAM_VERSION: str = "0.1"
+    PROGRAM_DESCRIPTION: str = "Python reproduction of the Java bytedump program"
     PROGRAM_COPYRIGHT: str = "Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
     PROGRAM_LICENSE: str = "SPDX-License-Identifier: MIT"
 
@@ -247,9 +247,9 @@ class ByteDump:
     # "program.name" key, but if it's not defined we use "bytedump" as the name of
     # this program.
     #
-
     # NOTE: In Python, we cannot call a method (get_system_property) that hasn't
     # been defined yet within the class body. Initializing to default.
+
     PROGRAM_NAME: str = "bytedump"
 
     #
@@ -332,7 +332,7 @@ class ByteDump:
     DEBUG_bytemap: bool = False
     DEBUG_charclass: Optional[str] = None
     # Placeholder for RegexManager.FLAGS_DEFAULT until we define imports
-    DEBUG_charclass_flags: int = 0 
+    DEBUG_charclass_flags: int = 0
     DEBUG_charclass_regex: Optional[str] = None
     DEBUG_fields: bool = False
     DEBUG_foreground: bool = False
@@ -717,12 +717,12 @@ class ByteDump:
         "BACKGROUND.reset", "",
         "RESET.attributes", "\u001B[0m"
     )
-    
+
     attributeTables: AttributeTables = AttributeTables(
         "BYTE_BACKGROUND", "BYTE_FOREGROUND",
         "TEXT_BACKGROUND", "TEXT_FOREGROUND"
     )
-    
+
     argumentsConsumed: int = 0
 
     ################################///
@@ -744,7 +744,7 @@ class ByteDump:
 
         if len(args) <= 1:
             arg = args[0] if len(args) > 0 else "-"
-            
+
             # Python's "-" check and path access checks
             if arg == "-" or cls.path_is_readable(arg):
                 if arg == "-" or cls.path_is_directory(arg) == False:
@@ -786,7 +786,7 @@ class ByteDump:
         last: int
         index: int
         count: int
-        
+
         base = 0
 
         #
@@ -808,15 +808,15 @@ class ByteDump:
 
         # Loop while we can strip non-whitespace tokens
         while True:
-            # Emulate Java assignment in while condition: 
+            # Emulate Java assignment in while condition:
             # while ((input = manager.matchedGroup(1, input, "^[ \\t]*([^ \\t].*)")) != null)
             match_res = manager.matched_group(1, input_str, "^[ \\t]*([^ \\t].*)")
             if match_res is None:
                 break
             input_str = match_res
-            
+
             input_start = input_str
-            
+
             if manager.matched(input_str, "^(0[xX]?)?[0-9a-fA-F]"):
                 first = 0
                 last = -1
@@ -916,15 +916,15 @@ class ByteDump:
                             cls.user_error(cls.delimit(name), "is not the name of an implemented character class")
                 else:
                     cls.user_error("problem extracting a character class from", cls.delimit(input_start))
-            
+
             elif True: # Emulate else if ... using match groups check inside block
                 groups = manager.matched_groups(input_str, "^(r([#]*)(\"|'))")
                 if groups is not None:
                     prefix = groups[1]
                     # Python slicing to reconstruct suffix: quote + hashes
-                    suffix = groups[3] + groups[2] 
+                    suffix = groups[3] + groups[2]
                     input_str = input_str[len(prefix):]
-                    
+
                     tail = manager.matched_group(1, input_str, suffix + "(.*)")
                     if tail is not None:
                         if manager.matched(tail, "^([ \\t]|$)"):
@@ -941,7 +941,7 @@ class ByteDump:
                                     if chars[code] is None:
                                         count += 1
                                     chars[code] = f"{code:02X}"
-                            
+
                             if count > 0:
                                 # StringTo.joiner simulation
                                 joined_chars = " ".join([c for c in chars if c is not None])
@@ -981,7 +981,7 @@ class ByteDump:
                     if cls.DEBUG_background:
                         cls.attributeTables.dump_table("BYTE_BACKGROUND", "[Debug] ")
                         cls.attributeTables.dump_table("TEXT_BACKGROUND", "[Debug] ")
-                
+
                 case "bytemap":
                     if cls.DEBUG_bytemap:
                         if cls.byteMap is not None:
@@ -993,21 +993,21 @@ class ByteDump:
                                     prefix = " "
                                 sys.stderr.write("\n")
                             sys.stderr.write("\n")
-                
+
                 case "charclass":
                     if cls.DEBUG_charclass is not None:
                         regex = cls.DEBUG_charclass_regex
                         flags = cls.DEBUG_charclass_flags
                         manager = RegexManager()
                         hits = None
-                        
+
                         for index in range(256):
                             # Python's chr(index) works for 0-255
                             if manager.matched(chr(index), regex, flags):
                                 if hits is None:
                                     hits = [None] * 256
                                 hits[index] = f"{index:02X}"
-                        
+
                         sys.stderr.write(f"[Debug] Character Class: [:{cls.DEBUG_charclass}:]\n")
                         sys.stderr.write("[Debug]")
                         if hits is not None:
@@ -1024,7 +1024,7 @@ class ByteDump:
                                     # Backtrack index one step as the outer loop increments or logic requires
                                     # Actually Java for loop increments index in the inner loop condition?
                                     # Java: for (last = index; index < 256; index++)
-                                    
+
                                     sys.stderr.write(sep + hits[first])
                                     if last > first:
                                         sys.stderr.write("-" + hits[last])
@@ -1043,7 +1043,7 @@ class ByteDump:
                         # We need class variables, not instance ones.
                         buffer = []
                         consumed = {}
-                        
+
                         # DEBUG_fields_prefixes is a string "DUMP ADDR ..."
                         for prfx in cls.DEBUG_fields_prefixes.split(" "):
                             matched_fields = []
@@ -1054,7 +1054,7 @@ class ByteDump:
                                      if name not in consumed:
                                          matched_fields.append(name)
                                          consumed[name] = getattr(cls, name)
-                            
+
                             if len(matched_fields) > 0:
                                 matched_fields.sort()
                                 for key in matched_fields:
@@ -1101,7 +1101,7 @@ class ByteDump:
             if cls.DUMP_input_start > 0:
                 # read() consumes bytes, acting like skip for non-seekable streams
                 input_stream.read(cls.DUMP_input_start)
-            
+
             if cls.DUMP_input_read > 0:
                 input_stream = cls.byte_loader(input_stream, cls.DUMP_input_read)
 
@@ -1109,8 +1109,8 @@ class ByteDump:
             # The Java code wraps output in BufferedWriter(OutputStreamWriter).
             # We will try to write strings to the output stream provided.
             # If standard out is used, it handles strings.
-            
-            writer = output_stream 
+
+            writer = output_stream
 
             if cls.DUMP_record_length > 0:
                 if cls.DUMP_field_flags == cls.BYTE_field_flag:
@@ -1121,10 +1121,10 @@ class ByteDump:
                     cls.dump_all(input_stream, writer)
             else:
                 cls.dump_all_single_record(input_stream, writer)
-            
+
             # We don't close sys.stdout usually, but logic says input.close()
             # input_stream.close() # Managed by caller in Python usually
-            
+
         except IOError as e:
             cls.java_error(str(e))
 
@@ -1145,14 +1145,14 @@ class ByteDump:
             text_suffix = cls.TEXT_suffix
             record_separator = cls.DUMP_record_separator
             record_len = cls.DUMP_record_length
-            
+
             addr_enabled = (cls.ADDR_format is not None and len(cls.ADDR_format) > 0)
             byte_enabled = (cls.byteMap is not None)
             text_enabled = (cls.textMap is not None)
-            
+
             byte_map = cls.byteMap
             text_map = cls.textMap
-            
+
             # Pre-calculate padding width per byte
             byte_pad_width = 0
             if byte_enabled and cls.BYTE_field_width > 0:
@@ -1165,7 +1165,7 @@ class ByteDump:
                 count = len(buffer)
                 if count <= 0:
                     break
-                
+
                 # 1. Address
                 if addr_enabled:
                     output.write(addr_prefix)
@@ -1188,7 +1188,7 @@ class ByteDump:
 
                 output.write(record_separator)
                 address += count
-            
+
             output.flush()
         else:
             cls.internal_error("single record dump has not been handled properly")
@@ -1207,11 +1207,11 @@ class ByteDump:
         if cls.DUMP_record_length == 0:
             addr_prefix = cls.ADDR_prefix
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
-            
+
             # These variables update as we loop (prefix becomes separator)
             current_byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
             byte_separator = cls.BYTE_separator
-            
+
             current_text_prefix = cls.TEXT_indent + cls.TEXT_prefix
             text_separator = cls.TEXT_separator
 
@@ -1230,13 +1230,13 @@ class ByteDump:
                 buffer = input_stream.read(chunk_size)
                 if not buffer:
                     break
-                
+
                 # Address prints only once at the very start
                 if addr_enabled:
                     output.write(addr_prefix)
                     cls.dump_formatted_address(address, output)
                     output.write(addr_suffix)
-                    addr_enabled = False 
+                    addr_enabled = False
 
                 if byte_enabled:
                     output_byte.write(current_byte_prefix)
@@ -1248,7 +1248,7 @@ class ByteDump:
                     output_text.write(current_text_prefix)
                     output_text.write(text_separator.join([text_map[b] for b in buffer]))
                     current_text_prefix = text_separator
-                
+
                 looped = True
 
             if looped:
@@ -1259,7 +1259,7 @@ class ByteDump:
                         output.write(cls.TEXT_suffix)
                 else:
                     output.write(cls.TEXT_suffix)
-                
+
                 output.write(cls.DUMP_record_separator)
                 output.flush()
         else:
@@ -1274,20 +1274,20 @@ class ByteDump:
             if cls.byteMap is not None:
                 byte_map = cls.byteMap
                 record_len = cls.DUMP_record_length
-                
+
                 # Check if we have complex formatting (prefixes, suffixes, etc.)
-                complex_fmt = (len(cls.BYTE_separator) > 0 or len(cls.BYTE_prefix) > 0 or 
+                complex_fmt = (len(cls.BYTE_separator) > 0 or len(cls.BYTE_prefix) > 0 or
                                len(cls.BYTE_indent) > 0 or len(cls.BYTE_suffix) > 0)
-                
+
                 if complex_fmt:
                     byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
                     byte_separator = cls.BYTE_separator
                     byte_suffix = cls.BYTE_suffix + cls.DUMP_record_separator
-                    
+
                     while True:
                         buffer = input_stream.read(record_len)
                         if not buffer: break
-                        
+
                         output.write(byte_prefix)
                         output.write(byte_separator.join([byte_map[b] for b in buffer]))
                         output.write(byte_suffix)
@@ -1297,11 +1297,11 @@ class ByteDump:
                     while True:
                         buffer = input_stream.read(record_len)
                         if not buffer: break
-                        
+
                         # Join with empty string
                         output.write("".join([byte_map[b] for b in buffer]))
                         output.write(record_separator)
-                
+
                 output.flush()
             else:
                 cls.internal_error("byte mapping array has not been initialized")
@@ -1364,19 +1364,19 @@ class ByteDump:
             if cls.textMap is not None:
                 text_map = cls.textMap
                 record_len = cls.DUMP_record_length
-                
-                complex_fmt = (len(cls.TEXT_separator) > 0 or len(cls.TEXT_prefix) > 0 or 
+
+                complex_fmt = (len(cls.TEXT_separator) > 0 or len(cls.TEXT_prefix) > 0 or
                                len(cls.TEXT_indent) > 0 or len(cls.TEXT_suffix) > 0)
-                
+
                 if complex_fmt:
                     text_prefix = cls.TEXT_indent + cls.TEXT_prefix
                     text_separator = cls.TEXT_separator
                     text_suffix = cls.TEXT_suffix + cls.DUMP_record_separator
-                    
+
                     while True:
                         buffer = input_stream.read(record_len)
                         if not buffer: break
-                        
+
                         output.write(text_prefix)
                         output.write(text_separator.join([text_map[b] for b in buffer]))
                         output.write(text_suffix)
@@ -1385,10 +1385,10 @@ class ByteDump:
                     while True:
                         buffer = input_stream.read(record_len)
                         if not buffer: break
-                        
+
                         output.write("".join([text_map[b] for b in buffer]))
                         output.write(record_separator)
-                
+
                 output.flush()
             else:
                 cls.internal_error("text mapping array has not been initialized")
@@ -1565,7 +1565,7 @@ class ByteDump:
     @classmethod
     def initialize3_layout(cls) -> None:
         padding = 0
-        
+
         if cls.DUMP_layout == "NARROW":
             cls.BYTE_field_separator = "\n"
 
@@ -1605,7 +1605,7 @@ class ByteDump:
         element: str
         unexpanded: Optional[str] = None
         codepoint: int
-        
+
         # Byte map initialization
         if len(cls.BYTE_map) > 0:
             cls.byteMap = getattr(cls, cls.BYTE_map)
@@ -1622,13 +1622,13 @@ class ByteDump:
             # in the default encoding if we were strictly mirroring Java's CharsetEncoder logic.
             # Here we assume Python 3's utf-8 environment usually, but let's mirror logic structure.
             unexpanded = cls.TEXT_unexpanded_string if len(cls.TEXT_unexpanded_string) > 0 else None
-            
+
             if not cls.DEBUG_unexpanded:
                 manager = RegexManager()
                 # Create a copy to modify if needed? Java modifies in place.
                 # Since we assign class attributes by reference from static lists, modifying
                 # cls.textMap modifies the original list. This matches Java behavior.
-                
+
                 for index in range(len(cls.textMap)):
                     element = cls.textMap[index]
                     if element is not None:
@@ -1655,7 +1655,7 @@ class ByteDump:
                         cls.addrMap = list("0123456789ABCDEF")
                     case "OCTAL":
                         cls.addrMap = list("01234567")
-            
+
             if cls.addrMap is not None:
                 padding_char = cls.ADDR_padding[0] if len(cls.ADDR_padding) > 0 else ' '
                 # 63 chars (Long.SIZE - 1)
@@ -1669,7 +1669,7 @@ class ByteDump:
         regex = cls.DEBUG_charclass_regex
         flags = cls.DEBUG_charclass_flags
         last = cls.last_encoded_byte()
-        
+
         # Iterate over attributeTables
         for key in cls.attributeTables.registered_keys:
             byte_table = cls.attributeTables.get(key)
@@ -1678,9 +1678,9 @@ class ByteDump:
                 if groups is not None:
                     field = groups[1]
                     layer = groups[2]
-                    
+
                     field_map = cls.byteMap if field == "BYTE" else cls.textMap
-                    
+
                     if field_map is not None:
                         suffix = cls.ANSI_ESCAPE.get("RESET.attributes", "")
                         for index in range(len(byte_table)):
@@ -1706,9 +1706,9 @@ class ByteDump:
             message = e.get_message()
             if message is not None and len(message) > 0:
                 sys.stderr.write(message + "\n")
-            
+
             # Cause printStackTrace not strictly needed for parity of output
-            
+
             if e.get_status() != 0:
                 sys.exit(e.get_status())
 
@@ -1736,7 +1736,7 @@ class ByteDump:
 
         while next_idx < len(args):
             arg = args[next_idx]
-            
+
             # Check for --option=value
             groups = manager.matched_groups(arg, "^(--[^=-][^=]*=)(.*)$")
             if groups is not None:
@@ -1758,7 +1758,7 @@ class ByteDump:
                     if groups is not None:
                         style = groups[1]
                         format_width = groups[3]
-                        
+
                         match style:
                             case "decimal":
                                 style = "DECIMAL"
@@ -1774,7 +1774,7 @@ class ByteDump:
                                 style = "XXD"
                             case _:
                                 cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
-                        
+
                         cls.ADDR_output = style
                         if format_width is not None:
                             cls.ADDR_format_width = format_width
@@ -1811,7 +1811,7 @@ class ByteDump:
                     if groups is not None:
                         style = groups[1]
                         length = groups[3]
-                        
+
                         match style:
                             case "binary":
                                 style = "BINARY"
@@ -1829,7 +1829,7 @@ class ByteDump:
                                 style = "XXD"
                             case _:
                                 cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
-                        
+
                         cls.BYTE_output = style
                         if length is not None:
                             # StringTo.unsignedInt simulation using int()
@@ -2025,7 +2025,7 @@ class ByteDump:
                             if cls.DUMP_input_start < 0: raise ValueError
                         except ValueError:
                             cls.range_error("skip argument", cls.delimit(groups[1]), "in option", cls.delimit(arg), "won't fit in a Java int")
-                        
+
                         if groups[3] is not None:
                             try:
                                 cls.DUMP_output_start = int(groups[3], 0)
@@ -2042,7 +2042,7 @@ class ByteDump:
                     if groups is not None:
                         style = groups[1]
                         length = groups[3]
-                        
+
                         match style:
                             case "ascii":
                                 style = "ASCII"
@@ -2058,7 +2058,7 @@ class ByteDump:
                                 style = "XXD"
                             case _:
                                 cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
-                        
+
                         cls.TEXT_output = style
                         if length is not None:
                             try:
@@ -2126,7 +2126,7 @@ class ByteDump:
 
             if done:
                 break
-            
+
             next_idx += 1
 
         cls.argumentsConsumed = next_idx
@@ -2229,7 +2229,7 @@ class ByteDump:
     @classmethod
     def path_is_readable(cls, path: str) -> bool:
         return os.access(path, os.R_OK)
-    
+
     @classmethod
     def setup(cls) -> None:
         pass
