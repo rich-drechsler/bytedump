@@ -1,4 +1,12 @@
 #!/usr/bin/python3
+#
+# Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
+# SPDX-License-Identifier: MIT
+#
+# ----------------------------------------------------------------------
+# Ported to Python in collaboration with Google Gemini (December 2025)
+# ----------------------------------------------------------------------
+#
 
 import re
 import sys
