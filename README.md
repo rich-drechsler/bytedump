@@ -14,25 +14,23 @@ than the bash script. Both versions are available in this repository and if I ge
 time I plan on adding implementations in a few more languages (e.g., Python, Rust,
 or C).
 
-Apparently I've found yet another convenient detour around the bytedump documentation
-that I eventually will finish. Sometime around 12/8/25 I decided to experiment a bit
-with Google's Gemini 3 and I was pleasantly surprised by what I found. At that time
-I probably was about 75% finished with the Makefile.md Markdown documentation, but
-since then I've been primarily focused on trying to decide whether Gemini 3 (with my
-guidance) could produce a Python implementation of bytedump that I would be willing
-to include in this repository. I don't know the answer yet, because I probably would
-insist that Gemini's Python implementation meet some unusual source code constraints.
-Anyway, at this point I'm not going to even try predict a date, and instead all I'll
-promise is that I will update this file when I know more.
+Gemini 3 Pro did a pretty good job translating the Java version into Python, and I
+was pleased with the results. It's not complete or thoroughly tested, but it does
+seem to work, so I decided to include it this repository. Gemini 3 Pro handled all
+of the translation with only a little interference from me. No makefile or anything
+else yet, but I still think what's there is worth a look. I'll probably spend a week
+or so working on it, and perhaps after that I'll get back to the documentation that
+I've been postponing for the last few months.
 
 ### Directories
 
 You'll find the following directories in this repository:
 
-         src - the top level source directory
-    src/bash - source code for the bash version of bytedump
-    src/java - source code for the Java version of bytedump
-       image - the default installation directory
+           src - the top level source directory
+      src/bash - source code for the bash version of bytedump
+      src/java - source code for the Java version of bytedump
+    src/python - preliminary source code for the Python version of bytedump
+         image - the default installation directory
 
 Implementations in any additional languages will be stored in directories that, just
 like the bash and Java versions, identify the language.
