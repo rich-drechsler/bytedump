@@ -1712,109 +1712,6 @@ class ByteDump:
             if e.get_status() != 0:
                 sys.exit(e.get_status())
 
-    #
-    # Helper wrappers
-    #
-    @classmethod
-    def internal_error(cls, *args: str) -> None:
-        Terminator.error_handler(
-            "-prefix=" + cls.PROGRAM_NAME,
-            "-tag=InternalError",
-            "-info=location",
-            "+exit",
-            "+frame",
-            "--",
-            " ".join(args)
-        )
-
-    @classmethod
-    def java_error(cls, *args: str) -> None:
-        Terminator.error_handler(
-            "-prefix=" + cls.PROGRAM_NAME,
-            "-tag=JavaError",
-            "-info=location",
-            "+exit",
-            "+frame",
-            "--",
-            " ".join(args)
-        )
-
-    @classmethod
-    def range_error(cls, *args: str) -> None:
-        Terminator.error_handler(
-            "-prefix=" + cls.PROGRAM_NAME,
-            "-tag=RangeError",
-            "-info",
-            "+exit",
-            "+frame",
-            "--",
-            " ".join(args)
-        )
-
-    @classmethod
-    def user_error(cls, *args: str) -> None:
-        Terminator.error_handler(
-            "-prefix=" + cls.PROGRAM_NAME,
-            "-tag=Error",
-            "-info",
-            "+exit",
-            "+frame",
-            "--",
-            " ".join(args)
-        )
-
-    #
-    # Low-level helpers
-    #
-    @classmethod
-    def byte_loader(cls, input_stream, limit: int):
-        # Reads limit bytes and returns a BytesIO
-        from io import BytesIO
-        buffer = input_stream.read(limit)
-        return BytesIO(buffer)
-
-    @classmethod
-    def delimit(cls, arg: Any) -> str:
-        # Trivial quote wrapping
-        return f"\"{str(arg)}\""
-
-    @classmethod
-    def delimit_args(cls, args: List[str]) -> str:
-        return "\"" + " ".join(args) + "\""
-
-    @classmethod
-    def has_named_field(cls, name: str) -> bool:
-        return hasattr(cls, name)
-
-    @classmethod
-    def get_named_resource_as_stream(cls, name: str):
-        # Emulate getResourceAsStream by looking in local dir
-        if os.path.exists(name):
-            return open(name, 'r', encoding='utf-8')
-        return None
-
-    @classmethod
-    def get_this_class_name(cls) -> str:
-        return cls.__name__
-
-    @classmethod
-    def last_encoded_byte(cls) -> int:
-        # Java logic: US-ASCII ? 127 : 255.
-        # Python default is usually UTF-8 (extends ASCII), so 255
-        return 255
-
-    @classmethod
-    def path_is_directory(cls, path: str) -> bool:
-        return os.path.isdir(path)
-
-    @classmethod
-    def path_is_readable(cls, path: str) -> bool:
-        return os.access(path, os.R_OK)
-    
-    @classmethod
-    def setup(cls) -> None:
-        pass
-
     @classmethod
     def options(cls, args: List[str]) -> None:
         manager = RegexManager()
@@ -2233,6 +2130,109 @@ class ByteDump:
             next_idx += 1
 
         cls.argumentsConsumed = next_idx
+
+    #
+    # Helper wrappers
+    #
+    @classmethod
+    def internal_error(cls, *args: str) -> None:
+        Terminator.error_handler(
+            "-prefix=" + cls.PROGRAM_NAME,
+            "-tag=InternalError",
+            "-info=location",
+            "+exit",
+            "+frame",
+            "--",
+            " ".join(args)
+        )
+
+    @classmethod
+    def java_error(cls, *args: str) -> None:
+        Terminator.error_handler(
+            "-prefix=" + cls.PROGRAM_NAME,
+            "-tag=JavaError",
+            "-info=location",
+            "+exit",
+            "+frame",
+            "--",
+            " ".join(args)
+        )
+
+    @classmethod
+    def range_error(cls, *args: str) -> None:
+        Terminator.error_handler(
+            "-prefix=" + cls.PROGRAM_NAME,
+            "-tag=RangeError",
+            "-info",
+            "+exit",
+            "+frame",
+            "--",
+            " ".join(args)
+        )
+
+    @classmethod
+    def user_error(cls, *args: str) -> None:
+        Terminator.error_handler(
+            "-prefix=" + cls.PROGRAM_NAME,
+            "-tag=Error",
+            "-info",
+            "+exit",
+            "+frame",
+            "--",
+            " ".join(args)
+        )
+
+    #
+    # Low-level helpers
+    #
+    @classmethod
+    def byte_loader(cls, input_stream, limit: int):
+        # Reads limit bytes and returns a BytesIO
+        from io import BytesIO
+        buffer = input_stream.read(limit)
+        return BytesIO(buffer)
+
+    @classmethod
+    def delimit(cls, arg: Any) -> str:
+        # Trivial quote wrapping
+        return f"\"{str(arg)}\""
+
+    @classmethod
+    def delimit_args(cls, args: List[str]) -> str:
+        return "\"" + " ".join(args) + "\""
+
+    @classmethod
+    def has_named_field(cls, name: str) -> bool:
+        return hasattr(cls, name)
+
+    @classmethod
+    def get_named_resource_as_stream(cls, name: str):
+        # Emulate getResourceAsStream by looking in local dir
+        if os.path.exists(name):
+            return open(name, 'r', encoding='utf-8')
+        return None
+
+    @classmethod
+    def get_this_class_name(cls) -> str:
+        return cls.__name__
+
+    @classmethod
+    def last_encoded_byte(cls) -> int:
+        # Java logic: US-ASCII ? 127 : 255.
+        # Python default is usually UTF-8 (extends ASCII), so 255
+        return 255
+
+    @classmethod
+    def path_is_directory(cls, path: str) -> bool:
+        return os.path.isdir(path)
+
+    @classmethod
+    def path_is_readable(cls, path: str) -> bool:
+        return os.access(path, os.R_OK)
+    
+    @classmethod
+    def setup(cls) -> None:
+        pass
 
 #
 # Guard
