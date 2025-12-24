@@ -12,6 +12,10 @@ that I expected. The documentation available in the other versions is missing, b
 it will be added. I also plan on going through the Python code and adding comments
 and perhaps reorganizing things in the near future, undoubtedly with Gemini's help.
 For now just keep in mind that this version was generated in a chat that probably
-lasted 90 mins and most of that time can be attributed to my lack of attention once
-I decided to just let Gemini build whatever it wanted.
+lasted 90 mins and most of that time can be attributed my slow typing and lack of
+attention after I decided to just let Gemini build whatever it wanted.
+
+Finally, I want to emphasize that this definitely isn't the final version. I think
+it's interesting enough to include in the ByteDump repository, but there undoubtedly
+will be quite a few updates in the near future.
 
