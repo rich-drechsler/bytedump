@@ -589,10 +589,6 @@ class ByteDump:
     DEBUG_addresses: bool = False
     DEBUG_background: bool = False
     DEBUG_bytemap: bool = False
-    DEBUG_charclass: Optional[str] = None
-    # Placeholder for RegexManager.FLAGS_DEFAULT until we define imports
-    DEBUG_charclass_flags: int = 0
-    DEBUG_charclass_regex: Optional[str] = None
     DEBUG_fields: bool = False
     DEBUG_foreground: bool = False
     DEBUG_textmap: bool = False
@@ -1232,7 +1228,7 @@ class ByteDump:
 
         # No arguments selects default keys
         if len(args) == 0:
-            args = ("foreground", "background", "bytemap", "textmap", "fields", "charclass")
+            args = ("foreground", "background", "bytemap", "textmap", "fields")
 
         for arg in args:
             match arg:
@@ -1252,48 +1248,6 @@ class ByteDump:
                                     prefix = " "
                                 sys.stderr.write("\n")
                             sys.stderr.write("\n")
-
-                case "charclass":
-                    if cls.DEBUG_charclass is not None:
-                        regex = cls.DEBUG_charclass_regex
-                        flags = cls.DEBUG_charclass_flags
-                        manager = RegexManager()
-                        hits = None
-
-                        for index in range(256):
-                            # Python's chr(index) works for 0-255
-                            if manager.matched(chr(index), regex, flags):
-                                if hits is None:
-                                    hits = [None] * 256
-                                hits[index] = f"{index:02X}"
-
-                        sys.stderr.write(f"[Debug] Character Class: [:{cls.DEBUG_charclass}:]\n")
-                        sys.stderr.write("[Debug]")
-                        if hits is not None:
-                            sep = "    0x("
-                            index = 0
-                            while index < 256:
-                                if hits[index] is not None:
-                                    first = index
-                                    last = index
-                                    # inner loop to find range
-                                    while index < 256 and hits[index] is not None:
-                                        last = index
-                                        index += 1
-                                    # Backtrack index one step as the outer loop increments or logic requires
-                                    # Actually Java for loop increments index in the inner loop condition?
-                                    # Java: for (last = index; index < 256; index++)
-
-                                    sys.stderr.write(sep + hits[first])
-                                    if last > first:
-                                        sys.stderr.write("-" + hits[last])
-                                    sep = " "
-                                else:
-                                    index += 1
-                            sys.stderr.write(")\n")
-                        else:
-                            sys.stderr.write(" -> NO HITS - this should not happen\n")
-                        sys.stderr.write("\n")
 
                 case "fields":
                     if cls.DEBUG_fields:
@@ -1923,8 +1877,6 @@ class ByteDump:
     @classmethod
     def initialize5_attributes(cls) -> None:
         manager = RegexManager()
-        regex = cls.DEBUG_charclass_regex
-        flags = cls.DEBUG_charclass_flags
         last = cls.last_encoded_byte()
 
         # Iterate over attributeTables
@@ -1943,11 +1895,9 @@ class ByteDump:
                         for index in range(len(byte_table)):
                             if index <= last:
                                 if byte_table[index] is not None and index < len(field_map):
-                                    # Check regex match
-                                    if regex is None or manager.matched(chr(index), regex, flags):
-                                        prefix = cls.ANSI_ESCAPE.get(layer + "." + byte_table[index], "")
-                                        if len(prefix) > 0:
-                                            field_map[index] = prefix + field_map[index] + suffix
+                                    prefix = cls.ANSI_ESCAPE.get(layer + "." + byte_table[index], "")
+                                    if len(prefix) > 0:
+                                        field_map[index] = prefix + field_map[index] + suffix
 
     @classmethod
     def main(cls, args: List[str]) -> None:
@@ -2164,37 +2114,6 @@ class ByteDump:
                             case _:
                                 if len(field) > 0:
                                     cls.user_error("field", cls.delimit(field), "in option", cls.delimit(arg), "is not recognized")
-
-                case "--debug-charclass=":
-                    cls.DEBUG_charclass = optarg
-                    cls.DEBUG_charclass_flags = RegexManager.UNICODE_CHARACTER_CLASS
-                    match optarg:
-                        case "alnum":
-                            cls.DEBUG_charclass_regex = "\\p{Alnum}"
-                        case "alpha":
-                            cls.DEBUG_charclass_regex = "\\p{Alpha}"
-                        case "blank":
-                            cls.DEBUG_charclass_regex = "\\p{Blank}"
-                        case "cntrl":
-                            cls.DEBUG_charclass_regex = "\\p{Cntrl}"
-                        case "digit":
-                            cls.DEBUG_charclass_regex = "\\p{Digit}"
-                        case "graph":
-                            cls.DEBUG_charclass_regex = "\\p{Graph}"
-                        case "lower":
-                            cls.DEBUG_charclass_regex = "\\p{Lower}"
-                        case "print":
-                            cls.DEBUG_charclass_regex = "\\p{Print}"
-                        case "punct":
-                            cls.DEBUG_charclass_regex = "\\p{Punct}"
-                        case "space":
-                            cls.DEBUG_charclass_regex = "\\p{Space}"
-                        case "upper":
-                            cls.DEBUG_charclass_regex = "\\p{Upper}"
-                        case "xdigit":
-                            cls.DEBUG_charclass_regex = "\\p{XDigit}"
-                        case _:
-                            cls.user_error("character class", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--foreground=":
                     groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
@@ -2514,4 +2433,3 @@ class ByteDump:
 #
 if __name__ == "__main__":
     ByteDump.main(sys.argv[1:])
-
