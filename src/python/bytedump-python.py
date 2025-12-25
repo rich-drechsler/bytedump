@@ -11,6 +11,7 @@
 import re
 import sys
 import os
+import locale
 from io import BytesIO
 from typing import List, Dict, Optional, Any
 
@@ -2036,13 +2037,13 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--addr-prefix=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.ADDR_prefix = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
 
                 case "--addr-suffix=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.ADDR_suffix = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
@@ -2121,19 +2122,19 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--byte-prefix=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.BYTE_prefix = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
 
                 case "--byte-separator=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.BYTE_separator = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
 
                 case "--byte-suffix=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.BYTE_suffix = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
@@ -2348,13 +2349,13 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--text-prefix=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.TEXT_prefix = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
 
                 case "--text-suffix=":
-                    if manager.matched(optarg, "^\\p{Print}*", RegexManager.UNICODE_CHARACTER_CLASS):
+                    if cls.printable_user_string(optarg):
                         cls.TEXT_suffix = optarg
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
@@ -2491,6 +2492,22 @@ class ByteDump:
     @classmethod
     def path_is_readable(cls, path: str) -> bool:
         return os.access(path, os.R_OK)
+
+    @classmethod
+    def printable_user_string(cls, str) -> bool:
+        printable = False
+        if str.isprintable():
+            try:
+                #
+                # I think this is sufficient - the Python UTF-8 Mode documentation implies
+                # it's only automatically enabled (at startup) when LC_CTYPE is C or POSIX.
+                #
+                encoding = locale.getpreferredencoding(False)
+                str.encode(encoding)
+                printable = True
+            except UnicodeEncodeError:
+                pass
+        return printable
 
 #
 # Guard
