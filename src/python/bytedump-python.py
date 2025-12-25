@@ -11,7 +11,8 @@
 import re
 import sys
 import os
-from typing import List, Dict, Optional, Any, Tuple
+from io import BytesIO
+from typing import List, Dict, Optional, Any
 
 ################################################################################
 # Helper Classes (Mirrors of AttributeTables.java and StringMap.java)
@@ -167,55 +168,317 @@ class RegexManager:
 # Terminator (Helper Class)
 ################################################################################
 
+import inspect
+
 class Terminator:
     """
-    Inferred functionality of Terminator.java to handle error messages and exiting.
+    Mirrors Terminator.java: Error handling framework for generating consistent messages
+    and handling graceful exits via exceptions.
     """
-    class ExitException(Exception):
-        def __init__(self, message: str, status: int):
-            self.message = message
+
+    # Constants used in message_formatter to select info
+    CALLER_INFO: str = "CALLER"
+    LINE_INFO: str = "LINE"
+    LOCATION_INFO: str = "LOCATION"
+    METHOD_INFO: str = "METHOD"
+    SOURCE_INFO: str = "SOURCE"
+
+    # Keys for stack frame info
+    FRAME_LINE: str = "LINE"
+    FRAME_METHOD: str = "METHOD"
+    FRAME_SOURCE: str = "SOURCE"
+
+    UNKNOWN_FILE_TAG: str = "File unknown"
+    UNKNOWN_LINE_TAG: str = "unknown"
+
+    RUNTIME_EXCEPTION: bool = True
+    DEFAULT_EXIT_STATUS: int = 1
+
+    ################################///
+    #
+    # Terminator Methods
+    #
+    ################################///
+
+    @classmethod
+    def error_handler(cls, *args: str) -> str:
+        arguments: List[str]
+        manager: RegexManager
+        groups: Optional[List[str]]
+        done: bool
+        should_exit: bool
+        runtime: bool
+        arg: str
+        message: str
+        optarg: str
+        opttag: str
+        target: str
+        status: int
+        index: int
+
+        should_exit = True
+        runtime = cls.RUNTIME_EXCEPTION
+        status = cls.DEFAULT_EXIT_STATUS
+
+        arguments = []
+        arguments.append("-tag=Error")
+        arguments.append("-info=location")
+
+        manager = RegexManager()
+        done = False
+        index = 0
+
+        # Argument parsing loop mirroring Java
+        while index < len(args):
+            arg = args[index]
+            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
+            if groups is not None:
+                target = groups[1]
+                opttag = groups[2]
+                optarg = groups[5]
+            else:
+                target = arg
+                opttag = ""
+                optarg = ""
+
+            match target:
+                case "+exit":
+                    should_exit = True
+                    runtime = cls.RUNTIME_EXCEPTION
+                case "-exit":
+                    should_exit = False
+                case "+exit-error":
+                    should_exit = True
+                    runtime = False
+                case "+exit-exception":
+                    should_exit = True
+                    runtime = True
+                case "-status":
+                    try:
+                        status = int(optarg)
+                    except ValueError:
+                        pass
+                case "--":
+                    done = True
+                    index += 1
+                case _:
+                    if opttag == "+" or opttag == "-":
+                        arguments.append(arg)
+                    else:
+                        done = True
+
+            if done:
+                break
+
+            index += 1
+
+        # Hand off remaining args
+        arguments.append("+frame")
+        arguments.append("--")
+        arguments.append(" ".join(args[index:]))
+
+        message = cls.message_formatter(arguments)
+
+        if should_exit:
+            cls.terminate(message, None, status, runtime)
+
+        return message
+
+    @classmethod
+    def terminate(cls, message: Optional[str] = None, cause: Optional[BaseException] = None,
+                  status: int = DEFAULT_EXIT_STATUS, runtime: bool = RUNTIME_EXCEPTION) -> None:
+        if runtime:
+            raise Terminator.ExitException(message, cause, status)
+        else:
+            raise Terminator.ExitError(message, cause, status)
+
+    ################################///
+    #
+    # Private Methods
+    #
+    ################################///
+
+    @classmethod
+    def message_formatter(cls, args: List[str]) -> str:
+        caller: Dict[str, str]
+        manager: RegexManager
+        groups: Optional[List[str]]
+        done: bool
+        arg: str
+        message: Optional[str]
+        optarg: str
+        opttag: str
+        target: str
+        info: Optional[str]
+        prefix: Optional[str]
+        suffix: Optional[str]
+        tag: Optional[str]
+        frame_offset: int
+        index: int
+
+        message = None
+        info = None
+        prefix = None
+        suffix = None
+        tag = None
+        frame_offset = 1
+
+        manager = RegexManager()
+        done = False
+        index = 0
+
+        while index < len(args):
+            arg = args[index]
+            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
+            if groups is not None:
+                target = groups[1]
+                opttag = groups[2]
+                optarg = groups[5]
+            else:
+                target = arg
+                opttag = ""
+                optarg = ""
+
+            match target:
+                case "+frame":
+                    frame_offset += 1
+                case "-frame":
+                    frame_offset = 0
+                case "-info":
+                    info = optarg
+                case "-prefix":
+                    prefix = optarg
+                case "-suffix":
+                    suffix = optarg
+                case "-tag":
+                    tag = optarg
+                case "--":
+                    done = True
+                    index += 1
+                case _:
+                    if opttag != "+" and opttag != "-":
+                        done = True
+
+            if done:
+                break
+
+            index += 1
+
+        if index < len(args):
+            message = " ".join(args[index:])
+
+        if info is not None:
+            # Python Stack Inspection
+            # stack[0] is current, stack[1] is caller of message_formatter, etc.
+            # Java default was frame=1 (caller of messageFormatter).
+            # We need to account for Python's stack structure.
+            # 0: message_formatter
+            # 1: error_handler (usually)
+            # 2: The actual caller we want
+
+            stack = inspect.stack()
+            # Adjust offset: Python stack includes current frame at 0.
+            # Java (new Throwable()).getStackTrace() usually has current method at 0 too.
+            # The logic +frame adds to the base frame.
+            # We add 1 extra to skip 'message_formatter' itself to match Java's "getStackTrace" view
+            target_frame_idx = frame_offset + 1
+
+            if target_frame_idx < len(stack):
+                frame_info = stack[target_frame_idx]
+                # frame_info is a FrameInfo object or tuple
+
+                caller = {}
+                line_no = frame_info.lineno
+                caller[cls.FRAME_LINE] = str(line_no) if line_no >= 0 else cls.UNKNOWN_LINE_TAG
+                caller[cls.FRAME_METHOD] = frame_info.function
+
+                # frame_info.filename gives full path, Java often gives just file name.
+                # using os.path.basename to match typical Java behavior
+                fname = frame_info.filename
+                caller[cls.FRAME_SOURCE] = os.path.basename(fname) if fname else cls.UNKNOWN_FILE_TAG
+
+                for token in info.split(","):
+                    token_upper = token.strip().upper()
+
+                    # Logic: tag = String.join("", tag, "] [", ...)
+                    # Check for null tag first to avoid "None] ["
+                    current_tag = tag if tag is not None else ""
+
+                    # NOTE: Python string join logic slightly different than Java's String.join with delimiter
+                    # Java: String.join("", tag, "] [", val) -> tag + "] [" + val
+
+                    # We need to handle the initial join if tag is empty?
+                    # Java code: tag = String.join("", tag, "] [", ...)
+                    # If tag was "Error", it becomes "Error] [LOCATION..."
+
+                    part = ""
+                    if token_upper == cls.CALLER_INFO:
+                        part = f"{caller[cls.FRAME_SOURCE]}; {caller[cls.FRAME_METHOD]}; Line {caller[cls.FRAME_LINE]}"
+                    elif token_upper == cls.LINE_INFO:
+                        part = f"Line {caller[cls.FRAME_LINE]}"
+                    elif token_upper == cls.LOCATION_INFO:
+                        part = f"{caller[cls.FRAME_SOURCE]}; Line {caller[cls.FRAME_LINE]}"
+                    elif token_upper == cls.METHOD_INFO:
+                        part = caller[cls.FRAME_METHOD]
+                    elif token_upper == cls.SOURCE_INFO:
+                        part = caller[cls.FRAME_SOURCE]
+
+                    if len(part) > 0:
+                        tag = f"{current_tag}] [{part}"
+
+        # Final Assembly
+        result = ""
+        if prefix is not None and len(prefix) > 0:
+            result += prefix + ": "
+        if message is not None and len(message) > 0:
+            result += message + " "
+        if tag is not None and len(tag) > 0:
+            result += "[" + tag + "]"
+        if suffix is not None and len(suffix) > 0:
+            result += suffix
+
+        return result
+
+    ################################///
+    #
+    # Terminator.ExitException
+    #
+    ################################///
+
+    class ExitException(RuntimeError):
+        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
+            super().__init__(message)
             self.status = status
-
-        def get_message(self) -> str:
-            return self.message
-
-        def get_cause(self) -> Optional[BaseException]:
-            return self.__cause__
+            if cause:
+                self.__cause__ = cause
 
         def get_status(self) -> int:
             return self.status
 
-    @staticmethod
-    def terminate() -> None:
-        sys.exit(0)
+        def get_message(self) -> str:
+            return str(self)
 
-    @staticmethod
-    def error_handler(*args: str) -> None:
-        """
-        Constructs error message and raises ExitException.
-        """
-        prefix = ""
-        message_parts = []
-        should_exit = False
+    ################################///
+    #
+    # Terminator.ExitError
+    #
+    ################################///
 
-        # Primitive parsing of the varargs used in ByteDump
-        for arg in args:
-            if arg.startswith("-prefix="):
-                prefix = arg.split("=", 1)[1]
-            elif arg == "+exit":
-                should_exit = True
-            elif arg == "--":
-                continue
-            elif not arg.startswith("-") and not arg.startswith("+"):
-                message_parts.append(arg)
+    class ExitError(Exception):
+        # Maps to java.lang.Error (serious problems).
+        # In Python, standard Exception is closest equivalent for "checked" but
+        # since we don't have checked/unchecked, BaseException or Exception is fine.
+        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
+            super().__init__(message)
+            self.status = status
+            if cause:
+                self.__cause__ = cause
 
-        full_message = f"{prefix}: {' '.join(message_parts)}" if prefix else " ".join(message_parts)
+        def get_status(self) -> int:
+            return self.status
 
-        if should_exit:
-            # We raise this exception to be caught in main(), mimicking Java structure
-            raise Terminator.ExitException(full_message, 1)
-        else:
-            sys.stderr.write(full_message + "\n")
+        def get_message(self) -> str:
+            return str(self)
 
 ################################################################################
 # Main Class
@@ -747,7 +1010,7 @@ class ByteDump:
 
             # Python's "-" check and path access checks
             if arg == "-" or cls.path_is_readable(arg):
-                if arg == "-" or cls.path_is_directory(arg) == False:
+                if arg == "-" or not cls.path_is_directory(arg):
                     if arg != "-":
                         try:
                             # In Python, we open the file. 'rb' is crucial for ByteDump.
@@ -1051,9 +1314,9 @@ class ByteDump:
                             for name in dir(cls):
                                 # Filter out builtins and methods, we want static data fields
                                 if name.startswith(prfx) and not callable(getattr(cls, name)):
-                                     if name not in consumed:
-                                         matched_fields.append(name)
-                                         consumed[name] = getattr(cls, name)
+                                    if name not in consumed:
+                                        matched_fields.append(name)
+                                        consumed[name] = getattr(cls, name)
 
                             if len(matched_fields) > 0:
                                 matched_fields.sort()
@@ -1550,7 +1813,7 @@ class ByteDump:
 
         if cls.DUMP_record_length_limit > 0:
             if cls.DUMP_record_length > cls.DUMP_record_length_limit:
-                 cls.user_error("requested record length", cls.delimit(str(cls.DUMP_record_length)), "exceeds the internal buffer limit of", cls.delimit(str(cls.DUMP_record_length_limit)), "bytes")
+                cls.user_error("requested record length", cls.delimit(str(cls.DUMP_record_length)), "exceeds the internal buffer limit of", cls.delimit(str(cls.DUMP_record_length_limit)), "bytes")
 
     @classmethod
     def initialize2_field_widths(cls) -> None:
@@ -1603,7 +1866,6 @@ class ByteDump:
         manager: RegexManager
         groups: Optional[List[str]]
         element: str
-        unexpanded: Optional[str] = None
         codepoint: int
 
         # Byte map initialization
@@ -1621,7 +1883,6 @@ class ByteDump:
             # Python handles unicode natively, but we need to check if the char is printable/encodeable
             # in the default encoding if we were strictly mirroring Java's CharsetEncoder logic.
             # Here we assume Python 3's utf-8 environment usually, but let's mirror logic structure.
-            unexpanded = cls.TEXT_unexpanded_string if len(cls.TEXT_unexpanded_string) > 0 else None
 
             if not cls.DEBUG_unexpanded:
                 manager = RegexManager()
@@ -1684,13 +1945,13 @@ class ByteDump:
                     if field_map is not None:
                         suffix = cls.ANSI_ESCAPE.get("RESET.attributes", "")
                         for index in range(len(byte_table)):
-                             if index <= last:
-                                 if byte_table[index] is not None and index < len(field_map):
-                                     # Check regex match
-                                     if regex is None or manager.matched(chr(index), regex, flags):
-                                         prefix = cls.ANSI_ESCAPE.get(layer + "." + byte_table[index], "")
-                                         if len(prefix) > 0:
-                                             field_map[index] = prefix + field_map[index] + suffix
+                            if index <= last:
+                                if byte_table[index] is not None and index < len(field_map):
+                                    # Check regex match
+                                    if regex is None or manager.matched(chr(index), regex, flags):
+                                        prefix = cls.ANSI_ESCAPE.get(layer + "." + byte_table[index], "")
+                                        if len(prefix) > 0:
+                                            field_map[index] = prefix + field_map[index] + suffix
 
     @classmethod
     def main(cls, args: List[str]) -> None:
@@ -1998,7 +2259,7 @@ class ByteDump:
                             else:
                                 raise ValueError
                         except ValueError:
-                             cls.range_error("byte count", cls.delimit(number), "requested in option", cls.delimit(arg), "must be an integer in the range [0, " + str(cls.DUMP_input_maxbuf) + "]")
+                            cls.range_error("byte count", cls.delimit(number), "requested in option", cls.delimit(arg), "must be an integer in the range [0, " + str(cls.DUMP_input_maxbuf) + "]")
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
@@ -2188,7 +2449,6 @@ class ByteDump:
     @classmethod
     def byte_loader(cls, input_stream, limit: int):
         # Reads limit bytes and returns a BytesIO
-        from io import BytesIO
         buffer = input_stream.read(limit)
         return BytesIO(buffer)
 
