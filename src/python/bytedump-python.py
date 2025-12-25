@@ -377,14 +377,9 @@ class Terminator:
             # 2: The actual caller we want
 
             stack = inspect.stack()
-            # Adjust offset: Python stack includes current frame at 0.
-            # Java (new Throwable()).getStackTrace() usually has current method at 0 too.
-            # The logic +frame adds to the base frame.
-            # We add 1 extra to skip 'message_formatter' itself to match Java's "getStackTrace" view
-            target_frame_idx = frame_offset + 1
 
-            if target_frame_idx < len(stack):
-                frame_info = stack[target_frame_idx]
+            if frame_offset < len(stack):
+                frame_info = stack[frame_offset]
                 # frame_info is a FrameInfo object or tuple
 
                 caller = {}
