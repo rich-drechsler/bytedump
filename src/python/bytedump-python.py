@@ -1955,9 +1955,7 @@ class ByteDump:
             cls.options(args)
             cls.initialize()
             cls.debug()
-            # argsConsumed is set in options
-            remaining_args = args[cls.argumentsConsumed:]
-            cls.arguments(remaining_args)
+            cls.arguments(args[cls.argumentsConsumed:])
         except Terminator.ExitException as e:
             message = e.get_message()
             if message is not None and len(message) > 0:
@@ -2387,6 +2385,15 @@ class ByteDump:
 
         cls.argumentsConsumed = next_idx
 
+    @classmethod
+    def setup(cls) -> None:
+        #
+        # This is where initialization that needs to happen before the command line
+        # are processed could be done. There's currently nothing to do.
+        #
+
+        pass
+
     #
     # Helper wrappers
     #
@@ -2484,10 +2491,6 @@ class ByteDump:
     @classmethod
     def path_is_readable(cls, path: str) -> bool:
         return os.access(path, os.R_OK)
-
-    @classmethod
-    def setup(cls) -> None:
-        pass
 
 #
 # Guard
