@@ -71,7 +71,8 @@
 #   testfiles - builds test files that might occasionally be useful.
 #
 #    validate - builds and then validates each of the bytedump applications named
-#               in SRCDIRS. Uses shellcheck on bash scripts and jdeps on jar files.
+#               in SRCDIRS. Uses shellcheck on bash scripts, jdeps on jar files,
+#		and pyflakes3 on python files.
 #
 
 ####################
@@ -94,7 +95,7 @@ MAKEFLAGS := --no-print-directory
 INSTALLDIR := ../image
 INSTALL := install
 
-SRCDIRS := bash java
+SRCDIRS := bash java python
 
 ####################
 #
