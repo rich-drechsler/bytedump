@@ -195,11 +195,11 @@ class Terminator:
     RUNTIME_EXCEPTION: bool = True
     DEFAULT_EXIT_STATUS: int = 1
 
-    ################################///
+    ###################################
     #
     # Terminator Methods
     #
-    ################################///
+    ###################################
 
     @classmethod
     def error_handler(cls, *args: str) -> str:
@@ -293,11 +293,11 @@ class Terminator:
         else:
             raise Terminator.ExitError(message, cause, status)
 
-    ################################///
+    ###################################
     #
     # Private Methods
     #
-    ################################///
+    ###################################
 
     @classmethod
     def message_formatter(cls, args: List[str]) -> str:
@@ -435,11 +435,11 @@ class Terminator:
 
         return result
 
-    ################################///
+    ###################################
     #
     # Terminator.ExitException
     #
-    ################################///
+    ###################################
 
     class ExitException(RuntimeError):
         def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
@@ -454,11 +454,11 @@ class Terminator:
         def get_message(self) -> str:
             return str(self)
 
-    ################################///
+    ###################################
     #
     # Terminator.ExitError
     #
-    ################################///
+    ###################################
 
     class ExitError(Exception):
         # Maps to java.lang.Error (serious problems).
@@ -485,11 +485,11 @@ class ByteDump:
     Java reproduction of the bash bytedump script (Python Translation).
     """
 
-    ################################///
+    ###################################
     #
-    # ByteDump Fields
+    # ByteDump Variables
     #
-    ################################///
+    ###################################
 
     #
     # Program information.
@@ -980,11 +980,11 @@ class ByteDump:
 
     argumentsConsumed: int = 0
 
-    ################################///
+    ###################################
     #
     # ByteDump Methods
     #
-    ################################///
+    ###################################
 
     @classmethod
     def arguments(cls, args: List[str]) -> None:
@@ -2314,9 +2314,12 @@ class ByteDump:
 
         pass
 
+    ###################################
     #
-    # Helper wrappers
+    # Error Methods
     #
+    ###################################
+
     @classmethod
     def internal_error(cls, *args: str) -> None:
         Terminator.error_handler(
@@ -2365,9 +2368,12 @@ class ByteDump:
             " ".join(args)
         )
 
+    ###################################
     #
-    # Low-level helpers
+    # Helper Methods
     #
+    ###################################
+
     @classmethod
     def byte_loader(cls, input_stream, limit: int):
         # Reads limit bytes and returns a BytesIO
