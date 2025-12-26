@@ -7,12 +7,21 @@
 # Ported to Python in collaboration with Google Gemini (December 2025)
 # ----------------------------------------------------------------------
 #
+# Lots of noise if you run pylint on this file and there still are issues that I'm
+# going to investigate. Right now I use something like
+#
+#   pylint --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R1702,R0912,R0914,R0915 file.py
+#
+# to run pylint (version 2.12.2) on my Linux system.
+#
 
+import inspect
+import locale
+import os
 import re
 import sys
-import os
-import locale
-from io import BytesIO
+
+from io import BytesIO, StringIO
 from typing import List, Dict, Optional, Any
 
 ################################################################################
@@ -165,9 +174,11 @@ class RegexManager:
         # for the current use case, but method signature matches.
         return re.search(regex, text) is not None
 
-################################################################################
-# Main Class
-################################################################################
+###################################
+#
+# ByteDump - Main Class
+#
+###################################
 
 class ByteDump:
     """
@@ -1092,7 +1103,6 @@ class ByteDump:
         #
         # OPTIMIZED: Single record dump
         #
-        from io import StringIO
 
         output_byte = output
         # If both enabled, we must buffer text to print it AFTER all bytes
@@ -1997,7 +2007,7 @@ class ByteDump:
 
     ###################################
     #
-    # Error Methods
+    # ByteDump - Error Methods
     #
     ###################################
 
@@ -2051,7 +2061,7 @@ class ByteDump:
 
     ###################################
     #
-    # Helper Methods
+    # ByteDump - Helper Methods
     #
     ###################################
 
@@ -2100,26 +2110,36 @@ class ByteDump:
         return os.access(path, os.R_OK)
 
     @classmethod
-    def printable_user_string(cls, str) -> bool:
+    def printable_user_string(cls, arg: str) -> bool:
+        #
+        # Just used to make sure that all of the characters in the strings that a user can
+        # "add" to our dump using command line options (e.g., --addr-suffix) are printable
+        # characters. It's important, because we need count characters in those strings to
+        # make sure everything in the dump lines up vertically. The bash and Java versions
+        # were able to do this by combining locales with appropriate regular expressions,
+        # but I'm not sure how to make that approach work in Python. Anyway, what's done
+        # here seems to be sufficient.
+        #
         printable = False
-        if str.isprintable():
+        if arg.isprintable():
             try:
                 #
-                # I think this is sufficient - the Python UTF-8 Mode documentation implies
-                # it's only automatically enabled (at startup) when LC_CTYPE is C or POSIX.
+                # I think this part works - the Python UTF-8 Mode documentation seems to
+                # imply that issues with locale.getpreferredencoding() are only enabled
+                # (at startup) when LC_CTYPE is C or POSIX.
                 #
                 encoding = locale.getpreferredencoding(False)
-                str.encode(encoding)
+                arg.encode(encoding)
                 printable = True
             except UnicodeEncodeError:
                 pass
         return printable
 
-################################################################################
-# Terminator (Helper Class)
-################################################################################
-
-import inspect
+###################################
+#
+# Terminator - Helper Class
+#
+###################################
 
 class Terminator:
     """
