@@ -24,26 +24,11 @@ import sys
 from io import BytesIO, StringIO
 from typing import List, Dict, Optional, Any
 
-################################################################################
-# Helper Classes (Mirrors of AttributeTables.java and StringMap.java)
-################################################################################
-
-class StringMap(dict):
-    """
-    Mirrors StringMap.java: A HashMap extension with a varargs-like constructor.
-    """
-    def __init__(self, *pairs: str):
-        super().__init__()
-        self.put_pairs(*pairs)
-
-    def put_pairs(self, *pairs: str) -> None:
-        length = len(pairs)
-        if length > 0:
-            # Step by 2 to process key-value pairs
-            for index in range(0, length, 2):
-                key = pairs[index]
-                value = pairs[index + 1] if index < length - 1 else None
-                self[key] = value
+###################################
+#
+# AttributeTables - Helper Class
+#
+###################################
 
 class AttributeTables(dict):
     """
@@ -103,76 +88,28 @@ class AttributeTables(dict):
 
         return table
 
-################################################################################
-# RegexManager (Helper Class)
-################################################################################
+###################################
+#
+# StringMap - Helper Class
+#
+###################################
 
-class RegexManager:
+class StringMap(dict):
     """
-    Mirrors RegexManager.java: Wraps regex operations to resemble Java/Bash behavior.
+    Mirrors StringMap.java: A HashMap extension with a varargs-like constructor.
     """
+    def __init__(self, *pairs: str):
+        super().__init__()
+        self.put_pairs(*pairs)
 
-    # Python 're' doesn't support Java's \p{Prop} syntax. We map commonly used ones.
-    UNICODE_CHARACTER_CLASS = 0  # Placeholder, not strictly needed in Python 're'
-    FLAGS_DEFAULT = 0
-
-    JAVA_TO_PYTHON_REGEX = {
-        r"\\p{Print}": r"[ -~]",  # Printable ASCII
-        r"\\p{Alnum}": r"[a-zA-Z0-9]",
-        r"\\p{Alpha}": r"[a-zA-Z]",
-        r"\\p{Blank}": r"[ \t]",
-        r"\\p{Cntrl}": r"[\x00-\x1F\x7F]",
-        r"\\p{Digit}": r"[0-9]",
-        r"\\p{Graph}": r"[!-~]",
-        r"\\p{Lower}": r"[a-z]",
-        r"\\p{Punct}": r"[!\"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]",
-        r"\\p{Space}": r"[\s]",
-        r"\\p{Upper}": r"[A-Z]",
-        r"\\p{XDigit}": r"[0-9a-fA-F]",
-    }
-
-    def _convert_regex(self, regex: str) -> str:
-        # Simple replacement to handle Java POSIX classes used in ByteDump
-        for java_p, py_re in self.JAVA_TO_PYTHON_REGEX.items():
-            regex = regex.replace(java_p, py_re)
-        return regex
-
-    def matched_groups(self, text: str, regex: str) -> Optional[List[str]]:
-        """
-        Mimics Java's matchedGroups. Returns a list where index 0 is the full match,
-        and subsequent indices are capturing groups. Returns None on no match.
-        """
-        if text is None or regex is None:
-            return None
-
-        regex = self._convert_regex(regex)
-        match = re.search(regex, text)
-        if match:
-            # Java Matcher.group(0) is full match, group(1).. are captures.
-            # Python match.groups() only returns captures.
-            return [match.group(0)] + list(match.groups())
-        return None
-
-    def matched_group(self, group_index: int, text: str, regex: str) -> Optional[str]:
-        """
-        Returns the specific group string from a match.
-        """
-        groups = self.matched_groups(text, regex)
-        if groups and group_index < len(groups):
-            return groups[group_index]
-        return None
-
-    def matched(self, text: str, regex: str, flags: int = 0) -> bool:
-        """
-        Returns True if the regex matches anywhere in the text.
-        """
-        if text is None or regex is None:
-            return False
-
-        regex = self._convert_regex(regex)
-        # We ignore flags implementation for now as Python defaults are sufficient
-        # for the current use case, but method signature matches.
-        return re.search(regex, text) is not None
+    def put_pairs(self, *pairs: str) -> None:
+        length = len(pairs)
+        if length > 0:
+            # Step by 2 to process key-value pairs
+            for index in range(0, length, 2):
+                key = pairs[index]
+                value = pairs[index + 1] if index < length - 1 else None
+                self[key] = value
 
 ###################################
 #
@@ -2137,6 +2074,79 @@ class ByteDump:
 
 ###################################
 #
+# RegexManager - Helper Class
+#
+###################################
+
+class RegexManager:
+    """
+    Mirrors RegexManager.java: Wraps regex operations to resemble Java/Bash behavior.
+    """
+
+    # Python 're' doesn't support Java's \p{Prop} syntax. We map commonly used ones.
+    UNICODE_CHARACTER_CLASS = 0  # Placeholder, not strictly needed in Python 're'
+    FLAGS_DEFAULT = 0
+
+    JAVA_TO_PYTHON_REGEX = {
+        r"\\p{Print}": r"[ -~]",  # Printable ASCII
+        r"\\p{Alnum}": r"[a-zA-Z0-9]",
+        r"\\p{Alpha}": r"[a-zA-Z]",
+        r"\\p{Blank}": r"[ \t]",
+        r"\\p{Cntrl}": r"[\x00-\x1F\x7F]",
+        r"\\p{Digit}": r"[0-9]",
+        r"\\p{Graph}": r"[!-~]",
+        r"\\p{Lower}": r"[a-z]",
+        r"\\p{Punct}": r"[!\"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]",
+        r"\\p{Space}": r"[\s]",
+        r"\\p{Upper}": r"[A-Z]",
+        r"\\p{XDigit}": r"[0-9a-fA-F]",
+    }
+
+    def _convert_regex(self, regex: str) -> str:
+        # Simple replacement to handle Java POSIX classes used in ByteDump
+        for java_p, py_re in self.JAVA_TO_PYTHON_REGEX.items():
+            regex = regex.replace(java_p, py_re)
+        return regex
+
+    def matched_groups(self, text: str, regex: str) -> Optional[List[str]]:
+        """
+        Mimics Java's matchedGroups. Returns a list where index 0 is the full match,
+        and subsequent indices are capturing groups. Returns None on no match.
+        """
+        if text is None or regex is None:
+            return None
+
+        regex = self._convert_regex(regex)
+        match = re.search(regex, text)
+        if match:
+            # Java Matcher.group(0) is full match, group(1).. are captures.
+            # Python match.groups() only returns captures.
+            return [match.group(0)] + list(match.groups())
+        return None
+
+    def matched_group(self, group_index: int, text: str, regex: str) -> Optional[str]:
+        """
+        Returns the specific group string from a match.
+        """
+        groups = self.matched_groups(text, regex)
+        if groups and group_index < len(groups):
+            return groups[group_index]
+        return None
+
+    def matched(self, text: str, regex: str, flags: int = 0) -> bool:
+        """
+        Returns True if the regex matches anywhere in the text.
+        """
+        if text is None or regex is None:
+            return False
+
+        regex = self._convert_regex(regex)
+        # We ignore flags implementation for now as Python defaults are sufficient
+        # for the current use case, but method signature matches.
+        return re.search(regex, text) is not None
+
+###################################
+#
 # Terminator - Helper Class
 #
 ###################################
@@ -2262,12 +2272,6 @@ class Terminator:
             raise Terminator.ExitException(message, cause, status)
         else:
             raise Terminator.ExitError(message, cause, status)
-
-    ###################################
-    #
-    # Private Methods
-    #
-    ###################################
 
     @classmethod
     def message_formatter(cls, args: List[str]) -> str:
