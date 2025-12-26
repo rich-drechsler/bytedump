@@ -134,5 +134,3 @@ code just to decide the author really was crazy. There really are enough comment
 particularly at the start of `bytedump-bash.sh`, that you probably can make that
 decision without looking at any bash code.
 
-The initial Python version was built
-
