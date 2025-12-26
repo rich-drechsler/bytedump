@@ -90,29 +90,6 @@ class AttributeTables(dict):
 
 ###################################
 #
-# StringMap - Helper Class
-#
-###################################
-
-class StringMap(dict):
-    """
-    Mirrors StringMap.java: A HashMap extension with a varargs-like constructor.
-    """
-    def __init__(self, *pairs: str):
-        super().__init__()
-        self.put_pairs(*pairs)
-
-    def put_pairs(self, *pairs: str) -> None:
-        length = len(pairs)
-        if length > 0:
-            # Step by 2 to process key-value pairs
-            for index in range(0, length, 2):
-                key = pairs[index]
-                value = pairs[index + 1] if index < length - 1 else None
-                self[key] = value
-
-###################################
-#
 # ByteDump - Main Class
 #
 ###################################
@@ -519,96 +496,96 @@ class ByteDump:
     # ANSI Escape Codes
     #
 
-    ANSI_ESCAPE: StringMap = StringMap(
+    ANSI_ESCAPE: Dict[str, str] = {
         # Foregound color escape sequences.
-        "FOREGROUND.black", "\u001B[30m",
-        "FOREGROUND.red", "\u001B[31m",
-        "FOREGROUND.green", "\u001B[32m",
-        "FOREGROUND.yellow", "\u001B[33m",
-        "FOREGROUND.blue", "\u001B[34m",
-        "FOREGROUND.magenta", "\u001B[35m",
-        "FOREGROUND.cyan", "\u001B[36m",
-        "FOREGROUND.white", "\u001B[37m",
+        "FOREGROUND.black": "\u001B[30m",
+        "FOREGROUND.red": "\u001B[31m",
+        "FOREGROUND.green": "\u001B[32m",
+        "FOREGROUND.yellow": "\u001B[33m",
+        "FOREGROUND.blue": "\u001B[34m",
+        "FOREGROUND.magenta": "\u001B[35m",
+        "FOREGROUND.cyan": "\u001B[36m",
+        "FOREGROUND.white": "\u001B[37m",
 
-        "FOREGROUND.alt-black", "\u001B[90m",
-        "FOREGROUND.alt-red", "\u001B[91m",
-        "FOREGROUND.alt-green", "\u001B[92m",
-        "FOREGROUND.alt-yellow", "\u001B[93m",
-        "FOREGROUND.alt-blue", "\u001B[94m",
-        "FOREGROUND.alt-magenta", "\u001B[95m",
-        "FOREGROUND.alt-cyan", "\u001B[96m",
-        "FOREGROUND.alt-white", "\u001B[97m",
+        "FOREGROUND.alt-black": "\u001B[90m",
+        "FOREGROUND.alt-red": "\u001B[91m",
+        "FOREGROUND.alt-green": "\u001B[92m",
+        "FOREGROUND.alt-yellow": "\u001B[93m",
+        "FOREGROUND.alt-blue": "\u001B[94m",
+        "FOREGROUND.alt-magenta": "\u001B[95m",
+        "FOREGROUND.alt-cyan": "\u001B[96m",
+        "FOREGROUND.alt-white": "\u001B[97m",
 
-        "FOREGROUND.bright-black", "\u001B[1;30m",
-        "FOREGROUND.bright-red", "\u001B[1;31m",
-        "FOREGROUND.bright-green", "\u001B[1;32m",
-        "FOREGROUND.bright-yellow", "\u001B[1;33m",
-        "FOREGROUND.bright-blue", "\u001B[1;34m",
-        "FOREGROUND.bright-magenta", "\u001B[1;35m",
-        "FOREGROUND.bright-cyan", "\u001B[1;36m",
-        "FOREGROUND.bright-white", "\u001B[1;37m",
+        "FOREGROUND.bright-black": "\u001B[1;30m",
+        "FOREGROUND.bright-red": "\u001B[1;31m",
+        "FOREGROUND.bright-green": "\u001B[1;32m",
+        "FOREGROUND.bright-yellow": "\u001B[1;33m",
+        "FOREGROUND.bright-blue": "\u001B[1;34m",
+        "FOREGROUND.bright-magenta": "\u001B[1;35m",
+        "FOREGROUND.bright-cyan": "\u001B[1;36m",
+        "FOREGROUND.bright-white": "\u001B[1;37m",
 
         # Blinking foreground color escape sequences.
-        "FOREGROUND.blink-black", "\u001B[5;30m",
-        "FOREGROUND.blink-red", "\u001B[5;31m",
-        "FOREGROUND.blink-green", "\u001B[5;32m",
-        "FOREGROUND.blink-yellow", "\u001B[5;33m",
-        "FOREGROUND.blink-blue", "\u001B[5;34m",
-        "FOREGROUND.blink-magenta", "\u001B[5;35m",
-        "FOREGROUND.blink-cyan", "\u001B[5;36m",
-        "FOREGROUND.blink-white", "\u001B[5;37m",
+        "FOREGROUND.blink-black": "\u001B[5;30m",
+        "FOREGROUND.blink-red": "\u001B[5;31m",
+        "FOREGROUND.blink-green": "\u001B[5;32m",
+        "FOREGROUND.blink-yellow": "\u001B[5;33m",
+        "FOREGROUND.blink-blue": "\u001B[5;34m",
+        "FOREGROUND.blink-magenta": "\u001B[5;35m",
+        "FOREGROUND.blink-cyan": "\u001B[5;36m",
+        "FOREGROUND.blink-white": "\u001B[5;37m",
 
-        "FOREGROUND.blink-alt-black", "\u001B[5;90m",
-        "FOREGROUND.blink-alt-red", "\u001B[5;91m",
-        "FOREGROUND.blink-alt-green", "\u001B[5;92m",
-        "FOREGROUND.blink-alt-yellow", "\u001B[5;93m",
-        "FOREGROUND.blink-alt-blue", "\u001B[5;94m",
-        "FOREGROUND.blink-alt-magenta", "\u001B[5;95m",
-        "FOREGROUND.blink-alt-cyan", "\u001B[5;96m",
-        "FOREGROUND.blink-alt-white", "\u001B[5;97m",
+        "FOREGROUND.blink-alt-black": "\u001B[5;90m",
+        "FOREGROUND.blink-alt-red": "\u001B[5;91m",
+        "FOREGROUND.blink-alt-green": "\u001B[5;92m",
+        "FOREGROUND.blink-alt-yellow": "\u001B[5;93m",
+        "FOREGROUND.blink-alt-blue": "\u001B[5;94m",
+        "FOREGROUND.blink-alt-magenta": "\u001B[5;95m",
+        "FOREGROUND.blink-alt-cyan": "\u001B[5;96m",
+        "FOREGROUND.blink-alt-white": "\u001B[5;97m",
 
-        "FOREGROUND.blink-bright-black", "\u001B[5;1;30m",
-        "FOREGROUND.blink-bright-red", "\u001B[5;1;31m",
-        "FOREGROUND.blink-bright-green", "\u001B[5;1;32m",
-        "FOREGROUND.blink-bright-yellow", "\u001B[5;1;33m",
-        "FOREGROUND.blink-bright-blue", "\u001B[5;1;34m",
-        "FOREGROUND.blink-bright-magenta", "\u001B[5;1;35m",
-        "FOREGROUND.blink-bright-cyan", "\u001B[5;1;36m",
-        "FOREGROUND.blink-bright-white", "\u001B[5;1;37m",
+        "FOREGROUND.blink-bright-black": "\u001B[5;1;30m",
+        "FOREGROUND.blink-bright-red": "\u001B[5;1;31m",
+        "FOREGROUND.blink-bright-green": "\u001B[5;1;32m",
+        "FOREGROUND.blink-bright-yellow": "\u001B[5;1;33m",
+        "FOREGROUND.blink-bright-blue": "\u001B[5;1;34m",
+        "FOREGROUND.blink-bright-magenta": "\u001B[5;1;35m",
+        "FOREGROUND.blink-bright-cyan": "\u001B[5;1;36m",
+        "FOREGROUND.blink-bright-white": "\u001B[5;1;37m",
 
-        "FOREGROUND.reset", "",
+        "FOREGROUND.reset": "",
 
         # Background color escape sequences
-        "BACKGROUND.black", "\u001B[40m",
-        "BACKGROUND.red", "\u001B[41m",
-        "BACKGROUND.green", "\u001B[42m",
-        "BACKGROUND.yellow", "\u001B[43m",
-        "BACKGROUND.blue", "\u001B[44m",
-        "BACKGROUND.magenta", "\u001B[45m",
-        "BACKGROUND.cyan", "\u001B[46m",
-        "BACKGROUND.white", "\u001B[47m",
+        "BACKGROUND.black": "\u001B[40m",
+        "BACKGROUND.red": "\u001B[41m",
+        "BACKGROUND.green": "\u001B[42m",
+        "BACKGROUND.yellow": "\u001B[43m",
+        "BACKGROUND.blue": "\u001B[44m",
+        "BACKGROUND.magenta": "\u001B[45m",
+        "BACKGROUND.cyan": "\u001B[46m",
+        "BACKGROUND.white": "\u001B[47m",
 
-        "BACKGROUND.alt-black", "\u001B[100m",
-        "BACKGROUND.alt-red", "\u001B[101m",
-        "BACKGROUND.alt-green", "\u001B[102m",
-        "BACKGROUND.alt-yellow", "\u001B[103m",
-        "BACKGROUND.alt-blue", "\u001B[104m",
-        "BACKGROUND.alt-magenta", "\u001B[105m",
-        "BACKGROUND.alt-cyan", "\u001B[106m",
-        "BACKGROUND.alt-white", "\u001B[107m",
+        "BACKGROUND.alt-black": "\u001B[100m",
+        "BACKGROUND.alt-red": "\u001B[101m",
+        "BACKGROUND.alt-green": "\u001B[102m",
+        "BACKGROUND.alt-yellow": "\u001B[103m",
+        "BACKGROUND.alt-blue": "\u001B[104m",
+        "BACKGROUND.alt-magenta": "\u001B[105m",
+        "BACKGROUND.alt-cyan": "\u001B[106m",
+        "BACKGROUND.alt-white": "\u001B[107m",
 
-        "BACKGROUND.bright-black", "\u001B[1;40m",
-        "BACKGROUND.bright-red", "\u001B[1;41m",
-        "BACKGROUND.bright-green", "\u001B[1;42m",
-        "BACKGROUND.bright-yellow", "\u001B[1;43m",
-        "BACKGROUND.bright-blue", "\u001B[1;44m",
-        "BACKGROUND.bright-magenta", "\u001B[1;45m",
-        "BACKGROUND.bright-cyan", "\u001B[1;46m",
-        "BACKGROUND.bright-white", "\u001B[1;47m",
+        "BACKGROUND.bright-black": "\u001B[1;40m",
+        "BACKGROUND.bright-red": "\u001B[1;41m",
+        "BACKGROUND.bright-green": "\u001B[1;42m",
+        "BACKGROUND.bright-yellow": "\u001B[1;43m",
+        "BACKGROUND.bright-blue": "\u001B[1;44m",
+        "BACKGROUND.bright-magenta": "\u001B[1;45m",
+        "BACKGROUND.bright-cyan": "\u001B[1;46m",
+        "BACKGROUND.bright-white": "\u001B[1;47m",
 
-        "BACKGROUND.reset", "",
-        "RESET.attributes", "\u001B[0m"
-    )
+        "BACKGROUND.reset": "",
+        "RESET.attributes": "\u001B[0m"
+    }
 
     attributeTables: AttributeTables = AttributeTables(
         "BYTE_BACKGROUND", "BYTE_FOREGROUND",
@@ -913,6 +890,7 @@ class ByteDump:
 
                         sys.stderr.write(f"[Debug] Fields[{len(consumed)}]:\n")
                         sys.stderr.write("".join(buffer))
+                        sys.stderr.write("\n")
 
                 case "foreground":
                     if cls.DEBUG_foreground:
