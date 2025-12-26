@@ -218,67 +218,10 @@ look like comments, so if you're relatively new to GNU make your first job proba
 should be to organize recipe lines into disjoint groups. Start at the first line of
 the rule's recipes and only stop collecting consecutive lines when you run into one
 that doesn't end with a backslash character.
-keep mentally collecting consecutive lines until you find one
-that doesn't end with a backslash character.
 
-
-
-
- the first thing you
-
-If you don't have much experience with GNU make, a rule with 60 lines that  of recipes could be intimidating, so
- a 60 line recipe 
- is unusual, even if most of the lines are comments, but the first
-thing you probably should do
-
-
-
-
-
-Perhaps the easiest way to start is to mentally organize a rule's recipe lines into
-disjoint groups that are glued together by 
-
-looking for
-Perhaps the best way to start to group recipe lines together by
-to look at the last character in each line of a
-rule's recipes. 
-If you're relatively new to make, my recommendation is that your first step should
-
-
-If you're relatively new to make, my recommendation is that your first step should
-be to mentally split the rule's recipes into groups. Start with the first line and
-keep adding consecutive lines to that "group" when the current line (i.e., the one
-you're looking at) 
-with a backslash. 
-
-    Start 
-    group[1] = line[
-    while 
-    current_line = first_line
-    while current_line 
-
-
-
-when you want to understand a rule's recipes, like the 60 line monster that you're
-hopefully looking at, is to bust it into pieces by checking at the last character on
-each line.
-
- you're confronted with a rule that 
-If you're new to GNU make you're probably overwhelmed by a 60 line recipe, even if
-most of the lines are comments, 
-
-Probably
-A 60 line recipe is unusual, even if most of the lines are comments, but the first
-thing you probably should do
-
-but if you're
-not sure what's happening tackle one line at a time, starting at the first line.
-
-
-Reading makefile recipes can be difficult because they're a strange mix of make and
-shell code that GNU make has to preprocess before anything is handed to the shell.
-A 60 line recipe is unusual, even if most of the lines are comments, but if you're
-not sure what's happening tackle one line at a time, starting at the first line.
+WAS WORKING HERE - deleted stuff that was incomplete in this section, but will come
+back to the section after I'm satisfied with Python version that recently added to
+this repository...
 
 ### Comments
 
