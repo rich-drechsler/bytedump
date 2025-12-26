@@ -1211,18 +1211,10 @@ class ByteDump:
         consumed: Dict[str, Any]
         matched: List[str]
         buffer: List[str]
-        manager: RegexManager
-        hits: Optional[List[str]]
         name: str
         prefix: str
-        regex: str
-        sep: str
         tag: str
         value: Any
-        flags: int
-        index: int
-        first: int
-        last: int
         col: int
         row: int
 
@@ -1259,18 +1251,18 @@ class ByteDump:
 
                         # DEBUG_fields_prefixes is a string "DUMP ADDR ..."
                         for prfx in cls.DEBUG_fields_prefixes.split(" "):
-                            matched_fields = []
+                            matched = []
                             # Inspect class attributes
                             for name in dir(cls):
                                 # Filter out builtins and methods, we want static data fields
                                 if name.startswith(prfx) and not callable(getattr(cls, name)):
                                     if name not in consumed:
-                                        matched_fields.append(name)
+                                        matched.append(name)
                                         consumed[name] = getattr(cls, name)
 
-                            if len(matched_fields) > 0:
-                                matched_fields.sort()
-                                for key in matched_fields:
+                            if len(matched) > 0:
+                                matched.sort()
+                                for key in matched:
                                     tag = "  "
                                     value = consumed[key]
                                     if value is None:
