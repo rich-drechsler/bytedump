@@ -148,8 +148,8 @@ validate : all
 	fi
 
 #
-# Not using make's implicit .sh rule, but only because I wanted consistent "build
-# messages" from makefiles.
+# Doubt there's an implicit GNU make rule to do this, but this approach is better
+# because it lets us control the output messages.
 #
 
 $(BYTEDUMP-PYTHON) : $(BYTEDUMP-PYTHON).py

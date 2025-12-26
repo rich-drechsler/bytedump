@@ -14,6 +14,8 @@ than the bash script. Both versions are available in this repository and if I ge
 time I plan on adding implementations in a few more languages (e.g., Python, Rust,
 or C).
 
+### Chatbots
+
 Gemini 3 Pro did a pretty good job translating the Java version into Python, and I
 was pleased with the results. It's not complete or thoroughly tested, but it does
 seem to work, so I decided to include it this repository. Gemini 3 Pro handled all
@@ -33,15 +35,16 @@ You'll find the following directories in this repository:
          image - the default installation directory
 
 Implementations in any additional languages will be stored in directories that, just
-like the bash and Java versions, identify the language.
+like the bash, Java, and Python versions, identify the language.
 
 ### Makefiles
 
 The makefiles
 
-    src/bash/Makefile - manages the bash version of bytedump
-    src/java/Makefile - manages the Java version of bytedump
-         src/Makefile - manages all of the bytedump implementations
+      src/bash/Makefile - manages the bash version of bytedump
+      src/java/Makefile - manages the Java version of bytedump
+    src/python/Makefile - manages the Java version of bytedump
+           src/Makefile - manages all of the bytedump implementations
 
 are available to help you build or install the different bytedump implementations.
 Each one recognizes a small set of targets (`all`, `install`, `clean`, `clobber`,
@@ -98,8 +101,8 @@ To install it somewhere else, like `/tmp/bytedump`, make sure the directory exis
     make INSTALLDIR=/tmp/bytedump install
 
 The name of the top level installation directory doesn't matter. There's no record
-of it in any of the installed files, so you can move it anywhere you want and all
-the installed bytedump executables will continue to work.
+of it in any of the installed files, so you can move that directory anywhere you
+want and all the installed bytedump executables will continue to work.
 
 ### Source Files
 
@@ -122,11 +125,14 @@ the files that I think might be most interesting and/or easiest come first.
     src/bash/bytedump-bash.sh
         The bash bytedump version - it's a big file with lots of comments.
 
-The bash version is, without a doubt, the toughest read. More than half the lines in
-the script are comments that I hope help anyone who decides to take a closer look at
-the source code. Many of the comments try to explain what I was thinking when I wrote
-portions of the bash script, so if you don't agree with my thoughts you won't have to
-waste time deciphering chunks of bash code just to decide the author really was crazy.
-There really are enough comments, particularly at the start of `bytedump-bash.sh`, that
-you probably can make that decision without looking at any bash code.
+The bash version is, without a doubt, the toughest read and it was easily the most
+challenging to write. More than half the lines in the script are comments that I hope
+help anyone who decides to take a closer look at the source code. Many of the comments
+try to explain what I was thinking when I wrote portions of the bash script, so if you
+don't agree with my thoughts you won't have to waste time deciphering chunks of bash
+code just to decide the author really was crazy. There really are enough comments,
+particularly at the start of `bytedump-bash.sh`, that you probably can make that
+decision without looking at any bash code.
+
+The initial Python version was built
 
