@@ -166,317 +166,6 @@ class RegexManager:
         return re.search(regex, text) is not None
 
 ################################################################################
-# Terminator (Helper Class)
-################################################################################
-
-import inspect
-
-class Terminator:
-    """
-    Mirrors Terminator.java: Error handling framework for generating consistent messages
-    and handling graceful exits via exceptions.
-    """
-
-    # Constants used in message_formatter to select info
-    CALLER_INFO: str = "CALLER"
-    LINE_INFO: str = "LINE"
-    LOCATION_INFO: str = "LOCATION"
-    METHOD_INFO: str = "METHOD"
-    SOURCE_INFO: str = "SOURCE"
-
-    # Keys for stack frame info
-    FRAME_LINE: str = "LINE"
-    FRAME_METHOD: str = "METHOD"
-    FRAME_SOURCE: str = "SOURCE"
-
-    UNKNOWN_FILE_TAG: str = "File unknown"
-    UNKNOWN_LINE_TAG: str = "unknown"
-
-    RUNTIME_EXCEPTION: bool = True
-    DEFAULT_EXIT_STATUS: int = 1
-
-    ###################################
-    #
-    # Terminator Methods
-    #
-    ###################################
-
-    @classmethod
-    def error_handler(cls, *args: str) -> str:
-        arguments: List[str]
-        manager: RegexManager
-        groups: Optional[List[str]]
-        done: bool
-        should_exit: bool
-        runtime: bool
-        arg: str
-        message: str
-        optarg: str
-        opttag: str
-        target: str
-        status: int
-        index: int
-
-        should_exit = True
-        runtime = cls.RUNTIME_EXCEPTION
-        status = cls.DEFAULT_EXIT_STATUS
-
-        arguments = []
-        arguments.append("-tag=Error")
-        arguments.append("-info=location")
-
-        manager = RegexManager()
-        done = False
-        index = 0
-
-        # Argument parsing loop mirroring Java
-        while index < len(args):
-            arg = args[index]
-            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
-            if groups is not None:
-                target = groups[1]
-                opttag = groups[2]
-                optarg = groups[5]
-            else:
-                target = arg
-                opttag = ""
-                optarg = ""
-
-            match target:
-                case "+exit":
-                    should_exit = True
-                    runtime = cls.RUNTIME_EXCEPTION
-                case "-exit":
-                    should_exit = False
-                case "+exit-error":
-                    should_exit = True
-                    runtime = False
-                case "+exit-exception":
-                    should_exit = True
-                    runtime = True
-                case "-status":
-                    try:
-                        status = int(optarg)
-                    except ValueError:
-                        pass
-                case "--":
-                    done = True
-                    index += 1
-                case _:
-                    if opttag == "+" or opttag == "-":
-                        arguments.append(arg)
-                    else:
-                        done = True
-
-            if done:
-                break
-
-            index += 1
-
-        # Hand off remaining args
-        arguments.append("+frame")
-        arguments.append("--")
-        arguments.append(" ".join(args[index:]))
-
-        message = cls.message_formatter(arguments)
-
-        if should_exit:
-            cls.terminate(message, None, status, runtime)
-
-        return message
-
-    @classmethod
-    def terminate(cls, message: Optional[str] = None, cause: Optional[BaseException] = None,
-                  status: int = DEFAULT_EXIT_STATUS, runtime: bool = RUNTIME_EXCEPTION) -> None:
-        if runtime:
-            raise Terminator.ExitException(message, cause, status)
-        else:
-            raise Terminator.ExitError(message, cause, status)
-
-    ###################################
-    #
-    # Private Methods
-    #
-    ###################################
-
-    @classmethod
-    def message_formatter(cls, args: List[str]) -> str:
-        caller: Dict[str, str]
-        manager: RegexManager
-        groups: Optional[List[str]]
-        done: bool
-        arg: str
-        message: Optional[str]
-        optarg: str
-        opttag: str
-        target: str
-        info: Optional[str]
-        prefix: Optional[str]
-        suffix: Optional[str]
-        tag: Optional[str]
-        frame_offset: int
-        index: int
-
-        message = None
-        info = None
-        prefix = None
-        suffix = None
-        tag = None
-        frame_offset = 1
-
-        manager = RegexManager()
-        done = False
-        index = 0
-
-        while index < len(args):
-            arg = args[index]
-            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
-            if groups is not None:
-                target = groups[1]
-                opttag = groups[2]
-                optarg = groups[5]
-            else:
-                target = arg
-                opttag = ""
-                optarg = ""
-
-            match target:
-                case "+frame":
-                    frame_offset += 1
-                case "-frame":
-                    frame_offset = 0
-                case "-info":
-                    info = optarg
-                case "-prefix":
-                    prefix = optarg
-                case "-suffix":
-                    suffix = optarg
-                case "-tag":
-                    tag = optarg
-                case "--":
-                    done = True
-                    index += 1
-                case _:
-                    if opttag != "+" and opttag != "-":
-                        done = True
-
-            if done:
-                break
-
-            index += 1
-
-        if index < len(args):
-            message = " ".join(args[index:])
-
-        if info is not None:
-            # Python Stack Inspection
-            # stack[0] is current, stack[1] is caller of message_formatter, etc.
-            # Java default was frame=1 (caller of messageFormatter).
-            # We need to account for Python's stack structure.
-            # 0: message_formatter
-            # 1: error_handler (usually)
-            # 2: The actual caller we want
-
-            stack = inspect.stack()
-
-            if frame_offset < len(stack):
-                frame_info = stack[frame_offset]
-                # frame_info is a FrameInfo object or tuple
-
-                caller = {}
-                line_no = frame_info.lineno
-                caller[cls.FRAME_LINE] = str(line_no) if line_no >= 0 else cls.UNKNOWN_LINE_TAG
-                caller[cls.FRAME_METHOD] = frame_info.function
-
-                # frame_info.filename gives full path, Java often gives just file name.
-                # using os.path.basename to match typical Java behavior
-                fname = frame_info.filename
-                caller[cls.FRAME_SOURCE] = os.path.basename(fname) if fname else cls.UNKNOWN_FILE_TAG
-
-                for token in info.split(","):
-                    token_upper = token.strip().upper()
-
-                    # Logic: tag = String.join("", tag, "] [", ...)
-                    # Check for null tag first to avoid "None] ["
-                    current_tag = tag if tag is not None else ""
-
-                    # NOTE: Python string join logic slightly different than Java's String.join with delimiter
-                    # Java: String.join("", tag, "] [", val) -> tag + "] [" + val
-
-                    # We need to handle the initial join if tag is empty?
-                    # Java code: tag = String.join("", tag, "] [", ...)
-                    # If tag was "Error", it becomes "Error] [LOCATION..."
-
-                    part = ""
-                    if token_upper == cls.CALLER_INFO:
-                        part = f"{caller[cls.FRAME_SOURCE]}; {caller[cls.FRAME_METHOD]}; Line {caller[cls.FRAME_LINE]}"
-                    elif token_upper == cls.LINE_INFO:
-                        part = f"Line {caller[cls.FRAME_LINE]}"
-                    elif token_upper == cls.LOCATION_INFO:
-                        part = f"{caller[cls.FRAME_SOURCE]}; Line {caller[cls.FRAME_LINE]}"
-                    elif token_upper == cls.METHOD_INFO:
-                        part = caller[cls.FRAME_METHOD]
-                    elif token_upper == cls.SOURCE_INFO:
-                        part = caller[cls.FRAME_SOURCE]
-
-                    if len(part) > 0:
-                        tag = f"{current_tag}] [{part}"
-
-        # Final Assembly
-        result = ""
-        if prefix is not None and len(prefix) > 0:
-            result += prefix + ": "
-        if message is not None and len(message) > 0:
-            result += message + " "
-        if tag is not None and len(tag) > 0:
-            result += "[" + tag + "]"
-        if suffix is not None and len(suffix) > 0:
-            result += suffix
-
-        return result
-
-    ###################################
-    #
-    # Terminator.ExitException
-    #
-    ###################################
-
-    class ExitException(RuntimeError):
-        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
-            super().__init__(message)
-            self.status = status
-            if cause:
-                self.__cause__ = cause
-
-        def get_status(self) -> int:
-            return self.status
-
-        def get_message(self) -> str:
-            return str(self)
-
-    ###################################
-    #
-    # Terminator.ExitError
-    #
-    ###################################
-
-    class ExitError(Exception):
-        # Maps to java.lang.Error (serious problems).
-        # In Python, standard Exception is closest equivalent for "checked" but
-        # since we don't have checked/unchecked, BaseException or Exception is fine.
-        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
-            super().__init__(message)
-            self.status = status
-            if cause:
-                self.__cause__ = cause
-
-        def get_status(self) -> int:
-            return self.status
-
-        def get_message(self) -> str:
-            return str(self)
-
-################################################################################
 # Main Class
 ################################################################################
 
@@ -2425,6 +2114,317 @@ class ByteDump:
             except UnicodeEncodeError:
                 pass
         return printable
+
+################################################################################
+# Terminator (Helper Class)
+################################################################################
+
+import inspect
+
+class Terminator:
+    """
+    Mirrors Terminator.java: Error handling framework for generating consistent messages
+    and handling graceful exits via exceptions.
+    """
+
+    # Constants used in message_formatter to select info
+    CALLER_INFO: str = "CALLER"
+    LINE_INFO: str = "LINE"
+    LOCATION_INFO: str = "LOCATION"
+    METHOD_INFO: str = "METHOD"
+    SOURCE_INFO: str = "SOURCE"
+
+    # Keys for stack frame info
+    FRAME_LINE: str = "LINE"
+    FRAME_METHOD: str = "METHOD"
+    FRAME_SOURCE: str = "SOURCE"
+
+    UNKNOWN_FILE_TAG: str = "File unknown"
+    UNKNOWN_LINE_TAG: str = "unknown"
+
+    RUNTIME_EXCEPTION: bool = True
+    DEFAULT_EXIT_STATUS: int = 1
+
+    ###################################
+    #
+    # Terminator Methods
+    #
+    ###################################
+
+    @classmethod
+    def error_handler(cls, *args: str) -> str:
+        arguments: List[str]
+        manager: RegexManager
+        groups: Optional[List[str]]
+        done: bool
+        should_exit: bool
+        runtime: bool
+        arg: str
+        message: str
+        optarg: str
+        opttag: str
+        target: str
+        status: int
+        index: int
+
+        should_exit = True
+        runtime = cls.RUNTIME_EXCEPTION
+        status = cls.DEFAULT_EXIT_STATUS
+
+        arguments = []
+        arguments.append("-tag=Error")
+        arguments.append("-info=location")
+
+        manager = RegexManager()
+        done = False
+        index = 0
+
+        # Argument parsing loop mirroring Java
+        while index < len(args):
+            arg = args[index]
+            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
+            if groups is not None:
+                target = groups[1]
+                opttag = groups[2]
+                optarg = groups[5]
+            else:
+                target = arg
+                opttag = ""
+                optarg = ""
+
+            match target:
+                case "+exit":
+                    should_exit = True
+                    runtime = cls.RUNTIME_EXCEPTION
+                case "-exit":
+                    should_exit = False
+                case "+exit-error":
+                    should_exit = True
+                    runtime = False
+                case "+exit-exception":
+                    should_exit = True
+                    runtime = True
+                case "-status":
+                    try:
+                        status = int(optarg)
+                    except ValueError:
+                        pass
+                case "--":
+                    done = True
+                    index += 1
+                case _:
+                    if opttag == "+" or opttag == "-":
+                        arguments.append(arg)
+                    else:
+                        done = True
+
+            if done:
+                break
+
+            index += 1
+
+        # Hand off remaining args
+        arguments.append("+frame")
+        arguments.append("--")
+        arguments.append(" ".join(args[index:]))
+
+        message = cls.message_formatter(arguments)
+
+        if should_exit:
+            cls.terminate(message, None, status, runtime)
+
+        return message
+
+    @classmethod
+    def terminate(cls, message: Optional[str] = None, cause: Optional[BaseException] = None,
+                  status: int = DEFAULT_EXIT_STATUS, runtime: bool = RUNTIME_EXCEPTION) -> None:
+        if runtime:
+            raise Terminator.ExitException(message, cause, status)
+        else:
+            raise Terminator.ExitError(message, cause, status)
+
+    ###################################
+    #
+    # Private Methods
+    #
+    ###################################
+
+    @classmethod
+    def message_formatter(cls, args: List[str]) -> str:
+        caller: Dict[str, str]
+        manager: RegexManager
+        groups: Optional[List[str]]
+        done: bool
+        arg: str
+        message: Optional[str]
+        optarg: str
+        opttag: str
+        target: str
+        info: Optional[str]
+        prefix: Optional[str]
+        suffix: Optional[str]
+        tag: Optional[str]
+        frame_offset: int
+        index: int
+
+        message = None
+        info = None
+        prefix = None
+        suffix = None
+        tag = None
+        frame_offset = 1
+
+        manager = RegexManager()
+        done = False
+        index = 0
+
+        while index < len(args):
+            arg = args[index]
+            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
+            if groups is not None:
+                target = groups[1]
+                opttag = groups[2]
+                optarg = groups[5]
+            else:
+                target = arg
+                opttag = ""
+                optarg = ""
+
+            match target:
+                case "+frame":
+                    frame_offset += 1
+                case "-frame":
+                    frame_offset = 0
+                case "-info":
+                    info = optarg
+                case "-prefix":
+                    prefix = optarg
+                case "-suffix":
+                    suffix = optarg
+                case "-tag":
+                    tag = optarg
+                case "--":
+                    done = True
+                    index += 1
+                case _:
+                    if opttag != "+" and opttag != "-":
+                        done = True
+
+            if done:
+                break
+
+            index += 1
+
+        if index < len(args):
+            message = " ".join(args[index:])
+
+        if info is not None:
+            # Python Stack Inspection
+            # stack[0] is current, stack[1] is caller of message_formatter, etc.
+            # Java default was frame=1 (caller of messageFormatter).
+            # We need to account for Python's stack structure.
+            # 0: message_formatter
+            # 1: error_handler (usually)
+            # 2: The actual caller we want
+
+            stack = inspect.stack()
+
+            if frame_offset < len(stack):
+                frame_info = stack[frame_offset]
+                # frame_info is a FrameInfo object or tuple
+
+                caller = {}
+                line_no = frame_info.lineno
+                caller[cls.FRAME_LINE] = str(line_no) if line_no >= 0 else cls.UNKNOWN_LINE_TAG
+                caller[cls.FRAME_METHOD] = frame_info.function
+
+                # frame_info.filename gives full path, Java often gives just file name.
+                # using os.path.basename to match typical Java behavior
+                fname = frame_info.filename
+                caller[cls.FRAME_SOURCE] = os.path.basename(fname) if fname else cls.UNKNOWN_FILE_TAG
+
+                for token in info.split(","):
+                    token_upper = token.strip().upper()
+
+                    # Logic: tag = String.join("", tag, "] [", ...)
+                    # Check for null tag first to avoid "None] ["
+                    current_tag = tag if tag is not None else ""
+
+                    # NOTE: Python string join logic slightly different than Java's String.join with delimiter
+                    # Java: String.join("", tag, "] [", val) -> tag + "] [" + val
+
+                    # We need to handle the initial join if tag is empty?
+                    # Java code: tag = String.join("", tag, "] [", ...)
+                    # If tag was "Error", it becomes "Error] [LOCATION..."
+
+                    part = ""
+                    if token_upper == cls.CALLER_INFO:
+                        part = f"{caller[cls.FRAME_SOURCE]}; {caller[cls.FRAME_METHOD]}; Line {caller[cls.FRAME_LINE]}"
+                    elif token_upper == cls.LINE_INFO:
+                        part = f"Line {caller[cls.FRAME_LINE]}"
+                    elif token_upper == cls.LOCATION_INFO:
+                        part = f"{caller[cls.FRAME_SOURCE]}; Line {caller[cls.FRAME_LINE]}"
+                    elif token_upper == cls.METHOD_INFO:
+                        part = caller[cls.FRAME_METHOD]
+                    elif token_upper == cls.SOURCE_INFO:
+                        part = caller[cls.FRAME_SOURCE]
+
+                    if len(part) > 0:
+                        tag = f"{current_tag}] [{part}"
+
+        # Final Assembly
+        result = ""
+        if prefix is not None and len(prefix) > 0:
+            result += prefix + ": "
+        if message is not None and len(message) > 0:
+            result += message + " "
+        if tag is not None and len(tag) > 0:
+            result += "[" + tag + "]"
+        if suffix is not None and len(suffix) > 0:
+            result += suffix
+
+        return result
+
+    ###################################
+    #
+    # Terminator.ExitException
+    #
+    ###################################
+
+    class ExitException(RuntimeError):
+        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
+            super().__init__(message)
+            self.status = status
+            if cause:
+                self.__cause__ = cause
+
+        def get_status(self) -> int:
+            return self.status
+
+        def get_message(self) -> str:
+            return str(self)
+
+    ###################################
+    #
+    # Terminator.ExitError
+    #
+    ###################################
+
+    class ExitError(Exception):
+        # Maps to java.lang.Error (serious problems).
+        # In Python, standard Exception is closest equivalent for "checked" but
+        # since we don't have checked/unchecked, BaseException or Exception is fine.
+        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
+            super().__init__(message)
+            self.status = status
+            if cause:
+                self.__cause__ = cause
+
+        def get_status(self) -> int:
+            return self.status
+
+        def get_message(self) -> str:
+            return str(self)
 
 #
 # Guard
