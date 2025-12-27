@@ -26,70 +26,6 @@ from typing import List, Dict, Optional, Any
 
 ###################################
 #
-# AttributeTables - Helper Class
-#
-###################################
-
-class AttributeTables(dict):
-    """
-    Mirrors AttributeTables.java: Manages arrays of attribute strings.
-    """
-    TABLE_SIZE: int = 256
-
-    def __init__(self, *keys: str):
-        super().__init__()
-        self.registered_keys = set()
-
-        if len(keys) > 0:
-            for key in keys:
-                if key is not None:
-                    self[key] = None  # tables start as None
-                    self.registered_keys.add(key)
-                else:
-                    raise ValueError("null keys are not allowed")
-        else:
-            raise ValueError("constructor requires at least one argument")
-
-    def dump_table(self, key: str, prefix: str) -> None:
-        # Mirrors the dumpTable method for debugging output
-        table = self.get(key)
-        if table is not None:
-            count = 0
-            prefix = prefix if prefix is not None else ""
-            elements = ""
-            separator = ""
-
-            for index in range(len(table)):
-                value = table[index]
-                if value is not None:
-                    # Formatting logic mirroring Java's String.format
-                    # "%s%s  %5s=%s"
-                    elements += f"{separator}{prefix}  {'[' + str(index) + ']':>5}=\"{value}\""
-                    separator = "\n"
-                    count += 1
-
-            if count > 0:
-                sys.stderr.write(f"{prefix}{key}[{count}]:\n")
-                sys.stderr.write(f"{elements}\n")
-                sys.stderr.write("\n")
-
-    def get_table(self, key: str) -> List[Optional[str]]:
-        # Mirrors getTable
-        if key in self.registered_keys:
-            if key is not None:
-                table = self.get(key)
-                if table is None:
-                    table = [None] * self.TABLE_SIZE
-                    self[key] = table
-            else:
-                raise ValueError("Key cannot be None")
-        else:
-            raise ValueError(f"{key} is not a key that was registered by the constructor.")
-
-        return table
-
-###################################
-#
 # ByteDump - Main Class
 #
 ###################################
@@ -587,11 +523,7 @@ class ByteDump:
         "RESET.attributes": "\u001B[0m"
     }
 
-    attributeTables: AttributeTables = AttributeTables(
-        "BYTE_BACKGROUND", "BYTE_FOREGROUND",
-        "TEXT_BACKGROUND", "TEXT_FOREGROUND"
-    )
-
+    attributeTables = None
     argumentsConsumed: int = 0
 
     ###################################
@@ -1915,10 +1847,15 @@ class ByteDump:
     def setup(cls) -> None:
         #
         # This is where initialization that needs to happen before the command line
-        # are processed could be done. There's currently nothing to do.
+        # options are processed can be done. In this case the AttributeTables class
+        # definition now follows the definition of the ByteDump class, so we have to
+        # wait use its constructor.
         #
 
-        pass
+        cls.attributeTables = AttributeTables(
+            "BYTE_BACKGROUND", "BYTE_FOREGROUND",
+            "TEXT_BACKGROUND", "TEXT_FOREGROUND"
+        )
 
     ###################################
     #
@@ -2049,6 +1986,70 @@ class ByteDump:
             except UnicodeEncodeError:
                 pass
         return printable
+
+###################################
+#
+# AttributeTables - Helper Class
+#
+###################################
+
+class AttributeTables(dict):
+    """
+    Mirrors AttributeTables.java: Manages arrays of attribute strings.
+    """
+    TABLE_SIZE: int = 256
+
+    def __init__(self, *keys: str):
+        super().__init__()
+        self.registered_keys = set()
+
+        if len(keys) > 0:
+            for key in keys:
+                if key is not None:
+                    self[key] = None  # tables start as None
+                    self.registered_keys.add(key)
+                else:
+                    raise ValueError("null keys are not allowed")
+        else:
+            raise ValueError("constructor requires at least one argument")
+
+    def dump_table(self, key: str, prefix: str) -> None:
+        # Mirrors the dumpTable method for debugging output
+        table = self.get(key)
+        if table is not None:
+            count = 0
+            prefix = prefix if prefix is not None else ""
+            elements = ""
+            separator = ""
+
+            for index in range(len(table)):
+                value = table[index]
+                if value is not None:
+                    # Formatting logic mirroring Java's String.format
+                    # "%s%s  %5s=%s"
+                    elements += f"{separator}{prefix}  {'[' + str(index) + ']':>5}=\"{value}\""
+                    separator = "\n"
+                    count += 1
+
+            if count > 0:
+                sys.stderr.write(f"{prefix}{key}[{count}]:\n")
+                sys.stderr.write(f"{elements}\n")
+                sys.stderr.write("\n")
+
+    def get_table(self, key: str) -> List[Optional[str]]:
+        # Mirrors getTable
+        if key in self.registered_keys:
+            if key is not None:
+                table = self.get(key)
+                if table is None:
+                    table = [None] * self.TABLE_SIZE
+                    self[key] = table
+            else:
+                raise ValueError("Key cannot be None")
+        else:
+            raise ValueError(f"{key} is not a key that was registered by the constructor.")
+
+        return table
 
 ###################################
 #
