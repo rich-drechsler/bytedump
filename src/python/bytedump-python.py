@@ -2243,10 +2243,14 @@ class RegexManager:
 ###################################
 
 class Terminator:
-    """
-    Mirrors Terminator.java: Error handling framework for generating consistent messages
-    and handling graceful exits via exceptions.
-    """
+    #
+    # This class tries to replicate most of the capabilities built into the Terminator
+    # class that's included in the Java version of bytedump. The Java class was written
+    # so it could be used by other Java applications, but that's definitely not the goal
+    # here. Instead, all this class is supposed to do is to provide a way to duplicate
+    # the error method calls, the error messages, and the way the error handling ends up
+    # in the main() method.
+    #
 
     # Constants used in message_formatter to select info
     CALLER_INFO: str = "CALLER"
