@@ -889,10 +889,10 @@ class ByteDump:
                             # Inspect class attributes
                             for name in dir(cls):
                                 # Filter out builtins and methods, we want static data fields
-                                if name.startswith(prfx) and not callable(getattr(cls, name)):
+                                if name.startswith(prfx) and not callable(getattr(cls, name, None)):
                                     if name not in consumed:
                                         matched.append(name)
-                                        consumed[name] = getattr(cls, name)
+                                        consumed[name] = getattr(cls, name, None)
 
                             if len(matched) > 0:
                                 matched.sort()
@@ -1446,13 +1446,13 @@ class ByteDump:
 
         # Byte map initialization
         if len(cls.BYTE_map) > 0:
-            cls.byteMap = getattr(cls, cls.BYTE_map)
+            cls.byteMap = getattr(cls, cls.BYTE_map, None)
             if cls.byteMap is None:
                 cls.internal_error(cls.delimit(cls.BYTE_map), "is not a recognized byte mapping array name")
 
         # Text map initialization
         if len(cls.TEXT_map) > 0:
-            cls.textMap = getattr(cls, cls.TEXT_map)
+            cls.textMap = getattr(cls, cls.TEXT_map, None)
             if cls.textMap is None:
                 cls.internal_error(cls.delimit(cls.TEXT_map), "is not a recognized text mapping array name")
 
@@ -2267,7 +2267,6 @@ class Terminator:
     UNKNOWN_FILE_TAG: str = "File unknown"
     UNKNOWN_LINE_TAG: str = "unknown"
 
-    RUNTIME_EXCEPTION: bool = True
     DEFAULT_EXIT_STATUS: int = 1
 
     ###################################
@@ -2283,7 +2282,6 @@ class Terminator:
         groups: Optional[List[str]]
         done: bool
         should_exit: bool
-        runtime: bool
         arg: str
         message: str
         optarg: str
@@ -2293,7 +2291,6 @@ class Terminator:
         index: int
 
         should_exit = True
-        runtime = cls.RUNTIME_EXCEPTION
         status = cls.DEFAULT_EXIT_STATUS
 
         arguments = []
@@ -2320,15 +2317,8 @@ class Terminator:
             match target:
                 case "+exit":
                     should_exit = True
-                    runtime = cls.RUNTIME_EXCEPTION
                 case "-exit":
                     should_exit = False
-                case "+exit-error":
-                    should_exit = True
-                    runtime = False
-                case "+exit-exception":
-                    should_exit = True
-                    runtime = True
                 case "-status":
                     try:
                         status = int(optarg)
@@ -2356,17 +2346,21 @@ class Terminator:
         message = cls.message_formatter(arguments)
 
         if should_exit:
-            cls.terminate(message, None, status, runtime)
+            cls.terminate(message, None, status)
 
         return message
 
     @classmethod
-    def terminate(cls, message: Optional[str] = None, cause: Optional[BaseException] = None,
-                  status: int = DEFAULT_EXIT_STATUS, runtime: bool = RUNTIME_EXCEPTION) -> None:
-        if runtime:
-            raise Terminator.ExitException(message, cause, status)
-        else:
-            raise Terminator.ExitError(message, cause, status)
+    def terminate(cls, message: Optional[str] = "", cause: Optional[BaseException] = None,
+                  status: int = DEFAULT_EXIT_STATUS) -> None:
+        #
+        # The original Python version of this method set the default message to None,
+        # but apparently behind the scenes somewhere that None value was translated to
+        # the string "None" and that ends up as the message that main() prints whenever
+        # this method was called with no arguments. Changing the default message to ""
+        # fixed the behavior, so I didn't try to track the behavior down.
+        #
+        raise Terminator.ExitException(message, cause, status)
 
     @classmethod
     def message_formatter(cls, args: List[str]) -> str:
@@ -2511,28 +2505,6 @@ class Terminator:
     ###################################
 
     class ExitException(RuntimeError):
-        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
-            super().__init__(message)
-            self.status = status
-            if cause:
-                self.__cause__ = cause
-
-        def get_status(self) -> int:
-            return self.status
-
-        def get_message(self) -> str:
-            return str(self)
-
-    ###################################
-    #
-    # Terminator.ExitError
-    #
-    ###################################
-
-    class ExitError(Exception):
-        # Maps to java.lang.Error (serious problems).
-        # In Python, standard Exception is closest equivalent for "checked" but
-        # since we don't have checked/unchecked, BaseException or Exception is fine.
         def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
             super().__init__(message)
             self.status = status
