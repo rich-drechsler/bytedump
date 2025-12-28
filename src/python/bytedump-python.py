@@ -1994,10 +1994,17 @@ class ByteDump:
 ###################################
 
 class AttributeTables(dict):
-    """
-    Mirrors AttributeTables.java: Manages arrays of attribute strings.
-    """
-    TABLE_SIZE: int = 256
+    #
+    # This class tries to replicate how the Java implementation manages attributes
+    # (like colors) that can be assigned by options and later applied to the dump.
+    #
+    # NOTE - there likely are better approaches, but this is sufficient. The main
+    # reason for using this stuff is to help simplify the management of attributes
+    # during option processing - take a look at the comments about attributes and
+    # options in the bash and Java implementations if you want more details.
+    #
+
+    TABLE_SIZE: int = 256               # one attribute slot for each byte
 
     def __init__(self, *keys: str):
         super().__init__()
@@ -2006,7 +2013,7 @@ class AttributeTables(dict):
         if len(keys) > 0:
             for key in keys:
                 if key is not None:
-                    self[key] = None  # tables start as None
+                    self[key] = None
                     self.registered_keys.add(key)
                 else:
                     raise ValueError("null keys are not allowed")
@@ -2014,7 +2021,14 @@ class AttributeTables(dict):
             raise ValueError("constructor requires at least one argument")
 
     def dump_table(self, key: str, prefix: str) -> None:
-        # Mirrors the dumpTable method for debugging output
+        #
+        # This method reproduces the "debugging" output that the original bash version
+        # of bytedump produced when it was asked to display "background" or "foreground"
+        # attributes that command line options assigned to individual bytes displayed in
+        # the dump's BYTE or TEXT fields. Occasionally helpful, but it has nothing to do
+        # with the actual generation of the dump.
+        #
+
         table = self.get(key)
         if table is not None:
             count = 0
@@ -2037,7 +2051,12 @@ class AttributeTables(dict):
                 sys.stderr.write("\n")
 
     def get_table(self, key: str) -> List[Optional[str]]:
-        # Mirrors getTable
+        #
+        # Returns the table that is (or soon will be) associated with key, but only if
+        # key is in registered_keys. The table is created and added to this dict if it's
+        # not there yet, which should only happen on the first request for key's table.
+        #
+
         if key in self.registered_keys:
             if key is not None:
                 table = self.get(key)
