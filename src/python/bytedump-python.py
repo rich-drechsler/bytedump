@@ -888,11 +888,10 @@ class ByteDump:
                             matched = []
                             # Inspect class attributes
                             for name in dir(cls):
-                                # Filter out builtins and methods, we want static data fields
-                                if name.startswith(prfx) and not callable(getattr(cls, name, None)):
-                                    if name not in consumed:
+                                if name not in consumed and name.startswith(prfx):
+                                    if hasattr(cls, name) and not callable(getattr(cls, name)):
                                         matched.append(name)
-                                        consumed[name] = getattr(cls, name, None)
+                                        consumed[name] = getattr(cls, name)
 
                             if len(matched) > 0:
                                 matched.sort()
