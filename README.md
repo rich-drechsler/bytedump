@@ -43,7 +43,7 @@ The makefiles
 
       src/bash/Makefile - manages the bash version of bytedump
       src/java/Makefile - manages the Java version of bytedump
-    src/python/Makefile - manages the Java version of bytedump
+    src/python/Makefile - manages the Python version of bytedump
            src/Makefile - manages all of the bytedump implementations
 
 are available to help you build or install the different bytedump implementations.
