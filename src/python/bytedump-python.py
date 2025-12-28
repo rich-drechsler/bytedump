@@ -588,11 +588,85 @@ class ByteDump:
         index: int
         count: int
 
+        #
+        # Called to parse a string that's supposed to assign an attribute (primarily
+        # a color) to a group of bytes whenever any of them is displayed in the BYTE
+        # or TEXT fields of the dump that this program produces. There's some simple
+        # recursion used to implement "character classes" and "raw strings", but the
+        # initial call is always triggered by a command line option.
+        #
+        # The first argument is a string that identifies the attribute that the user
+        # wants applied to the bytes selected by the second argument. This method's
+        # job is to figure out the numeric values of the selected bytes and associate
+        # the attribute (i.e., the first argument) with each byte's numeric value in
+        # the string array that's referenced by the third argument.
+        #
+        # The second argument is the byte "selector" and it's processed using regular
+        # expressions. The selector consists of space separated tokens that represent
+        # integers, integer ranges, character classes, and a modified implementation
+        # of Rust raw string literals.
+        #
+        # A selector string that starts with an optional base prefix and is followed
+        # by tokens that are completely enclosed in a single set of parentheses picks
+        # the base used to evaluate all numbers in the selector. A base prefix that's
+        # "0x" or "0X" means all numbers are hex, "0" means they're all octal, and no
+        # base prefix (just the parens) means they're all decimal. Setting the default
+        # base this way, instead of using an option, makes it easy for the user to do
+        # exactly the same thing from the command line.
+        #
+        # If a base is set, all characters in an integer token must be digits in that
+        # base. Otherwise C-style syntax is used, so hex integers start with "0x" or
+        # "0X", octal integers start with "0", and decimal integers always start with
+        # a nonzero decimal digit. An integer range is a pair of integers separated
+        # by '-'. It represents a closed interval that extends from the left integer
+        # to the right integer. Both end points of a range must be expressed in the
+        # same base. Any integer or any part of an integer range that doesn't fit in
+        # a byte is ignored.
+        #
+        # A character class uses a short, familiar lowercase name to select a group
+        # of bytes. Those names must be bracketed by "[:" and ":]" in the selector
+        # to be recognized as a character class. The 15 character classes that are
+        # allowed in a selector are:
+        #
+        #     [:alnum:]      [:digit:]      [:punct:]
+        #     [:alpha:]      [:graph:]      [:space:]
+        #     [:blank:]      [:lower:]      [:upper:]
+        #     [:cntrl:]      [:print:]      [:xdigit:]
+        #
+        #     [:ascii:]      [:latin1:]     [:all:]
+        #
+        # The first four rows are the 12 character classes that are defined in the
+        # POSIX standard. The last row are 3 character classes that I decided to
+        # support because they seemed like a convenient way to select familiar (or
+        # otherwise obvious) blocks of contiguous bytes. This program only deals with
+        # bytes, so it's easy to enumerate their members using integers and integer
+        # ranges, and that's exactly how this method uses recursion to implement
+        # character classes.
+        #
+        # A modified version of Rust's raw string literal can also be used as a token
+        # in the byte selector. They always start with a prefix that's the letter 'r',
+        # zero or more '#' characters, and a single or double quote, and they end with
+        # a suffix that matches the quote and the number of '#' characters used in the
+        # prefix. For example,
+        #
+        #       r"hello, world"
+        #       r'hello, world'
+        #      r#'hello, world'#
+        #     r##"hello, world"##
+        #
+        # are valid selectors that represent exactly the same string. Any character,
+        # except null, can appear in a raw string that's used as a selector, and the
+        # selected bytes are the Unicode code points of the characters in the string
+        # that are less than 256. Two quoting styles are supported because the quote
+        # delimiters have to be protected from your shell on the command line.
+        #
+
         base = 0
 
         #
         # First check for the optional base prefix.
         #
+
         groups = manager.matched_groups(input_str, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")
         if groups is not None:
             prefix = groups[1]
@@ -609,8 +683,6 @@ class ByteDump:
 
         # Loop while we can strip non-whitespace tokens
         while True:
-            # Emulate Java assignment in while condition:
-            # while ((input = manager.matchedGroup(1, input, "^[ \\t]*([^ \\t].*)")) != null)
             match_res = manager.matched_group(1, input_str, "^[ \\t]*([^ \\t].*)")
             if match_res is None:
                 break
@@ -649,7 +721,12 @@ class ByteDump:
                     else:
                         cls.internal_error("base", cls.delimit(str(base)), "has not been implemented")
                 else:
-                    # No base set, try detecting syntax
+                    #
+                    # TODO - kind of ugly if-else nesting that probably could be eliminated by
+                    # adding a new method (or modifying the implementation of matched_groups).
+                    # Bash's =~ operator and Java's ability to do assignments in if statements
+                    # mean the same thing doesn't happen in those implementations.
+                    #
                     groups = manager.matched_groups(input_str, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)")
                     if groups is not None:
                         first = int(groups[2], 16)
@@ -683,6 +760,10 @@ class ByteDump:
                     input_str = input_str[len(groups[0]):]
 
                     match name:
+                        #
+                        # POSIX character class names - these hex mappings were all generated
+                        # by debugging code in the Java bytedump implementation.
+                        #
                         case "alnum":
                             cls.byte_selector(attribute, "0x(30-39 41-5A 61-7A AA B5 BA C0-D6 D8-F6 F8-FF)", output)
                         case "alpha":
@@ -707,6 +788,9 @@ class ByteDump:
                             cls.byte_selector(attribute, "0x(41-5A C0-D6 D8-DE)", output)
                         case "xdigit":
                             cls.byte_selector(attribute, "0x(30-39 41-46 61-66)", output)
+                        #
+                        # Custom character class names.
+                        #
                         case "ascii":
                             cls.byte_selector(attribute, "0x(00-7F)", output)
                         case "latin1":
@@ -718,6 +802,10 @@ class ByteDump:
                 else:
                     cls.user_error("problem extracting a character class from", cls.delimit(input_start))
 
+            #
+            # TODO - think a modified implementation of matched_groups() could also eliminate
+            # at least one level of nesting here. Same guess also holds for matched_group().
+            #
             elif True: # Emulate else if ... using match groups check inside block
                 groups = manager.matched_groups(input_str, "^(r([#]*)(\"|'))")
                 if groups is not None:
@@ -1997,6 +2085,8 @@ class AttributeTables(dict):
     #
     # This class tries to replicate how the Java implementation manages attributes
     # (like colors) that can be assigned by options and later applied to the dump.
+    # It's called in options() and used by byte_selector() to associate attributes
+    # with individual bytes.
     #
     # NOTE - there likely are better approaches, but this is sufficient. The main
     # reason for using this stuff is to help simplify the management of attributes
@@ -2077,11 +2167,14 @@ class AttributeTables(dict):
 ###################################
 
 class RegexManager:
-    """
-    Mirrors RegexManager.java: Wraps regex operations to resemble Java/Bash behavior.
-    """
-
-    # Python 're' doesn't support Java's \p{Prop} syntax. We map commonly used ones.
+    #
+    # Not being able to do assignments and test what was assigned in if statements
+    # seems to lead to extra nesting that isn't found in the Java version or needed
+    # in the bash version (because it uses the =~ opertor for regex matching). Think
+    # a few new (or modified) methods here couild help - later.
+    #
+    # TODO - also think the next three definitions can be removed.
+    #
     UNICODE_CHARACTER_CLASS = 0  # Placeholder, not strictly needed in Python 're'
     FLAGS_DEFAULT = 0
 
