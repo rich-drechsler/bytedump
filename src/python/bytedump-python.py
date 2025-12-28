@@ -1966,11 +1966,11 @@ class ByteDump:
         #
         # Just used to make sure that all of the characters in the strings that a user can
         # "add" to our dump using command line options (e.g., --addr-suffix) are printable
-        # characters. It's important, because we need count characters in those strings to
-        # make sure everything in the dump lines up vertically. The bash and Java versions
-        # were able to do this by combining locales with appropriate regular expressions,
-        # but I'm not sure how to make that approach work in Python. Anyway, what's done
-        # here seems to be sufficient.
+        # characters. It's important, because we count characters in those strings to make
+        # sure everything in the dump lines up vertically. The bash and Java versions were
+        # able to do this by combining locales with appropriate regular expressions, but
+        # I'm not sure how to make that approach work in Python. Anyway, what's done here
+        # seems to be sufficient.
         #
         printable = False
         if arg.isprintable():
