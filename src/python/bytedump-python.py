@@ -7,12 +7,13 @@
 # Ported to Python in collaboration with Google Gemini (December 2025)
 # ----------------------------------------------------------------------
 #
-# Lots of noise if you run pylint on this file and there still are issues that I'm
-# going to investigate. Right now I use something like
+# NOTE - lots of noise if you run pylint on this file and there still are issues that
+# I'm going to investigate. Right now I use something like
 #
 #   pylint --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R1702,R0912,R0914,R0915 file.py
 #
-# to run pylint (version 2.12.2) on my Linux system.
+# to run pylint (version 2.12.2) on my Linux system. Disabled messages are things I've
+# looked at (briefly at least) and decided not to address right now.
 #
 
 import inspect
@@ -85,7 +86,9 @@ class ByteDump:
     DUMP_unexpanded_char: str = "?"
 
     #
-    # Values associated with the ADDR, BYTE, and TEXT fields in our dump.
+    # Values associated with the ADDR, BYTE, and TEXT fields in our dump. Some of
+    # them are changed by command line options, while many others are used or set
+    # by the initialization code that runs after all of the options are processed.
     #
 
     ADDR_output: str = "HEX-LOWER"
@@ -133,7 +136,9 @@ class ByteDump:
     TEXT_unexpanded_string: str = ""
 
     #
-    # Debugging keys that can be changed by command line options.
+    # Debugging keys that can be changed by command line options. None of them are
+    # officially documented, but they are occasionally referenced in comments that
+    # you'll find in the source code.
     #
 
     DEBUG_addresses: bool = False
@@ -146,13 +151,24 @@ class ByteDump:
 
     #
     # The value assigned to DEBUG_fields_prefixes are the space separated prefixes of
-    # the field names that are dumped when the --debug=fields option is used.
+    # the field names that are dumped when the --debug=fields option is used. Change
+    # the list if you want a different collection fields or have them presented in a
+    # different order.
     #
 
     DEBUG_fields_prefixes: str = "DUMP ADDR BYTE TEXT DEBUG PROGRAM"
 
+    #
+    # The ASCII_TEXT_MAP mapping array is designed to reproduce the ASCII text output
+    # that xxd (and other similar programs) generate. Unprintable ASCII characters and
+    # all bytes with their top bit set are represented by a period in the TEXT field.
+    #
+
     ASCII_TEXT_MAP: List[str] = [
+        #
         # Basic Latin Block (ASCII)
+        #
+
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
@@ -171,7 +187,10 @@ class ByteDump:
         "\\u0070",  "\\u0071",  "\\u0072",  "\\u0073",  "\\u0074",  "\\u0075",  "\\u0076",  "\\u0077",
         "\\u0078",  "\\u0079",  "\\u007A",  "\\u007B",  "\\u007C",  "\\u007D",  "\\u007E",     ".",
 
+        #
         # Latin-1 Supplement Block
+        #
+
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
@@ -191,8 +210,19 @@ class ByteDump:
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
     ]
 
+    #
+    # The UNICODE_TEXT_MAP mapping array is a modified version of the ASCII mapping
+    # array that expands the collection of bytes displayed by unique single character
+    # strings to the printable characters in Unicode's Latin-1 Supplement Block. All
+    # control characters are displayed using the string ".", exactly the way they're
+    # handled in the ASCII_TEXT_MAP mapping array.
+    #
+
     UNICODE_TEXT_MAP: List[str] = [
+        #`
         # Basic Latin Block (ASCII)
+        #
+
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
@@ -211,7 +241,10 @@ class ByteDump:
         "\\u0070",  "\\u0071",  "\\u0072",  "\\u0073",  "\\u0074",  "\\u0075",  "\\u0076",  "\\u0077",
         "\\u0078",  "\\u0079",  "\\u007A",  "\\u007B",  "\\u007C",  "\\u007D",  "\\u007E",     ".",
 
+        #
         # Latin-1 Supplement Block
+        #
+
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
            ".",        ".",        ".",        ".",        ".",        ".",        ".",        ".",
@@ -231,8 +264,26 @@ class ByteDump:
         "\\u00F8",  "\\u00F9",  "\\u00FA",  "\\u00FB",  "\\u00FC",  "\\u00FD",  "\\u00FE",  "\\u00FF",
     ]
 
+    #
+    # The CARET_TEXT_MAP mapping array maps bytes into printable two character strings
+    # that can be used in the TEXT field display. The two character strings assigned to
+    # bytes that are Unicode C0 and C1 control codes (and DEL) start with a caret (^)
+    # and end with a printable character that's selected using:
+    #
+    #       Unicode C0 and DEL: (byte + 0x40) % 0x80
+    #               Unicode C1: (byte + 0x40) % 0x80 + 0x80
+    #
+    # The rest of the bytes in the array are printable and the string assigned to each
+    # one starts with a space and ends with the Unicode character that represents that
+    # byte. The extension of "caret notation" beyond the ASCII block seems reasonable,
+    # but as far as I know it's just my own convention.
+    #
+
     CARET_TEXT_MAP: List[str] = [
+        #
         # Basic Latin Block (ASCII)
+        #
+
         "^\\u0040",  "^\\u0041",  "^\\u0042",  "^\\u0043",  "^\\u0044",  "^\\u0045",  "^\\u0046",  "^\\u0047",
         "^\\u0048",  "^\\u0049",  "^\\u004A",  "^\\u004B",  "^\\u004C",  "^\\u004D",  "^\\u004E",  "^\\u004F",
         "^\\u0050",  "^\\u0051",  "^\\u0052",  "^\\u0053",  "^\\u0054",  "^\\u0055",  "^\\u0056",  "^\\u0057",
@@ -251,7 +302,10 @@ class ByteDump:
         " \\u0070",  " \\u0071",  " \\u0072",  " \\u0073",  " \\u0074",  " \\u0075",  " \\u0076",  " \\u0077",
         " \\u0078",  " \\u0079",  " \\u007A",  " \\u007B",  " \\u007C",  " \\u007D",  " \\u007E",  "^\\u003F",
 
+        #
         # Latin-1 Supplement Block
+        #
+
         "^\\u00C0",  "^\\u00C1",  "^\\u00C2",  "^\\u00C3",  "^\\u00C4",  "^\\u00C5",  "^\\u00C6",  "^\\u00C7",
         "^\\u00C8",  "^\\u00C9",  "^\\u00CA",  "^\\u00CB",  "^\\u00CC",  "^\\u00CD",  "^\\u00CE",  "^\\u00CF",
         "^\\u00D0",  "^\\u00D1",  "^\\u00D2",  "^\\u00D3",  "^\\u00D4",  "^\\u00D5",  "^\\u00D6",  "^\\u00D7",
@@ -271,8 +325,18 @@ class ByteDump:
         " \\u00F8",  " \\u00F9",  " \\u00FA",  " \\u00FB",  " \\u00FC",  " \\u00FD",  " \\u00FE",  " \\u00FF",
     ]
 
+    #
+    # The CARET_ESCAPE_TEXT_MAP mapping array is a slightly modified version of the
+    # CARET_TEXT_MAP array that uses C-style escape sequences, when they're defined,
+    # to represent control characters. The remaining control characters are displayed
+    # using the caret notation that's already been described.
+    #
+
     CARET_ESCAPE_TEXT_MAP: List[str] = [
+        #
         # Basic Latin Block (ASCII)
+        #
+
              "\\0",  "^\\u0041",  "^\\u0042",  "^\\u0043",  "^\\u0044",  "^\\u0045",  "^\\u0046",       "\\a",
              "\\b",       "\\t",       "\\n",       "\\v",       "\\f",       "\\r",  "^\\u004E",  "^\\u004F",
         "^\\u0050",  "^\\u0051",  "^\\u0052",  "^\\u0053",  "^\\u0054",  "^\\u0055",  "^\\u0056",  "^\\u0057",
@@ -291,7 +355,10 @@ class ByteDump:
         " \\u0070",  " \\u0071",  " \\u0072",  " \\u0073",  " \\u0074",  " \\u0075",  " \\u0076",  " \\u0077",
         " \\u0078",  " \\u0079",  " \\u007A",  " \\u007B",  " \\u007C",  " \\u007D",  " \\u007E",       "\\?",
 
+        #
         # Latin-1 Supplement Block
+        #
+
         "^\\u00C0",  "^\\u00C1",  "^\\u00C2",  "^\\u00C3",  "^\\u00C4",  "^\\u00C5",  "^\\u00C6",  "^\\u00C7",
         "^\\u00C8",  "^\\u00C9",  "^\\u00CA",  "^\\u00CB",  "^\\u00CC",  "^\\u00CD",  "^\\u00CE",  "^\\u00CF",
         "^\\u00D0",  "^\\u00D1",  "^\\u00D2",  "^\\u00D3",  "^\\u00D4",  "^\\u00D5",  "^\\u00D6",  "^\\u00D7",
@@ -310,6 +377,14 @@ class ByteDump:
         " \\u00F0",  " \\u00F1",  " \\u00F2",  " \\u00F3",  " \\u00F4",  " \\u00F5",  " \\u00F6",  " \\u00F7",
         " \\u00F8",  " \\u00F9",  " \\u00FA",  " \\u00FB",  " \\u00FC",  " \\u00FD",  " \\u00FE",  " \\u00FF",
     ]
+
+    #
+    # TODO - Think I'll probably end up handling the BYTE field mapping arrays the way
+    # it was done in the bash version, where the one mapping that was needed was built
+    # during initialization, which happens right after the options are processed. Java
+    # version let javac do all that work for us, but there's no compiler to rely on in
+    # this version. Not terribly important right now, so I'll probably wait a while.
+    #
 
     BINARY_BYTE_MAP: List[str] = [
         "00000000", "00000001", "00000010", "00000011", "00000100", "00000101", "00000110", "00000111",
@@ -422,14 +497,42 @@ class ByteDump:
         "F0", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "FA", "FB", "FC", "FD", "FE", "FF",
     ]
 
+    #
+    # These will be end up being references to the BYTE and TEXT field mapping arrays
+    # that need to be used to build the dump that the user wants. They're set during
+    # the initialization that happens after the command line options are processed,
+    # and if either one ends up None, the associated field will be omitted from the
+    # dump. Both fields can't be omitted.
+    #
+
     byteMap: Optional[List[str]] = None
     textMap: Optional[List[str]] = None
+
+    #
+    # TODO - in Java there really was a plausible reason why addresses could be built
+    # a bit faster using the addrMap and addrBuffer, but I kind of doubt the argument
+    # holds for Python. Should be investigated and if so just delete all of this stuff.
+    #
 
     addrMap: Optional[List[str]] = None
     addrBuffer: Optional[List[str]] = None
 
     #
-    # ANSI Escape Codes
+    # Values stored in the ANSI_ESCAPE dictionary are the ANSI escape sequences used
+    # to selectively change the foreground and background attributes (think colors)
+    # of character strings displayed in the BYTE and TEXT fields. They're used in
+    # initialize5_Attributes() to surround individual character strings in the BYTE
+    # or TEXT field mapping arrays with the ANSI escape sequences that enable and
+    # then disable (i.e., reset) the requested attribute.
+    #
+    # Values assigned to the keys defined in ANSI_ESCAPE that start with FOREGROUND
+    # are ANSI escape sequences that set foreground attributes, while values assigned
+    # to the keys that start with BACKGROUND are ANSI escapes that set the background
+    # attributes. Take a look at
+    #
+    #     https://en.wikipedia.org/wiki/ANSI_escape_code
+    #
+    # if you want more information about ANSI escape codes.
     #
 
     ANSI_ESCAPE: Dict[str, str] = {
@@ -523,7 +626,20 @@ class ByteDump:
         "RESET.attributes": "\u001B[0m"
     }
 
+    #
+    # This will be an instance of the AttributeTables class, but I didn't want that
+    # class to be the first one in this file. Initialization of attributeTables now
+    # happens in the setup() method, which is the first method called by main().
+    #
+
     attributeTables = None
+
+    #
+    # Using the argumentsConsumed class variable means command line option can be
+    # handled in a way that resembles the bash version of this program. There are
+    # lots of alternatives, but this is appropriate for this program.
+    #
+
     argumentsConsumed: int = 0
 
     ###################################
