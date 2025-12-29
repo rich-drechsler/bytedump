@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
+# Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
 # SPDX-License-Identifier: MIT
 #
 # ----------------------------------------------------------------------
@@ -512,7 +512,8 @@ class ByteDump:
     #
     # TODO - in Java there really was a plausible reason why addresses could be built
     # a bit faster using the addrMap and addrBuffer, but I kind of doubt the argument
-    # holds for Python. Should be investigated and if so just delete all of this stuff.
+    # holds for Python. Should be investigated and if so just delete all of this stuff
+    # and simplify the methods responsible for generating the acutal dump.
     #
 
     addrMap: Optional[List[str]] = None
@@ -522,7 +523,7 @@ class ByteDump:
     # Values stored in the ANSI_ESCAPE dictionary are the ANSI escape sequences used
     # to selectively change the foreground and background attributes (think colors)
     # of character strings displayed in the BYTE and TEXT fields. They're used in
-    # initialize5_Attributes() to surround individual character strings in the BYTE
+    # initialize5_attributes() to surround individual character strings in the BYTE
     # or TEXT field mapping arrays with the ANSI escape sequences that enable and
     # then disable (i.e., reset) the requested attribute.
     #
@@ -1651,6 +1652,12 @@ class ByteDump:
 
     @classmethod
     def main(cls, args: List[str]) -> None:
+
+        #
+        # This method runs the program, basically by just calling the other methods that
+        # do the real work.
+        #
+
         try:
             cls.setup()
             cls.options(args)
@@ -2477,13 +2484,19 @@ class Terminator:
     @classmethod
     def terminate(cls, message: Optional[str] = "", cause: Optional[BaseException] = None,
                   status: int = DEFAULT_EXIT_STATUS) -> None:
+
         #
-        # The original Python version of this method set the default message to None,
-        # but apparently behind the scenes somewhere that None value was translated to
-        # the string "None" and that ends up as the message that main() prints whenever
-        # this method was called with no arguments. Changing the default message to ""
-        # fixed the behavior, so I didn't try to track the behavior down.
+        # Gemini's original Python version of this method set the default message to None.
+        # However, apparently somewhere behind the scenes that None message was translated
+        # to the string "None", which ended up as the message that main() printed whenever
+        # this method is called with no arguments.
         #
+        # Changing the default message to the empty string (i.e., "") fixed that behavior,
+        # but only because main() explicitly ignores all messages that are None or empty
+        # strings. After that I decided not to spend more time trying to track down where
+        # the translation of None to "None" happened.
+        #
+
         raise Terminator.ExitException(message, cause, status)
 
     @classmethod
@@ -2642,7 +2655,9 @@ class Terminator:
             return str(self)
 
 #
-# Guard
+# This is the guard that makes sure this Python implementation of bytedump only runs
+# if this file was directly executed.
 #
+
 if __name__ == "__main__":
     ByteDump.main(sys.argv[1:])
