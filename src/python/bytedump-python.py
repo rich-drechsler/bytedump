@@ -680,7 +680,15 @@ class ByteDump:
         #
         # Expects at most one argument, which must be "-" or the name of a readable
         # file that's not a directory. Standard input is read when there aren't any
-        # arguments or when "-" is the only argument.
+        # arguments or when "-" is the only argument. A representation of the bytes
+        # in the input file are written to standard output in a style controlled by
+        # the command line options.
+        #
+        # Treating "-" as an abbreviation for standard input, before checking to see
+        # if it's the name of a readable file or directory in the current directory,
+        # matches the way Linux commands typically handle it. A pathname containing
+        # at least one "/" (e.g., ./-) is how to reference a file named "-" on the
+        # command line.
         #
 
         if len(args) <= 1:
@@ -1000,7 +1008,17 @@ class ByteDump:
         col: int
         row: int
 
-        # No arguments selects default keys
+        #
+        # Takes zero or more arguments that select debugging keys and handles the ones
+        # that are supposed to generate immediate output and aren't explicilty handled
+        # anywhere else in this class. No arguments selects the most important keys,
+        # which currently happens to cover all the cases in the switch statement.
+        #
+        # NOTE - debug code in the bash version handled the dump of the background and
+        # foreground attributes. I moved that responsibility to the dump_table() method
+        # that's defined in the AttributeTables class.
+        #
+
         if len(args) == 0:
             args = ("foreground", "background", "bytemap", "textmap", "fields")
 
@@ -1031,7 +1049,6 @@ class ByteDump:
                         buffer = []
                         consumed = {}
 
-                        # DEBUG_fields_prefixes is a string "DUMP ADDR ..."
                         for prfx in cls.DEBUG_fields_prefixes.split(" "):
                             matched = []
                             # Inspect class attributes
