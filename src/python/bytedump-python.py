@@ -652,11 +652,11 @@ class ByteDump:
 
     #
     # This will be an instance of the AttributeTables class, but I didn't want that
-    # class to be the first one in this file. Initialization of attributeTables now
+    # class to be the first one in this file. Initialization of attribute_tables now
     # happens in the setup() method, which is the first method called by main().
     #
 
-    attributeTables = None
+    attribute_tables = None
 
     #
     # Using the argumentsConsumed class variable means command line option can be
@@ -1008,8 +1008,8 @@ class ByteDump:
             match arg:
                 case "background":
                     if cls.DEBUG_background:
-                        cls.attributeTables.dump_table("BYTE_BACKGROUND", "[Debug] ")
-                        cls.attributeTables.dump_table("TEXT_BACKGROUND", "[Debug] ")
+                        cls.attribute_tables.dump_table("BYTE_BACKGROUND", "[Debug] ")
+                        cls.attribute_tables.dump_table("TEXT_BACKGROUND", "[Debug] ")
 
                 case "bytemap":
                     if cls.DEBUG_bytemap:
@@ -1061,8 +1061,8 @@ class ByteDump:
 
                 case "foreground":
                     if cls.DEBUG_foreground:
-                        cls.attributeTables.dump_table("BYTE_FOREGROUND", "[Debug] ")
-                        cls.attributeTables.dump_table("TEXT_FOREGROUND", "[Debug] ")
+                        cls.attribute_tables.dump_table("BYTE_FOREGROUND", "[Debug] ")
+                        cls.attribute_tables.dump_table("TEXT_FOREGROUND", "[Debug] ")
 
                 case "textmap":
                     if cls.DEBUG_textmap:
@@ -1587,9 +1587,9 @@ class ByteDump:
         manager = RegexManager()
         last = cls.last_encoded_byte()
 
-        # Iterate over attributeTables
-        for key in cls.attributeTables.registered_keys:
-            byte_table = cls.attributeTables.get(key)
+        # Iterate over attribute_tables
+        for key in cls.attribute_tables.registered_keys:
+            byte_table = cls.attribute_tables.get(key)
             if byte_table is not None:
                 groups = manager.matched_groups(key, "^(BYTE|TEXT)_(.+)$")
                 if groups is not None:
@@ -1718,8 +1718,8 @@ class ByteDump:
                         attribute = groups[1]
                         selector = groups[4] if groups[3] is not None else "0x(00-FF)"
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("BYTE_BACKGROUND"))
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("TEXT_BACKGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
                             cls.user_error("background attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
                     else:
@@ -1767,7 +1767,7 @@ class ByteDump:
                         attribute = groups[1]
                         selector = groups[4] if groups[3] is not None else "0x(00-FF)"
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("BYTE_BACKGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                         else:
                             cls.user_error("background attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
                     else:
@@ -1779,7 +1779,7 @@ class ByteDump:
                         attribute = groups[1]
                         selector = groups[4] if groups[3] is not None else "0x(00-FF)"
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("BYTE_FOREGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                         else:
                             cls.user_error("foreground attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
                     else:
@@ -1833,8 +1833,8 @@ class ByteDump:
                         attribute = groups[1]
                         selector = groups[4] if groups[3] is not None else "0x(00-FF)"
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("BYTE_FOREGROUND"))
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("TEXT_FOREGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
                             cls.user_error("foreground attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
                     else:
@@ -1961,7 +1961,7 @@ class ByteDump:
                         attribute = groups[1]
                         selector = groups[4] if groups[3] is not None else "0x(00-FF)"
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("TEXT_BACKGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
                             cls.user_error("background attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
                     else:
@@ -1973,7 +1973,7 @@ class ByteDump:
                         attribute = groups[1]
                         selector = groups[4] if groups[3] is not None else "0x(00-FF)"
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
-                            cls.byte_selector(attribute, selector, cls.attributeTables.get_table("TEXT_FOREGROUND"))
+                            cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
                             cls.user_error("foreground attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
                     else:
@@ -2026,7 +2026,7 @@ class ByteDump:
         # wait use its constructor.
         #
 
-        cls.attributeTables = AttributeTables(
+        cls.attribute_tables = AttributeTables(
             "BYTE_BACKGROUND", "BYTE_FOREGROUND",
             "TEXT_BACKGROUND", "TEXT_FOREGROUND"
         )
