@@ -527,7 +527,10 @@ class ByteDump:
     #
 
     ANSI_ESCAPE: Dict[str, str] = {
+        #
         # Foregound color escape sequences.
+        #
+
         "FOREGROUND.black": "\u001B[30m",
         "FOREGROUND.red": "\u001B[31m",
         "FOREGROUND.green": "\u001B[32m",
@@ -555,7 +558,10 @@ class ByteDump:
         "FOREGROUND.bright-cyan": "\u001B[1;36m",
         "FOREGROUND.bright-white": "\u001B[1;37m",
 
+        #
         # Blinking foreground color escape sequences.
+        #
+
         "FOREGROUND.blink-black": "\u001B[5;30m",
         "FOREGROUND.blink-red": "\u001B[5;31m",
         "FOREGROUND.blink-green": "\u001B[5;32m",
@@ -583,9 +589,21 @@ class ByteDump:
         "FOREGROUND.blink-bright-cyan": "\u001B[5;1;36m",
         "FOREGROUND.blink-bright-white": "\u001B[5;1;37m",
 
+        #
+        # The ANSI escape code that restores the default foreground color is
+        #
+        #    $'\e[39m'
+        #
+        # but in our implementation, an empty string accomplishes the same thing, so
+        # it's a much better choice.
+        #
+
         "FOREGROUND.reset": "",
 
-        # Background color escape sequences
+        #
+        # Background color escape sequences - background blinking isn't possible.
+        #
+
         "BACKGROUND.black": "\u001B[40m",
         "BACKGROUND.red": "\u001B[41m",
         "BACKGROUND.green": "\u001B[42m",
@@ -613,7 +631,22 @@ class ByteDump:
         "BACKGROUND.bright-cyan": "\u001B[1;46m",
         "BACKGROUND.bright-white": "\u001B[1;47m",
 
+        #
+        # The ANSI escape code that restores the default background color is
+        #
+        #    $'\e[49m'
+        #
+        # but in our implementation, an empty string accomplishes the same thing and
+        # is a much better choice.
+        #
+
         "BACKGROUND.reset": "",
+
+        #
+        # Reset all escape sequences. Omitting the 0 should work, but decided against
+        # it - at least for now.
+        #
+
         "RESET.attributes": "\u001B[0m"
     }
 
