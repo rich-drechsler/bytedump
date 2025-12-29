@@ -10,10 +10,11 @@
 # NOTE - lots of noise if you run pylint on this file and there still are issues that
 # I'm going to investigate. Right now I use something like
 #
-#   pylint --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R1702,R0912,R0914,R0915 file.py
+#   pylint --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R0912,R0914,R0915,R1702 bytedump-python.py
 #
 # to run pylint (version 2.12.2) on my Linux system. Disabled messages are things I've
-# looked at (briefly at least) and decided not to address right now.
+# decided to permanently ignore or looked at (briefly at least) and may revisit in the
+# near future.
 #
 
 import inspect
@@ -776,6 +777,10 @@ class ByteDump:
         # that are less than 256. Two quoting styles are supported because the quote
         # delimiters have to be protected from your shell on the command line.
         #
+        # NOTE - this is a difficult method to follow, but similarily to what's done
+        # in the other bytedump implementations should help if really want to tackle
+        # this method. Lots of regular expressions, but chatbots can help with them.
+        #
 
         base = 0
 
@@ -921,6 +926,10 @@ class ByteDump:
             #
             # TODO - think a modified implementation of matched_groups() could also eliminate
             # at least one level of nesting here. Same guess also holds for matched_group().
+            # Actually, I think defining a few regular expression helper functions in this
+            # class and eliminating the RegexManager class is the best approach. One of the
+            # main reasons I built the Java version of RegexManager was so it could be used
+            # by other Java applications - any generality here isn't my goal.
             #
             elif True: # Emulate else if ... using match groups check inside block
                 groups = manager.matched_groups(input_str, "^(r([#]*)(\"|'))")

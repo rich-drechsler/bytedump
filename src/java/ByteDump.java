@@ -1172,6 +1172,10 @@ class ByteDump {
         // that are less than 256. Two quoting styles are supported because the quote
         // delimiters have to be protected from your shell on the command line.
         //
+        // NOTE - this is a difficult method to follow, but similarily to what's done
+        // in the other bytedump implementations should help if really want to tackle
+        // this method. Lots of regular expressions, but chatbots can help with them.
+        //
 
         manager = new RegexManager();
         base = 0;

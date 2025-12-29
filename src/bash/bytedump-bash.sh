@@ -1835,6 +1835,10 @@ ByteSelector() {
     # the regular expressions were written, because we couldn't be sure what was
     # stored in LC_ALL.
     #
+    # NOTE - this is a difficult function to follow, but similarily to what's done
+    # in the other bytedump implementations should help if really want to tackle
+    # this function. Lots of regular expressions, but chatbots can help with them.
+    #
 
     selector_status="0"
     selector_base=""
