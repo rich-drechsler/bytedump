@@ -142,7 +142,6 @@ class ByteDump:
     # you'll find in the source code.
     #
 
-    DEBUG_addresses: bool = False
     DEBUG_background: bool = False
     DEBUG_bytemap: bool = False
     DEBUG_fields: bool = False
@@ -508,16 +507,6 @@ class ByteDump:
 
     byteMap: Optional[List[str]] = None
     textMap: Optional[List[str]] = None
-
-    #
-    # TODO - in Java there really was a plausible reason why addresses could be built
-    # a bit faster using the addrMap and addrBuffer, but I kind of doubt the argument
-    # holds for Python. Should be investigated and if so just delete all of this stuff
-    # and simplify the methods responsible for generating the acutal dump.
-    #
-
-    addrMap: Optional[List[str]] = None
-    addrBuffer: Optional[List[str]] = None
 
     #
     # Values stored in the ANSI_ESCAPE dictionary are the ANSI escape sequences used
@@ -1101,6 +1090,7 @@ class ByteDump:
         if cls.DUMP_record_length > 0:
             # Localize lookups for speed
             addr_prefix = cls.ADDR_prefix
+            addr_format = cls.ADDR_format
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
             byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
             byte_separator = cls.BYTE_separator
@@ -1134,7 +1124,7 @@ class ByteDump:
                 # 1. Address
                 if addr_enabled:
                     output.write(addr_prefix)
-                    cls.dump_formatted_address(address, output)
+                    output.write(addr_format % address)
                     output.write(addr_suffix)
 
                 # 2. Bytes
@@ -1170,6 +1160,7 @@ class ByteDump:
 
         if cls.DUMP_record_length == 0:
             addr_prefix = cls.ADDR_prefix
+            addr_format = cls.ADDR_format
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
 
             # These variables update as we loop (prefix becomes separator)
@@ -1198,7 +1189,7 @@ class ByteDump:
                 # Address prints only once at the very start
                 if addr_enabled:
                     output.write(addr_prefix)
-                    cls.dump_formatted_address(address, output)
+                    output.write(addr_format % address)
                     output.write(addr_suffix)
                     addr_enabled = False
 
@@ -1271,53 +1262,6 @@ class ByteDump:
                 cls.internal_error("byte mapping array has not been initialized")
         else:
             cls.internal_error("single record dump has not been handled properly")
-
-    @classmethod
-    def dump_formatted_address(cls, address: int, output) -> None:
-        #
-        # Uses addrBuffer to build addresses without String.format where possible.
-        #
-        if cls.addrMap is not None:
-            length = len(cls.addrBuffer)
-            offset = length - cls.ADDR_digits
-
-            # Reset buffer to padding character (simulated by copying)
-            # In Python, lists are mutable, so we can use that.
-            # Java: addrBuffer[index] = ...
-
-            # We need a fresh copy or reset of logic because Python strings immutable
-            # But cls.addrBuffer is a list of characters in our translation?
-            # Step 1 didn't init it, Step 2 defined it as Optional[List[str]].
-            # Initialize4_Maps will fill it.
-
-            # Assuming addrBuffer is a list of characters like ['0', '0', ...]
-            local_buffer = list(cls.addrBuffer)
-
-            if address > 0:
-                index = length
-                radix = cls.ADDR_radix
-
-                # Logic mirroring the switch(ADDR_radix)
-                while address > 0:
-                    index -= 1
-                    local_buffer[index] = cls.addrMap[int(address % radix)]
-                    address //= radix
-
-                if offset < index:
-                    output.write("".join(local_buffer[offset : offset + cls.ADDR_digits]))
-                else:
-                    output.write("".join(local_buffer[index : length]))
-
-            elif address == 0:
-                local_buffer[length - 1] = '0'
-                output.write("".join(local_buffer[offset : offset + cls.ADDR_digits]))
-            else:
-                output.write(cls.ADDR_format % address)
-        else:
-            # Fallback to standard formatting
-            # Python equivalent of String.format
-            # ADDR_format is like "%06x", which works in Python
-            output.write(cls.ADDR_format % address)
 
     @classmethod
     def dump_text_field(cls, input_stream, output) -> None:
@@ -1605,26 +1549,6 @@ class ByteDump:
                         else:
                             cls.textMap[index] = element
 
-        # Address Map initialization
-        if not cls.DEBUG_addresses:
-            if cls.addrMap is None:
-                match cls.ADDR_output:
-                    case "DECIMAL":
-                        cls.addrMap = list("0123456789")
-                    case "HEX-LOWER":
-                        cls.addrMap = list("0123456789abcdef")
-                    case "HEX-UPPER":
-                        cls.addrMap = list("0123456789ABCDEF")
-                    case "OCTAL":
-                        cls.addrMap = list("01234567")
-
-            if cls.addrMap is not None:
-                padding_char = cls.ADDR_padding[0] if len(cls.ADDR_padding) > 0 else ' '
-                # 63 chars (Long.SIZE - 1)
-                cls.addrBuffer = [padding_char] * 63
-        else:
-            cls.addrMap = None
-
     @classmethod
     def initialize5_attributes(cls) -> None:
         manager = RegexManager()
@@ -1854,8 +1778,6 @@ class ByteDump:
                     for field in optarg.split(","):
                         field = field.strip()
                         match field:
-                            case "addresses":
-                                cls.DEBUG_addresses = True
                             case "background":
                                 cls.DEBUG_background = True
                             case "bytemap":
