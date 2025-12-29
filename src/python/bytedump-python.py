@@ -505,8 +505,8 @@ class ByteDump:
     # dump. Both fields can't be omitted.
     #
 
-    byteMap: Optional[List[str]] = None
-    textMap: Optional[List[str]] = None
+    byte_map: Optional[List[str]] = None
+    text_map: Optional[List[str]] = None
 
     #
     # Values stored in the ANSI_ESCAPE dictionary are the ANSI escape sequences used
@@ -1013,12 +1013,12 @@ class ByteDump:
 
                 case "bytemap":
                     if cls.DEBUG_bytemap:
-                        if cls.byteMap is not None:
-                            sys.stderr.write(f"[Debug] byteMap[{len(cls.byteMap)}]:\n")
+                        if cls.byte_map is not None:
+                            sys.stderr.write(f"[Debug] byte_map[{len(cls.byte_map)}]:\n")
                             for row in range(16):
                                 prefix = "[Debug]    "
                                 for col in range(16):
-                                    sys.stderr.write(f"{prefix}{cls.byteMap[16 * row + col]}")
+                                    sys.stderr.write(f"{prefix}{cls.byte_map[16 * row + col]}")
                                     prefix = " "
                                 sys.stderr.write("\n")
                             sys.stderr.write("\n")
@@ -1066,12 +1066,12 @@ class ByteDump:
 
                 case "textmap":
                     if cls.DEBUG_textmap:
-                        if cls.textMap is not None:
-                            sys.stderr.write(f"[Debug] textMap[{len(cls.textMap)}]:\n")
+                        if cls.text_map is not None:
+                            sys.stderr.write(f"[Debug] text_map[{len(cls.text_map)}]:\n")
                             for row in range(16):
                                 prefix = "[Debug]    "
                                 for col in range(16):
-                                    sys.stderr.write(f"{prefix}{cls.textMap[16 * row + col]}")
+                                    sys.stderr.write(f"{prefix}{cls.text_map[16 * row + col]}")
                                     prefix = " "
                                 sys.stderr.write("\n")
                             sys.stderr.write("\n")
@@ -1135,11 +1135,11 @@ class ByteDump:
             record_len = cls.DUMP_record_length
 
             addr_enabled = (cls.ADDR_format is not None and len(cls.ADDR_format) > 0)
-            byte_enabled = (cls.byteMap is not None)
-            text_enabled = (cls.textMap is not None)
+            byte_enabled = (cls.byte_map is not None)
+            text_enabled = (cls.text_map is not None)
 
-            byte_map = cls.byteMap
-            text_map = cls.textMap
+            byte_map = cls.byte_map
+            text_map = cls.text_map
 
             # Pre-calculate padding width per byte
             byte_pad_width = 0
@@ -1189,7 +1189,7 @@ class ByteDump:
 
         output_byte = output
         # If both enabled, we must buffer text to print it AFTER all bytes
-        output_text = StringIO() if (cls.byteMap is not None and cls.textMap is not None) else output
+        output_text = StringIO() if (cls.byte_map is not None and cls.text_map is not None) else output
 
         if cls.DUMP_record_length == 0:
             addr_prefix = cls.ADDR_prefix
@@ -1204,11 +1204,11 @@ class ByteDump:
             text_separator = cls.TEXT_separator
 
             addr_enabled = (cls.ADDR_format is not None and len(cls.ADDR_format) > 0)
-            byte_enabled = (cls.byteMap is not None)
-            text_enabled = (cls.textMap is not None)
+            byte_enabled = (cls.byte_map is not None)
+            text_enabled = (cls.text_map is not None)
 
-            byte_map = cls.byteMap
-            text_map = cls.textMap
+            byte_map = cls.byte_map
+            text_map = cls.text_map
 
             chunk_size = 4096
             address = cls.DUMP_output_start
@@ -1259,8 +1259,8 @@ class ByteDump:
         # OPTIMIZED: Dump only byte field
         #
         if cls.DUMP_record_length > 0:
-            if cls.byteMap is not None:
-                byte_map = cls.byteMap
+            if cls.byte_map is not None:
+                byte_map = cls.byte_map
                 record_len = cls.DUMP_record_length
 
                 # Check if we have complex formatting (prefixes, suffixes, etc.)
@@ -1302,8 +1302,8 @@ class ByteDump:
         # OPTIMIZED: Dump only text field
         #
         if cls.DUMP_record_length > 0:
-            if cls.textMap is not None:
-                text_map = cls.textMap
+            if cls.text_map is not None:
+                text_map = cls.text_map
                 record_len = cls.DUMP_record_length
 
                 complex_fmt = (len(cls.TEXT_separator) > 0 or len(cls.TEXT_prefix) > 0 or
@@ -1548,14 +1548,14 @@ class ByteDump:
 
         # Byte map initialization
         if len(cls.BYTE_map) > 0:
-            cls.byteMap = getattr(cls, cls.BYTE_map, None)
-            if cls.byteMap is None:
+            cls.byte_map = getattr(cls, cls.BYTE_map, None)
+            if cls.byte_map is None:
                 cls.internal_error(cls.delimit(cls.BYTE_map), "is not a recognized byte mapping array name")
 
         # Text map initialization
         if len(cls.TEXT_map) > 0:
-            cls.textMap = getattr(cls, cls.TEXT_map, None)
-            if cls.textMap is None:
+            cls.text_map = getattr(cls, cls.TEXT_map, None)
+            if cls.text_map is None:
                 cls.internal_error(cls.delimit(cls.TEXT_map), "is not a recognized text mapping array name")
 
             # Python handles unicode natively, but we need to check if the char is printable/encodeable
@@ -1566,10 +1566,10 @@ class ByteDump:
                 manager = RegexManager()
                 # Create a copy to modify if needed? Java modifies in place.
                 # Since we assign class attributes by reference from static lists, modifying
-                # cls.textMap modifies the original list. This matches Java behavior.
+                # cls.text_map modifies the original list. This matches Java behavior.
 
-                for index in range(len(cls.textMap)):
-                    element = cls.textMap[index]
+                for index in range(len(cls.text_map)):
+                    element = cls.text_map[index]
                     if element is not None:
                         # Matches unicode escapes in the literal string: ^(.*)(\\u([0-9a-fA-F]{4}))$
                         groups = manager.matched_groups(element, r"^(.*)(\\u([0-9a-fA-F]{4}))$")
@@ -1578,9 +1578,9 @@ class ByteDump:
                             # Logic: if unexpanded is null OR encoder can encode...
                             # In Python, we can basically always encode to UTF-8/Unicode.
                             # We'll assume success unless unexpanded logic dictates otherwise.
-                            cls.textMap[index] = groups[1] + chr(codepoint)
+                            cls.text_map[index] = groups[1] + chr(codepoint)
                         else:
-                            cls.textMap[index] = element
+                            cls.text_map[index] = element
 
     @classmethod
     def initialize5_attributes(cls) -> None:
@@ -1596,7 +1596,7 @@ class ByteDump:
                     field = groups[1]
                     layer = groups[2]
 
-                    field_map = cls.byteMap if field == "BYTE" else cls.textMap
+                    field_map = cls.byte_map if field == "BYTE" else cls.text_map
 
                     if field_map is not None:
                         suffix = cls.ANSI_ESCAPE.get("RESET.attributes", "")
