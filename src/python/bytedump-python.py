@@ -1562,40 +1562,38 @@ class ByteDump:
         groups: Optional[List[str]]
         element: str
         codepoint: int
+        encoder: str
 
-        # Byte map initialization
         if len(cls.BYTE_map) > 0:
+            #
+            # Eventually expect we'll build the required BYTE field mapping array here,
+            # something like the way it was done in the bash version of bytedump.
+            #
+            #
             cls.byte_map = getattr(cls, cls.BYTE_map, None)
             if cls.byte_map is None:
                 cls.internal_error(cls.delimit(cls.BYTE_map), "is not a recognized byte mapping array name")
 
-        # Text map initialization
         if len(cls.TEXT_map) > 0:
             cls.text_map = getattr(cls, cls.TEXT_map, None)
             if cls.text_map is None:
                 cls.internal_error(cls.delimit(cls.TEXT_map), "is not a recognized text mapping array name")
 
-            # Python handles unicode natively, but we need to check if the char is printable/encodeable
-            # in the default encoding if we were strictly mirroring Java's CharsetEncoder logic.
-            # Here we assume Python 3's utf-8 environment usually, but let's mirror logic structure.
-
             if not cls.DEBUG_unexpanded:
                 manager = RegexManager()
-                # Create a copy to modify if needed? Java modifies in place.
-                # Since we assign class attributes by reference from static lists, modifying
-                # cls.text_map modifies the original list. This matches Java behavior.
+                encoder = sys.stdout.encoding
 
                 for index in range(len(cls.text_map)):
                     element = cls.text_map[index]
                     if element is not None:
-                        # Matches unicode escapes in the literal string: ^(.*)(\\u([0-9a-fA-F]{4}))$
-                        groups = manager.matched_groups(element, r"^(.*)(\\u([0-9a-fA-F]{4}))$")
+                        groups = manager.matched_groups(element, r"^(.*)(\\u([0123456789abcdefABCDEF]{4}))$")
                         if groups is not None:
                             codepoint = int(groups[3], 16)
-                            # Logic: if unexpanded is null OR encoder can encode...
-                            # In Python, we can basically always encode to UTF-8/Unicode.
-                            # We'll assume success unless unexpanded logic dictates otherwise.
-                            cls.text_map[index] = groups[1] + chr(codepoint)
+                            try:
+                                chr(codepoint).encode(encoder)
+                                cls.text_map[index] = groups[1] + chr(codepoint)
+                            except UnicodeEncodeError:
+                                cls.text_map[index] = cls.TEXT_unexpanded_string
                         else:
                             cls.text_map[index] = element
 
