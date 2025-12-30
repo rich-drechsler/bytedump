@@ -2271,73 +2271,33 @@ class AttributeTables(dict):
 
 class RegexManager:
     #
-    # Not being able to do assignments and test what was assigned in if statements
-    # seems to lead to extra nesting that isn't found in the Java version or needed
-    # in the bash version (because it uses the =~ opertor for regex matching). Think
-    # a few new (or modified) methods here couild help - later.
+    # Simple class that supports some regular expression methods that can be used to
+    # replicate how regular expressions are used in the Java bytedump implemenation.
+    # Caching groups recognized by matched() means the program doesn't need to call
+    # matched_groups() to get them.
     #
-    # TODO - also think the next three definitions can be removed.
-    #
-    UNICODE_CHARACTER_CLASS = 0  # Placeholder, not strictly needed in Python 're'
-    FLAGS_DEFAULT = 0
 
-    JAVA_TO_PYTHON_REGEX = {
-        r"\\p{Print}": r"[ -~]",  # Printable ASCII
-        r"\\p{Alnum}": r"[a-zA-Z0-9]",
-        r"\\p{Alpha}": r"[a-zA-Z]",
-        r"\\p{Blank}": r"[ \t]",
-        r"\\p{Cntrl}": r"[\x00-\x1F\x7F]",
-        r"\\p{Digit}": r"[0-9]",
-        r"\\p{Graph}": r"[!-~]",
-        r"\\p{Lower}": r"[a-z]",
-        r"\\p{Punct}": r"[!\"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]",
-        r"\\p{Space}": r"[\s]",
-        r"\\p{Upper}": r"[A-Z]",
-        r"\\p{XDigit}": r"[0-9a-fA-F]",
-    }
+    cached_matched_groups: list[str] = None
 
-    def _convert_regex(self, regex: str) -> str:
-        # Simple replacement to handle Java POSIX classes used in ByteDump
-        for java_p, py_re in self.JAVA_TO_PYTHON_REGEX.items():
-            regex = regex.replace(java_p, py_re)
-        return regex
-
-    def matched_groups(self, text: str, regex: str) -> Optional[List[str]]:
-        """
-        Mimics Java's matchedGroups. Returns a list where index 0 is the full match,
-        and subsequent indices are capturing groups. Returns None on no match.
-        """
-        if text is None or regex is None:
-            return None
-
-        regex = self._convert_regex(regex)
-        match = re.search(regex, text)
-        if match:
-            # Java Matcher.group(0) is full match, group(1).. are captures.
-            # Python match.groups() only returns captures.
-            return [match.group(0)] + list(match.groups())
-        return None
+    def matched(self, text: str, regex: str) -> bool:
+        #
+        # Caching the matched groups means they're available without requiring more
+        # matching by calling matched_groups().
+        #
+        self.cached_matched_groups = self.matched_groups(text, regex)
+        return self.cached_matched_groups is not None
 
     def matched_group(self, group_index: int, text: str, regex: str) -> Optional[str]:
-        """
-        Returns the specific group string from a match.
-        """
         groups = self.matched_groups(text, regex)
-        if groups and group_index < len(groups):
-            return groups[group_index]
-        return None
+        return groups[group_index] if groups and group_index < len(groups) else None
 
-    def matched(self, text: str, regex: str, flags: int = 0) -> bool:
-        """
-        Returns True if the regex matches anywhere in the text.
-        """
-        if text is None or regex is None:
-            return False
-
-        regex = self._convert_regex(regex)
-        # We ignore flags implementation for now as Python defaults are sufficient
-        # for the current use case, but method signature matches.
-        return re.search(regex, text) is not None
+    def matched_groups(self, text: str, regex: str) -> Optional[List[str]]:
+        groups = None
+        if text is not None and regex is not None:
+            match = re.search(regex, text)
+            if match:
+                groups = [match.group(0)] + list(match.groups())
+        return groups
 
 ###################################
 #
