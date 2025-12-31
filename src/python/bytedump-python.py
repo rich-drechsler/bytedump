@@ -716,7 +716,6 @@ class ByteDump:
 
     @classmethod
     def byte_selector(cls, attribute: str, tokens: str, output: List[Optional[str]]) -> None:
-        # NOTE: Variable names mirrored from Java (input -> input_str to avoid builtin shadow)
         manager = RegexManager()
         groups: Optional[List[str]] = None
         chars: List[Optional[str]]
@@ -809,6 +808,11 @@ class ByteDump:
         # in the other bytedump implementations should help if really want to tackle
         # this method. Lots of regular expressions, but chatbots can help with them.
         #
+        # NOTE - the RegexManager class defined later in this file now caches keeps a
+        # temporary copy of the matched groups whenever the manager.matched() method
+        # succeeds. Those groups can be accessed using manager.cached_matched_groups
+        # and they stick around until the next call of manager.matched().
+        #
 
         base = 0
 
@@ -830,78 +834,56 @@ class ByteDump:
             else:
                 cls.internal_error("selector base prefix", cls.delimit(prefix), "has not been implemented")
 
-        # Loop while we can strip non-whitespace tokens
-        while True:
-            match_res = manager.matched_group(1, tokens, "^[ \\t]*([^ \\t].*)")
-            if match_res is None:
-                break
-            tokens = match_res
-
+        while manager.matched(tokens, "^[ \\t]*([^ \\t].*)"):
+            tokens = manager.cached_matched_groups[1]
             tokens_start = tokens
-
             if manager.matched(tokens, "^(0[xX]?)?[0-9a-fA-F]"):
                 first = 0
                 last = -1
                 if base > 0:
                     if base == 16:
-                        groups = manager.matched_groups(tokens, "^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([ \\t]+|$)")
-                        if groups is not None:
-                            first = int(groups[2], base)
-                            last = int(groups[4], base) if groups[4] is not None else first
-                            tokens = tokens[len(groups[0]):]
+                        if manager.matched(tokens, "^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([ \\t]+|$)"):
+                            first = int(manager.cached_matched_groups[2], base)
+                            last = int(manager.cached_matched_groups[4], base) if manager.cached_matched_groups[4] is not None else first
+                            tokens = tokens[len(manager.cached_matched_groups[0]):]
                         else:
                             cls.user_error("problem extracting a hex integer from", cls.delimit(tokens_start))
                     elif base == 8:
-                        groups = manager.matched_groups(tokens, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)")
-                        if groups is not None:
-                            first = int(groups[2], base)
-                            last = int(groups[4], base) if groups[4] is not None else first
-                            tokens = tokens[len(groups[0]):]
+                        if manager.matched(tokens, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)"):
+                            first = int(manager.cached_matched_groups[2], base)
+                            last = int(manager.cached_matched_groups[4], base) if manager.cached_matched_groups[4] is not None else first
+                            tokens = tokens[len(manager.cached_matched_groups[0]):]
                         else:
                             cls.user_error("problem extracting an octal integer from", cls.delimit(tokens_start))
                     elif base == 10:
-                        groups = manager.matched_groups(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")
-                        if groups is not None:
-                            first = int(groups[2], base)
-                            last = int(groups[4], base) if groups[4] is not None else first
-                            tokens = tokens[len(groups[0]):]
+                        if manager.matched(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)"):
+                            first = int(manager.cached_matched_groups[2], base)
+                            last = int(manager.cached_matched_groups[4], base) if manager.cached_matched_groups[4] is not None else first
+                            tokens = tokens[len(manager.cached_matched_groups[0]):]
                         else:
                             cls.user_error("problem extracting a decimal integer from", cls.delimit(tokens_start))
                     else:
                         cls.internal_error("base", cls.delimit(str(base)), "has not been implemented")
                 else:
-                    #
-                    # TODO - kind of ugly if-else nesting that probably could be eliminated by
-                    # adding a new method (or modifying the implementation of matched_groups).
-                    # Bash's =~ operator and Java's ability to do assignments in if statements
-                    # mean the same thing doesn't happen in those implementations.
-                    #
-                    groups = manager.matched_groups(tokens, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)")
-                    if groups is not None:
-                        first = int(groups[2], 16)
-                        last = int(groups[4], 16) if groups[4] is not None else first
-                        tokens = tokens[len(groups[0]):]
+                    if manager.matched(tokens, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)"):
+                        first = int(manager.cached_matched_groups[2], 16)
+                        last = int(manager.cached_matched_groups[4], 16) if manager.cached_matched_groups[4] is not None else first
+                        tokens = tokens[len(manager.cached_matched_groups[0]):]
+                    elif manager.matched(tokens, "^((0[0-7]*)([-](0[0-7]*))?)([ \\t]+|$)"):
+                        first = int(manager.cached_matched_groups[2], 8)
+                        last = int(manager.cached_matched_groups[4], 8) if manager.cached_matched_groups[4] is not None else first
+                        tokens = tokens[len(manager.cached_matched_groups[0]):]
+                    elif manager.matched(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)"):
+                        first = int(manager.cached_matched_groups[2], 10)
+                        last = int(manager.cached_matched_groups[4], 10) if manager.cached_matched_groups[4] is not None else first
+                        tokens = tokens[len(manager.cached_matched_groups[0]):]
                     else:
-                        groups = manager.matched_groups(tokens, "^((0[0-7]*)([-](0[0-7]*))?)([ \\t]+|$)")
-                        if groups is not None:
-                            first = int(groups[2], 8)
-                            last = int(groups[4], 8) if groups[4] is not None else first
-                            tokens = tokens[len(groups[0]):]
-                        else:
-                            groups = manager.matched_groups(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")
-                            if groups is not None:
-                                first = int(groups[2], 10)
-                                last = int(groups[4], 10) if groups[4] is not None else first
-                                tokens = tokens[len(groups[0]):]
-                            else:
-                                cls.user_error("problem extracting an integer from", cls.delimit(tokens_start))
-
+                        cls.user_error("problem extracting an integer from", cls.delimit(tokens_start))
                 if first <= last and first < 256:
                     if last > 256:
                         last = 256
                     for index in range(first, last + 1):
                         output[index] = attribute
-
             elif manager.matched(tokens, "^\\[:"):
                 groups = manager.matched_groups(tokens, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)")
                 if groups is not None:
@@ -950,7 +932,6 @@ class ByteDump:
                             cls.user_error(cls.delimit(name), "is not the name of an implemented character class")
                 else:
                     cls.user_error("problem extracting a character class from", cls.delimit(tokens_start))
-
             elif manager.matched(tokens, "^(r([#]*)(\"|'))"):
                 #
                 # The manager.matched() method now keeps a temporary copy of the matched groups
@@ -1557,7 +1538,6 @@ class ByteDump:
             #
             # Eventually expect we'll build the required BYTE field mapping array here,
             # something like the way it was done in the bash version of bytedump.
-            #
             #
             cls.byte_map = getattr(cls, cls.BYTE_map, None)
             if cls.byte_map is None:
