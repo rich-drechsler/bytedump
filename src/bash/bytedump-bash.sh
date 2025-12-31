@@ -1737,8 +1737,8 @@ ByteSelector() {
     local -i selector_first
     local selector_hashes
     local selector_index
-    local selector_input
-    local selector_input_start
+    local selector_tokens
+    local selector_tokens_start
     local -i selector_last
     local -n selector_output
     local selector_output_name
@@ -1844,21 +1844,21 @@ ByteSelector() {
     selector_base=""
 
     selector_attribute="$1"
-    selector_input="$2"
+    selector_tokens="$2"
     selector_output_name="$3"
 
     #
     # First check for the optional base prefix.
     #
 
-    if [[ $selector_input =~ ^[$' \t']*(0[xX]?)?[(](.*)[)][$' \t']*$ ]]; then
+    if [[ $selector_tokens =~ ^[$' \t']*(0[xX]?)?[(](.*)[)][$' \t']*$ ]]; then
         #
         # Selector string starts with an optional base prefix and is followed by
         # tokens that are completely enclosed in a single set of parentheses, so
         # set the default base and update the selector string.
         #
         selector_prefix="${BASH_REMATCH[1]}"
-        selector_input="${BASH_REMATCH[2]}"
+        selector_tokens="${BASH_REMATCH[2]}"
 
         case "$selector_prefix" in
             0[xX]) selector_base="16";;
@@ -1871,21 +1871,21 @@ ByteSelector() {
     if [[ $selector_output_name =~ ^SCRIPT_ATTRIBUTES_(BYTE|TEXT)_(BACKGROUND|FOREGROUND)$ ]]; then
         selector_output="$selector_output_name"     # create the output nameref
 
-        while [[ $selector_input =~ ^[$' \t']*([^$' \t'].*) ]]; do
+        while [[ $selector_tokens =~ ^[$' \t']*([^$' \t'].*) ]]; do
             #
             # Omitting leading blanks here means the regular expressions that do the
             # real work don't have to worry about them. Decided to save a copy of the
-            # initial input, because selector_input might be modified when we want to
+            # initial input, because selector_tokens might be modified when we want to
             # use it in an error message.
             #
-            selector_input="${BASH_REMATCH[1]}"
-            selector_input_start="$selector_input"      # for error messages
+            selector_tokens="${BASH_REMATCH[1]}"
+            selector_tokens_start="$selector_tokens"      # for error messages
 
             #
             # Implemented tokens can be identified by looking at how they start. It's
             # an approach that also improves error messages when we notice mistakes.
             #
-            if [[ $selector_input =~ ^(0[xX]?)?[0-9a-fA-F] ]]; then
+            if [[ $selector_tokens =~ ^(0[xX]?)?[0-9a-fA-F] ]]; then
                 #
                 # Next token looks like an integer or integer range. All "numbers" are
                 # carefully checked before we ask bash to do anything significant with
@@ -1897,28 +1897,28 @@ ByteSelector() {
                     # and the digits in every integer must all be valid in that base.
                     #
                     if [[ $selector_base == "16" ]]; then
-                        if [[ $selector_input =~ ^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([$' \t']+|$) ]]; then
+                        if [[ $selector_tokens =~ ^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([$' \t']+|$) ]]; then
                             selector_first="16#${BASH_REMATCH[2]}"
                             selector_last="16#${BASH_REMATCH[4]:-${BASH_REMATCH[2]}}"
-                            selector_input="${selector_input:${#BASH_REMATCH[0]}}"
+                            selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
                         else
-                            Error "problem extracting a hex integer from $(Delimit "${selector_input_start}")"
+                            Error "problem extracting a hex integer from $(Delimit "${selector_tokens_start}")"
                         fi
                     elif [[ $selector_base == "8" ]]; then
-                        if [[ $selector_input =~ ^(([0-7]+)([-]([0-7]+))?)([$' \t']+|$) ]]; then
+                        if [[ $selector_tokens =~ ^(([0-7]+)([-]([0-7]+))?)([$' \t']+|$) ]]; then
                             selector_first="8#${BASH_REMATCH[2]}"
                             selector_last="8#${BASH_REMATCH[4]:-${BASH_REMATCH[2]}}"
-                            selector_input="${selector_input:${#BASH_REMATCH[0]}}"
+                            selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
                         else
-                            Error "problem extracting an octal integer from $(Delimit "${selector_input_start}")"
+                            Error "problem extracting an octal integer from $(Delimit "${selector_tokens_start}")"
                         fi
                     elif [[ $selector_base == "10" ]]; then
-                        if [[ $selector_input =~ ^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([$' \t']+|$) ]]; then
+                        if [[ $selector_tokens =~ ^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([$' \t']+|$) ]]; then
                             selector_first="${BASH_REMATCH[2]}"
                             selector_last="${BASH_REMATCH[4]:-${BASH_REMATCH[2]}}"
-                            selector_input="${selector_input:${#BASH_REMATCH[0]}}"
+                            selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
                         else
-                            Error "problem extracting a decimal integer from $(Delimit "${selector_input_start}")"
+                            Error "problem extracting a decimal integer from $(Delimit "${selector_tokens_start}")"
                         fi
                     else
                         InternalError "base $(Delimit "${selector_base}") has not been implemented"
@@ -1929,20 +1929,20 @@ ByteSelector() {
                     # use C-style literal notation to specify the base. Both ends of an
                     # integer range must be expressed in the same base.
                     #
-                    if [[ $selector_input =~ ^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([$' \t']+|$) ]]; then
+                    if [[ $selector_tokens =~ ^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([$' \t']+|$) ]]; then
                         selector_first="16#${BASH_REMATCH[2]}"
                         selector_last="16#${BASH_REMATCH[4]:-${BASH_REMATCH[2]}}"
-                        selector_input="${selector_input:${#BASH_REMATCH[0]}}"
-                    elif [[ $selector_input =~ ^((0[0-7]*)([-](0[0-7]*))?)([$' \t']+|$) ]]; then
+                        selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
+                    elif [[ $selector_tokens =~ ^((0[0-7]*)([-](0[0-7]*))?)([$' \t']+|$) ]]; then
                         selector_first="8#${BASH_REMATCH[2]}"
                         selector_last="8#${BASH_REMATCH[4]:-${BASH_REMATCH[2]}}"
-                        selector_input="${selector_input:${#BASH_REMATCH[0]}}"
-                    elif [[ $selector_input =~ ^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([$' \t']+|$) ]]; then
+                        selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
+                    elif [[ $selector_tokens =~ ^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([$' \t']+|$) ]]; then
                         selector_first="${BASH_REMATCH[2]}"
                         selector_last="${BASH_REMATCH[4]:-${BASH_REMATCH[2]}}"
-                        selector_input="${selector_input:${#BASH_REMATCH[0]}}"
+                        selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
                     else
-                        Error "problem extracting an integer from $(Delimit "${selector_input_start}")"
+                        Error "problem extracting an integer from $(Delimit "${selector_tokens_start}")"
                     fi
                 fi
 
@@ -1954,10 +1954,10 @@ ByteSelector() {
                         selector_output[${selector_index}]="$selector_attribute"
                     done
                 fi
-            elif [[ $selector_input =~ ^"[:" ]]; then
-                if [[ $selector_input =~ ^"[:"([a-zA-Z0-9]+)":]"([$' \t']+|$) ]]; then
+            elif [[ $selector_tokens =~ ^"[:" ]]; then
+                if [[ $selector_tokens =~ ^"[:"([a-zA-Z0-9]+)":]"([$' \t']+|$) ]]; then
                     selector_class="${BASH_REMATCH[1]}"
-                    selector_input="${selector_input:${#BASH_REMATCH[0]}}"
+                    selector_tokens="${selector_tokens:${#BASH_REMATCH[0]}}"
 
                     case "$selector_class" in
                         #
@@ -1993,9 +1993,9 @@ ByteSelector() {
                                *) Error "$(Delimit "${selector_class}") is not the name of an implemented character class";;
                     esac
                 else
-                    Error "problem extracting a character class from $(Delimit "${selector_input_start}")"
+                    Error "problem extracting a character class from $(Delimit "${selector_tokens_start}")"
                 fi
-            elif [[ $selector_input =~ ^(r([#]*)(\"|\')) ]]; then
+            elif [[ $selector_tokens =~ ^(r([#]*)(\"|\')) ]]; then
                 #
                 # Next token looks like a slightly modified Rust raw string literal.
                 # It accepts matching single or double quotes in the delimiters and
@@ -2007,7 +2007,7 @@ ByteSelector() {
                 #
                 # Once we've recognized the prefix it's easy to construct the suffix
                 # that's supposed to mark the end of this "raw string". After that we
-                # can use them to separate $selector_input into appropriate pieces.
+                # can use them to separate $selector_tokens into appropriate pieces.
                 #
                 # NOTE - this is pretty difficult code and really doesn't add much to
                 # the program. It's here mostly because it felt like a challenge, and
@@ -2034,9 +2034,9 @@ ByteSelector() {
                 # easy to grab everything that we need.
                 #
 
-                selector_input="${selector_input:${#selector_prefix}}"
+                selector_tokens="${selector_tokens:${#selector_prefix}}"
 
-                if [[ $selector_input =~ "${selector_suffix}"(.*) ]]; then
+                if [[ $selector_tokens =~ "${selector_suffix}"(.*) ]]; then
                     #
                     # Found the end of this raw string - whatever follows the suffix will
                     # be the input string that's processed by the next interation through
@@ -2046,11 +2046,11 @@ ByteSelector() {
                     if [[ $selector_tail =~ ^([$' \t']|$) ]]; then
                         #
                         # Grab the body of the raw string (everything between the prefix
-                        # and suffix), then update selector_input for the next loop.
+                        # and suffix), then update selector_tokens for the next loop.
                         #
 
-                        selector_body="${selector_input:0:${#selector_input} - (${#selector_suffix} + ${#selector_tail})}"
-                        selector_input="$selector_tail"
+                        selector_body="${selector_tokens:0:${#selector_tokens} - (${#selector_suffix} + ${#selector_tail})}"
+                        selector_tokens="$selector_tail"
 
                         #
                         # Need to convert characters in $selector_body to character codes
@@ -2124,13 +2124,13 @@ ByteSelector() {
                             ByteSelector "$selector_attribute" "0x(${selector_chars[*]})" "$selector_output_name"
                         fi
                     else
-                        Error "all tokens must be space separated in byte selector $(Delimit "${selector_input_start}")"
+                        Error "all tokens must be space separated in byte selector $(Delimit "${selector_tokens_start}")"
                     fi
                 else
-                    Error "can't find raw string suffix $(Delimit "${selector_suffix}") in byte selector $(Delimit "${selector_input_start}")"
+                    Error "can't find raw string suffix $(Delimit "${selector_suffix}") in byte selector $(Delimit "${selector_tokens_start}")"
                 fi
             else
-                Error "no valid token found at the start of byte selector $(Delimit "${selector_input_start}")"
+                Error "no valid token found at the start of byte selector $(Delimit "${selector_tokens_start}")"
             fi
         done
     else

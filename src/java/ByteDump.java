@@ -1082,7 +1082,7 @@ class ByteDump {
 
 
     private static void
-    byteSelector(String attribute, String input, String[] output) {
+    byteSelector(String attribute, String tokens, String[] output) {
 
         RegexManager manager;
         String[]     groups;
@@ -1091,7 +1091,7 @@ class ByteDump {
         String       suffix;
         String       body;
         String       tail;
-        String       input_start;
+        String       tokens_start;
         String       name;
         int          code;
         int          base;
@@ -1184,9 +1184,9 @@ class ByteDump {
         // First check for the optional base prefix.
         //
 
-        if ((groups = manager.matchedGroups(input, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")) != null) {
+        if ((groups = manager.matchedGroups(tokens, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")) != null) {
             prefix = groups[1];
-            input = groups[2];
+            tokens = groups[2];
 
             if (prefix == null) {
                 base = 10;
@@ -1199,54 +1199,54 @@ class ByteDump {
             }
         }
 
-        while ((input = manager.matchedGroup(1, input, "^[ \\t]*([^ \\t].*)")) != null) {
-            input_start = input;
-            if (manager.matched(input, "^(0[xX]?)?[0-9a-fA-F]")) {
+        while ((tokens = manager.matchedGroup(1, tokens, "^[ \\t]*([^ \\t].*)")) != null) {
+            tokens_start = tokens;
+            if (manager.matched(tokens, "^(0[xX]?)?[0-9a-fA-F]")) {
                 first = 0;
                 last = -1;
                 if (base > 0) {
                     if (base == 16) {
-                        if ((groups = manager.matchedGroups(input, "^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([ \\t]+|$)")) != null) {
+                        if ((groups = manager.matchedGroups(tokens, "^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([ \\t]+|$)")) != null) {
                             first = Integer.parseInt(groups[2], base);
                             last = (groups[4] != null ? Integer.parseInt(groups[4], base) : first);
-                            input = input.substring(groups[0].length());
+                            tokens = tokens.substring(groups[0].length());
                         } else {
-                            userError("problem extracting a hex integer from", delimit(input_start));
+                            userError("problem extracting a hex integer from", delimit(tokens_start));
                         }
                     } else if (base == 8) {
-                        if ((groups = manager.matchedGroups(input, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)")) != null) {
+                        if ((groups = manager.matchedGroups(tokens, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)")) != null) {
                             first = Integer.parseInt(groups[2], base);
                             last = (groups[4] != null ? Integer.parseInt(groups[4], base) : first);
-                            input = input.substring(groups[0].length());
+                            tokens = tokens.substring(groups[0].length());
                         } else {
-                            userError("problem extracting an octal integer from", delimit(input_start));
+                            userError("problem extracting an octal integer from", delimit(tokens_start));
                         }
                     } else if (base == 10) {
-                        if ((groups = manager.matchedGroups(input, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")) != null) {
+                        if ((groups = manager.matchedGroups(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")) != null) {
                             first = Integer.parseInt(groups[2], base);
                             last = (groups[4] != null ? Integer.parseInt(groups[4], base) : first);
-                            input = input.substring(groups[0].length());
+                            tokens = tokens.substring(groups[0].length());
                         } else {
-                            userError("problem extracting a decimal integer from", delimit(input_start));
+                            userError("problem extracting a decimal integer from", delimit(tokens_start));
                         }
                     } else {
                         internalError("base", delimit(base), "has not been implemented");
                     }
                 } else {
-                    if ((groups = manager.matchedGroups(input, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)")) != null) {
+                    if ((groups = manager.matchedGroups(tokens, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)")) != null) {
                         first = Integer.parseInt(groups[2], 16);
                         last = (groups[4] != null ? Integer.parseInt(groups[4], 16) : first);
-                        input = input.substring(groups[0].length());
-                    } else if ((groups = manager.matchedGroups(input, "^((0[0-7]*)([-](0[0-7]*))?)([ \\t]+|$)")) != null) {
+                        tokens = tokens.substring(groups[0].length());
+                    } else if ((groups = manager.matchedGroups(tokens, "^((0[0-7]*)([-](0[0-7]*))?)([ \\t]+|$)")) != null) {
                         first = Integer.parseInt(groups[2], 8);
                         last = (groups[4] != null ? Integer.parseInt(groups[4], 8) : first);
-                        input = input.substring(groups[0].length());
-                    } else if ((groups = manager.matchedGroups(input, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")) != null) {
+                        tokens = tokens.substring(groups[0].length());
+                    } else if ((groups = manager.matchedGroups(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")) != null) {
                         first = Integer.parseInt(groups[2], 10);
                         last = (groups[4] != null ? Integer.parseInt(groups[4], 10) : first);
-                        input = input.substring(groups[0].length());
+                        tokens = tokens.substring(groups[0].length());
                     } else {
-                        userError("problem extracting an integer from", delimit(input_start));
+                        userError("problem extracting an integer from", delimit(tokens_start));
                     }
                 }
                 if (first <= last && first < 256) {
@@ -1257,10 +1257,10 @@ class ByteDump {
                         output[index] = attribute;
                     }
                 }
-            } else if (manager.matched(input, "^\\[:")) {
-                if ((groups = manager.matchedGroups(input, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)")) != null) {
+            } else if (manager.matched(tokens, "^\\[:")) {
+                if ((groups = manager.matchedGroups(tokens, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)")) != null) {
                     name = groups[1];
-                    input = input.substring(groups[0].length());
+                    tokens = tokens.substring(groups[0].length());
 
                     switch (name) {
                         //
@@ -1336,16 +1336,16 @@ class ByteDump {
                             break;
                     }
                 } else {
-                    userError("problem extracting a character class from", delimit(input_start));
+                    userError("problem extracting a character class from", delimit(tokens_start));
                 }
-            } else if ((groups = manager.matchedGroups(input, "^(r([#]*)(\"|'))")) != null) {
+            } else if ((groups = manager.matchedGroups(tokens, "^(r([#]*)(\"|'))")) != null) {
                 prefix = groups[1];
                 suffix = groups[3] + groups[2];
-                input = input.substring(prefix.length());
-                if ((tail = manager.matchedGroup(1, input, suffix + "(.*)")) != null) {
+                tokens = tokens.substring(prefix.length());
+                if ((tail = manager.matchedGroup(1, tokens, suffix + "(.*)")) != null) {
                     if (manager.matched(tail, "^([ \\t]|$)")) {
-                        body = input.substring(0, input.length() - (suffix.length() + tail.length()));
-                        input = tail;
+                        body = tokens.substring(0, tokens.length() - (suffix.length() + tail.length()));
+                        tokens = tail;
 
                         chars = new String[256];
                         count = 0;
@@ -1361,11 +1361,11 @@ class ByteDump {
                             byteSelector(attribute, "0x(" + StringTo.joiner(" ", chars) + ")", output);
                         }
                     } else {
-                        userError("all tokens must be space separated in byte selector", delimit(input_start));
+                        userError("all tokens must be space separated in byte selector", delimit(tokens_start));
                     }
                 }
             } else {
-                userError("no valid token found at the start of byte selector", delimit(input_start));
+                userError("no valid token found at the start of byte selector", delimit(tokens_start));
             }
         }
     }

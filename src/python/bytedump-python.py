@@ -715,7 +715,7 @@ class ByteDump:
             cls.user_error("too many non-option command line arguments:", cls.delimit_args(args))
 
     @classmethod
-    def byte_selector(cls, attribute: str, input_str: str, output: List[Optional[str]]) -> None:
+    def byte_selector(cls, attribute: str, tokens: str, output: List[Optional[str]]) -> None:
         # NOTE: Variable names mirrored from Java (input -> input_str to avoid builtin shadow)
         manager = RegexManager()
         groups: Optional[List[str]] = None
@@ -724,7 +724,7 @@ class ByteDump:
         suffix: str
         body: str
         tail: str
-        input_start: str
+        tokens_start: str
         name: str
         code: int
         base: int
@@ -816,10 +816,10 @@ class ByteDump:
         # First check for the optional base prefix.
         #
 
-        groups = manager.matched_groups(input_str, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")
+        groups = manager.matched_groups(tokens, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")
         if groups is not None:
             prefix = groups[1]
-            input_str = groups[2]
+            tokens = groups[2]
 
             if prefix is None:
                 base = 10
@@ -832,41 +832,41 @@ class ByteDump:
 
         # Loop while we can strip non-whitespace tokens
         while True:
-            match_res = manager.matched_group(1, input_str, "^[ \\t]*([^ \\t].*)")
+            match_res = manager.matched_group(1, tokens, "^[ \\t]*([^ \\t].*)")
             if match_res is None:
                 break
-            input_str = match_res
+            tokens = match_res
 
-            input_start = input_str
+            tokens_start = tokens
 
-            if manager.matched(input_str, "^(0[xX]?)?[0-9a-fA-F]"):
+            if manager.matched(tokens, "^(0[xX]?)?[0-9a-fA-F]"):
                 first = 0
                 last = -1
                 if base > 0:
                     if base == 16:
-                        groups = manager.matched_groups(input_str, "^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([ \\t]+|$)")
+                        groups = manager.matched_groups(tokens, "^(([0-9a-fA-F]+)([-]([0-9a-fA-F]+))?)([ \\t]+|$)")
                         if groups is not None:
                             first = int(groups[2], base)
                             last = int(groups[4], base) if groups[4] is not None else first
-                            input_str = input_str[len(groups[0]):]
+                            tokens = tokens[len(groups[0]):]
                         else:
-                            cls.user_error("problem extracting a hex integer from", cls.delimit(input_start))
+                            cls.user_error("problem extracting a hex integer from", cls.delimit(tokens_start))
                     elif base == 8:
-                        groups = manager.matched_groups(input_str, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)")
+                        groups = manager.matched_groups(tokens, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)")
                         if groups is not None:
                             first = int(groups[2], base)
                             last = int(groups[4], base) if groups[4] is not None else first
-                            input_str = input_str[len(groups[0]):]
+                            tokens = tokens[len(groups[0]):]
                         else:
-                            cls.user_error("problem extracting an octal integer from", cls.delimit(input_start))
+                            cls.user_error("problem extracting an octal integer from", cls.delimit(tokens_start))
                     elif base == 10:
-                        groups = manager.matched_groups(input_str, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")
+                        groups = manager.matched_groups(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")
                         if groups is not None:
                             first = int(groups[2], base)
                             last = int(groups[4], base) if groups[4] is not None else first
-                            input_str = input_str[len(groups[0]):]
+                            tokens = tokens[len(groups[0]):]
                         else:
-                            cls.user_error("problem extracting a decimal integer from", cls.delimit(input_start))
+                            cls.user_error("problem extracting a decimal integer from", cls.delimit(tokens_start))
                     else:
                         cls.internal_error("base", cls.delimit(str(base)), "has not been implemented")
                 else:
@@ -876,25 +876,25 @@ class ByteDump:
                     # Bash's =~ operator and Java's ability to do assignments in if statements
                     # mean the same thing doesn't happen in those implementations.
                     #
-                    groups = manager.matched_groups(input_str, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)")
+                    groups = manager.matched_groups(tokens, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)")
                     if groups is not None:
                         first = int(groups[2], 16)
                         last = int(groups[4], 16) if groups[4] is not None else first
-                        input_str = input_str[len(groups[0]):]
+                        tokens = tokens[len(groups[0]):]
                     else:
-                        groups = manager.matched_groups(input_str, "^((0[0-7]*)([-](0[0-7]*))?)([ \\t]+|$)")
+                        groups = manager.matched_groups(tokens, "^((0[0-7]*)([-](0[0-7]*))?)([ \\t]+|$)")
                         if groups is not None:
                             first = int(groups[2], 8)
                             last = int(groups[4], 8) if groups[4] is not None else first
-                            input_str = input_str[len(groups[0]):]
+                            tokens = tokens[len(groups[0]):]
                         else:
-                            groups = manager.matched_groups(input_str, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")
+                            groups = manager.matched_groups(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)")
                             if groups is not None:
                                 first = int(groups[2], 10)
                                 last = int(groups[4], 10) if groups[4] is not None else first
-                                input_str = input_str[len(groups[0]):]
+                                tokens = tokens[len(groups[0]):]
                             else:
-                                cls.user_error("problem extracting an integer from", cls.delimit(input_start))
+                                cls.user_error("problem extracting an integer from", cls.delimit(tokens_start))
 
                 if first <= last and first < 256:
                     if last > 256:
@@ -902,11 +902,11 @@ class ByteDump:
                     for index in range(first, last + 1):
                         output[index] = attribute
 
-            elif manager.matched(input_str, "^\\[:"):
-                groups = manager.matched_groups(input_str, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)")
+            elif manager.matched(tokens, "^\\[:"):
+                groups = manager.matched_groups(tokens, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)")
                 if groups is not None:
                     name = groups[1]
-                    input_str = input_str[len(groups[0]):]
+                    tokens = tokens[len(groups[0]):]
 
                     match name:
                         #
@@ -949,7 +949,7 @@ class ByteDump:
                         case _:
                             cls.user_error(cls.delimit(name), "is not the name of an implemented character class")
                 else:
-                    cls.user_error("problem extracting a character class from", cls.delimit(input_start))
+                    cls.user_error("problem extracting a character class from", cls.delimit(tokens_start))
 
             #
             # TODO - think a modified implementation of matched_groups() could also eliminate
@@ -960,20 +960,20 @@ class ByteDump:
             # by other Java applications - any generality here isn't my goal.
             #
             elif True: # Emulate else if ... using match groups check inside block
-                groups = manager.matched_groups(input_str, "^(r([#]*)(\"|'))")
+                groups = manager.matched_groups(tokens, "^(r([#]*)(\"|'))")
                 if groups is not None:
                     prefix = groups[1]
                     # Python slicing to reconstruct suffix: quote + hashes
                     suffix = groups[3] + groups[2]
-                    input_str = input_str[len(prefix):]
+                    tokens = tokens[len(prefix):]
 
-                    tail = manager.matched_group(1, input_str, suffix + "(.*)")
+                    tail = manager.matched_group(1, tokens, suffix + "(.*)")
                     if tail is not None:
                         if manager.matched(tail, "^([ \\t]|$)"):
                             # body = input.substring(0, input.length() - (suffix.length() + tail.length()));
-                            body_len = len(input_str) - (len(suffix) + len(tail))
-                            body = input_str[:body_len]
-                            input_str = tail
+                            body_len = len(tokens) - (len(suffix) + len(tail))
+                            body = tokens[:body_len]
+                            tokens = tail
 
                             chars = [None] * 256
                             count = 0
@@ -989,9 +989,9 @@ class ByteDump:
                                 joined_chars = " ".join([c for c in chars if c is not None])
                                 cls.byte_selector(attribute, f"0x({joined_chars})", output)
                         else:
-                            cls.user_error("all tokens must be space separated in byte selector", cls.delimit(input_start))
+                            cls.user_error("all tokens must be space separated in byte selector", cls.delimit(tokens_start))
                 else:
-                    cls.user_error("no valid token found at the start of byte selector", cls.delimit(input_start))
+                    cls.user_error("no valid token found at the start of byte selector", cls.delimit(tokens_start))
 
     @classmethod
     def debug(cls, *args: str) -> None:
