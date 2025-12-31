@@ -951,47 +951,39 @@ class ByteDump:
                 else:
                     cls.user_error("problem extracting a character class from", cls.delimit(tokens_start))
 
-            #
-            # TODO - think a modified implementation of matched_groups() could also eliminate
-            # at least one level of nesting here. Same guess also holds for matched_group().
-            # Actually, I think defining a few regular expression helper functions in this
-            # class and eliminating the RegexManager class is the best approach. One of the
-            # main reasons I built the Java version of RegexManager was so it could be used
-            # by other Java applications - any generality here isn't my goal.
-            #
-            elif True: # Emulate else if ... using match groups check inside block
-                groups = manager.matched_groups(tokens, "^(r([#]*)(\"|'))")
-                if groups is not None:
-                    prefix = groups[1]
-                    # Python slicing to reconstruct suffix: quote + hashes
-                    suffix = groups[3] + groups[2]
-                    tokens = tokens[len(prefix):]
+            elif manager.matched(tokens, "^(r([#]*)(\"|'))"):
+                #
+                # The manager.matched() method now keeps a temporary copy of the matched groups
+                # whenever the match succeeds.
+                #
+                prefix = manager.cached_matched_groups[1]
+                suffix = manager.cached_matched_groups[3] + manager.cached_matched_groups[2]
+                tokens = tokens[len(prefix):]
 
-                    tail = manager.matched_group(1, tokens, suffix + "(.*)")
-                    if tail is not None:
-                        if manager.matched(tail, "^([ \\t]|$)"):
-                            # body = input.substring(0, input.length() - (suffix.length() + tail.length()));
-                            body_len = len(tokens) - (len(suffix) + len(tail))
-                            body = tokens[:body_len]
-                            tokens = tail
+                tail = manager.matched_group(1, tokens, suffix + "(.*)")
+                if tail is not None:
+                    if manager.matched(tail, "^([ \\t]|$)"):
+                        body_len = len(tokens) - (len(suffix) + len(tail))
+                        body = tokens[:body_len]
+                        tokens = tail
 
-                            chars = [None] * 256
-                            count = 0
-                            for index in range(len(body)):
-                                code = ord(body[index])
-                                if code < len(chars):
-                                    if chars[code] is None:
-                                        count += 1
-                                    chars[code] = f"{code:02X}"
+                        chars = [None] * 256
+                        count = 0
+                        for index in range(len(body)):
+                            code = ord(body[index])
+                            if code < len(chars):
+                                if chars[code] is None:
+                                    count += 1
+                                chars[code] = f"{code:02X}"
 
-                            if count > 0:
-                                # StringTo.joiner simulation
-                                joined_chars = " ".join([c for c in chars if c is not None])
-                                cls.byte_selector(attribute, f"0x({joined_chars})", output)
-                        else:
-                            cls.user_error("all tokens must be space separated in byte selector", cls.delimit(tokens_start))
-                else:
-                    cls.user_error("no valid token found at the start of byte selector", cls.delimit(tokens_start))
+                        if count > 0:
+                            # StringTo.joiner simulation
+                            joined_chars = " ".join([c for c in chars if c is not None])
+                            cls.byte_selector(attribute, f"0x({joined_chars})", output)
+                    else:
+                        cls.user_error("all tokens must be space separated in byte selector", cls.delimit(tokens_start))
+            else:
+                cls.user_error("no valid token found at the start of byte selector", cls.delimit(tokens_start))
 
     @classmethod
     def debug(cls, *args: str) -> None:
