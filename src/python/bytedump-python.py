@@ -54,18 +54,15 @@ class ByteDump:
 
     #
     # The string assigned to PROGRAM_NAME constant is only used in error and usage
-    # messages. It's supposed to be the system property that's associated with the
-    # "program.name" key, but if it's not defined we use "bytedump" as the name of
-    # this program.
+    # messages.
     #
-    # NOTE: In Python, we cannot call a method (get_system_property) that hasn't
-    # been defined yet within the class body. Initializing to default.
 
-    PROGRAM_NAME: str = "bytedump"
+    PROGRAM_NAME: str = os.path.basename(sys.argv[0])
 
     #
-    # Right now PROGRAM_USAGE is only used if there's no help file in the jar file
-    # that was used to launch this application.
+    # PROGRAM_USAGE is currently only if when there's no available help text, either
+    # in a resource file, a string, or any other mechanism (e.g., a custom formatted
+    # block of comment).
     #
 
     PROGRAM_USAGE: str = "Usage: " + PROGRAM_NAME + " [OPTIONS] [FILE|-]"
