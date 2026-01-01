@@ -381,12 +381,6 @@ class ByteDump {
     // officially documented, but they are occasionally referenced in comments that
     // you'll find in the source code.
     //
-    // NOTE - dropped debugging keys found in the bash version that aren't needed or
-    // just don't make sense in this version. The DEBUG_fields key is responsible for
-    // generating the kind of output that "DEBUG.strings" did in the bash version. It
-    // relies on reflection to access all the class fields and then uses the prefixes
-    // (defined below in DEBUG_fields_prefixes) to pick the interesting fields.
-    //
 
     private static boolean DEBUG_addresses = false;
     private static boolean DEBUG_background = false;
@@ -394,23 +388,24 @@ class ByteDump {
     private static String  DEBUG_charclass = null;
     private static int     DEBUG_charclass_flags = RegexManager.FLAGS_DEFAULT;
     private static String  DEBUG_charclass_regex = null;
-    private static boolean DEBUG_fields = false;
     private static boolean DEBUG_foreground = false;
+    private static boolean DEBUG_settings = false;
     private static boolean DEBUG_textmap = false;
     private static boolean DEBUG_unexpanded = false;
 
+
     //
-    // The value assigned to DEBUG_fields_prefixes are the space separated prefixes of
-    // the field names that are dumped when the --debug=fields option is used. Change
-    // the list if you want a different collection fields or have them presented in a
-    // different order.
+    // The value assigned to DEBUG_settings_prefixes are the space separated prefixes
+    // of the variable names that are dumped when the --debug=settings option is used.
+    // Change the list if you want a different collection of "settings" or have them
+    // presented in a different order.
     //
     // NOTE - the bash version could just look for "keys" in an associative array, but
     // in this Java implementation we have to use reflection to find the appropriately
     // named class variables.
     //
 
-    private static String DEBUG_fields_prefixes = "DUMP ADDR BYTE TEXT DEBUG PROGRAM";
+    private static String DEBUG_settings_prefixes = "DUMP ADDR BYTE TEXT DEBUG PROGRAM";
 
     //
     // Dumps that this program produces never depend on an external program to generate
@@ -1405,7 +1400,7 @@ class ByteDump {
         //
 
         if (args.length == 0) {
-            args = new String[] {"foreground", "background", "bytemap", "textmap", "fields", "charclass"};
+            args = new String[] {"foreground", "background", "bytemap", "textmap", "settings", "charclass"};
         }
 
         for (String arg : args) {
@@ -1477,17 +1472,19 @@ class ByteDump {
                     }
                     break;
 
-                case "fields":
-                    if (DEBUG_fields) {
+                case "foreground":
+                    if (DEBUG_foreground) {
+                        attributeTables.dumpTable("BYTE_FOREGROUND", "[Debug] ");
+                        attributeTables.dumpTable("TEXT_FOREGROUND", "[Debug] ");
+                    }
+                    break;
+
+                case "settings":
+                    if (DEBUG_settings) {
                         fields = getDeclaredFields();           // this uses reflection
                         buffer = new StringBuilder();
                         consumed = new HashMap<>();
-                        for (String prfx : DEBUG_fields_prefixes.split(" ")) {
-                            //
-                            // Appending and an underscore to prfx might be appropriate, but this
-                            // is debugging code, so it's not a big deal. Perhaps better would be
-                            // to include those underscores in DEBUG_fields_prefixes.split.
-                            //
+                        for (String prfx : DEBUG_settings_prefixes.split(" ")) {
                             matched = new ArrayList<>();
                             for (Field field : fields) {
                                 name = field.getName();
@@ -1513,15 +1510,8 @@ class ByteDump {
                                 buffer.append("[Debug]\n");
                             }
                         }
-                        System.err.printf("[Debug] Fields[%d]:\n", consumed.size());
+                        System.err.printf("[Debug] Settings[%d]:\n", consumed.size());
                         System.err.println(buffer.toString());
-                    }
-                    break;
-
-                case "foreground":
-                    if (DEBUG_foreground) {
-                        attributeTables.dumpTable("BYTE_FOREGROUND", "[Debug] ");
-                        attributeTables.dumpTable("TEXT_FOREGROUND", "[Debug] ");
                     }
                     break;
 
@@ -2999,9 +2989,9 @@ class ByteDump {
                     break;
 
                 case "--debug=":
-                    for (String field : optarg.split(",")) {
-                        field = field.trim();
-                        switch (field) {
+                    for (String name : optarg.split(",")) {
+                        name = name.trim();
+                        switch (name) {
                             case "addresses":
                                 DEBUG_addresses = true;
                                 break;
@@ -3014,12 +3004,12 @@ class ByteDump {
                                 DEBUG_bytemap = true;
                                 break;
 
-                            case "fields":
-                                DEBUG_fields = true;
-                                break;
-
                             case "foreground":
                                 DEBUG_foreground = true;
+                                break;
+
+                            case "settings":
+                                DEBUG_settings = true;
                                 break;
 
                             case "textmap":
@@ -3031,8 +3021,8 @@ class ByteDump {
                                 break;
 
                             default:
-                                if (field.length() > 0) {
-                                    userError("field", delimit(field), "in option", delimit(arg), "is not recognized");
+                                if (name.length() > 0) {
+                                    userError("debugging name", delimit(name), "in option", delimit(arg), "is not recognized");
                                 }
                                 break;
                         }

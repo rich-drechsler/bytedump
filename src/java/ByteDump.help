@@ -458,11 +458,11 @@
  a few debug options that users might occasionally be interested in. The three that
  stand out can be added individually
 
-     bytedump-java --debug=fields --debug=bytemap --debug=textmap ...
+     bytedump-java --debug=settings --debug=bytemap --debug=textmap ...
 
  or in a comma separated list
 
-     bytedump-java --debug=fields,bytemap,textmap ...
+     bytedump-java --debug=settings,bytemap,textmap ...
 
  to any of the example command lines in the next section. Debugging output goes to
  standard error, so it can easily be separated from the generated dump. Organization

@@ -141,19 +141,19 @@ class ByteDump:
 
     DEBUG_background: bool = False
     DEBUG_bytemap: bool = False
-    DEBUG_fields: bool = False
     DEBUG_foreground: bool = False
+    DEBUG_settings: bool = False
     DEBUG_textmap: bool = False
     DEBUG_unexpanded: bool = False
 
     #
-    # The value assigned to DEBUG_fields_prefixes are the space separated prefixes of
-    # the field names that are dumped when the --debug=fields option is used. Change
-    # the list if you want a different collection fields or have them presented in a
-    # different order.
+    # The value assigned to DEBUG_settings_prefixes are the space separated prefixes
+    # of the variable names that are dumped when the --debug=settings option is used.
+    # Change the list if you want a different collection of "settings" or have them
+    # presented in a different order.
     #
 
-    DEBUG_fields_prefixes: str = "DUMP ADDR BYTE TEXT DEBUG PROGRAM"
+    DEBUG_settings_prefixes: str = "DUMP ADDR BYTE TEXT DEBUG PROGRAM"
 
     #
     # The ASCII_TEXT_MAP mapping array is designed to reproduce the ASCII text output
@@ -968,15 +968,15 @@ class ByteDump:
 
     @classmethod
     def debug(cls, *args: str) -> None:
+        buffer: List[str]
+        col: int
         consumed: Dict[str, Any]
         matched: List[str]
-        buffer: List[str]
         name: str
         prefix: str
+        row: int
         tag: str
         value: Any
-        col: int
-        row: int
 
         #
         # Takes zero or more arguments that select debugging keys and handles the ones
@@ -990,7 +990,7 @@ class ByteDump:
         #
 
         if len(args) == 0:
-            args = ("foreground", "background", "bytemap", "textmap", "fields")
+            args = ("foreground", "background", "bytemap", "textmap", "settings")
 
         for arg in args:
             match arg:
@@ -1011,19 +1011,23 @@ class ByteDump:
                                 sys.stderr.write("\n")
                             sys.stderr.write("\n")
 
-                case "fields":
-                    if cls.DEBUG_fields:
+                case "foreground":
+                    if cls.DEBUG_foreground:
+                        cls.attribute_tables.dump_table("BYTE_FOREGROUND", "[Debug] ")
+                        cls.attribute_tables.dump_table("TEXT_FOREGROUND", "[Debug] ")
+
+                case "settings":
+                    if cls.DEBUG_settings:
                         # Reflection in Python: use __annotations__ or vars() to find fields
                         # cls is ByteDump
                         # We need class variables, not instance ones.
                         buffer = []
                         consumed = {}
 
-                        for prfx in cls.DEBUG_fields_prefixes.split(" "):
+                        for prefix in cls.DEBUG_settings_prefixes.split(" "):
                             matched = []
-                            # Inspect class attributes
                             for name in dir(cls):
-                                if name not in consumed and name.startswith(prfx):
+                                if name not in consumed and name.startswith(prefix):
                                     if hasattr(cls, name) and not callable(getattr(cls, name)):
                                         matched.append(name)
                                         consumed[name] = getattr(cls, name)
@@ -1042,14 +1046,9 @@ class ByteDump:
                                         buffer.append(f"[Debug] {tag} {key}={str(value)}\n")
                                 buffer.append("[Debug]\n")
 
-                        sys.stderr.write(f"[Debug] Fields[{len(consumed)}]:\n")
+                        sys.stderr.write(f"[Debug] Settings[{len(consumed)}]:\n")
                         sys.stderr.write("".join(buffer))
                         sys.stderr.write("\n")
-
-                case "foreground":
-                    if cls.DEBUG_foreground:
-                        cls.attribute_tables.dump_table("BYTE_FOREGROUND", "[Debug] ")
-                        cls.attribute_tables.dump_table("TEXT_FOREGROUND", "[Debug] ")
 
                 case "textmap":
                     if cls.DEBUG_textmap:
@@ -1623,6 +1622,7 @@ class ByteDump:
         arg: str
         attribute: str
         length: str
+        name: str
         number: str
         optarg: str
         selector: str
@@ -1792,24 +1792,24 @@ class ByteDump:
                     Terminator.terminate()
 
                 case "--debug=":
-                    for field in optarg.split(","):
-                        field = field.strip()
-                        match field:
+                    for name in optarg.split(","):
+                        name = name.strip()
+                        match name:
                             case "background":
                                 cls.DEBUG_background = True
                             case "bytemap":
                                 cls.DEBUG_bytemap = True
-                            case "fields":
-                                cls.DEBUG_fields = True
                             case "foreground":
                                 cls.DEBUG_foreground = True
+                            case "settings":
+                                cls.DEBUG_settings = True
                             case "textmap":
                                 cls.DEBUG_textmap = True
                             case "unexpanded":
                                 cls.DEBUG_unexpanded = True
                             case _:
-                                if len(field) > 0:
-                                    cls.user_error("field", cls.delimit(field), "in option", cls.delimit(arg), "is not recognized")
+                                if len(name) > 0:
+                                    cls.user_error("debugging name", cls.delimit(name), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--foreground=":
                     groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")

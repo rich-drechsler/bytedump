@@ -270,11 +270,11 @@
 #       separated list of words. For example, the three separate command line
 #       debug options
 #
-#           --debug=strings --debug=bytemap --debug=textmap
+#           --debug=settings --debug=bytemap --debug=textmap
 #
 #       could be combined into one option
 #
-#           --debug=strings,bytemap,textmap
+#           --debug=settings,bytemap,textmap
 #
 #       that accomplishes exactly the same thing using a comma separated list.
 #
@@ -283,13 +283,13 @@
 #       keys defined in the SCRIPT_STRINGS associative array. For example, the
 #       command line option
 #
-#           --debug=strings
+#           --debug=settings
 #
 #       ends up executing the option handling code
 #
-#           SCRIPT_STRINGS[DEBUG.strings]="TRUE"
+#           SCRIPT_STRINGS[DEBUG.settings]="TRUE"
 #
-#       so the SCRIPT_STRINGS key that's updated is DEBUG.strings.
+#       so the SCRIPT_STRINGS key that's updated is DEBUG.settings.
 #
 #    5: Pick the debugging key you're interested in and search for it in this
 #       script. Keep searching until you find code that looks like it supports
@@ -848,7 +848,7 @@ LC_ALL="${SCRIPT_LC_ALL[INTERNAL]}"
 # groups, both here in the source code and also in the sorted debugging output
 # that the
 #
-#     --debug=strings
+#     --debug=settings
 #
 # command line option produces. For example, all keys that start with the "BYTE"
 # prefix apply to the BYTE field in the dump that we produce or the dump that xxd
@@ -1019,7 +1019,7 @@ declare -A SCRIPT_STRINGS=(
     [DEBUG.foreground]="FALSE"
     [DEBUG.handler]="FALSE"
     [DEBUG.locals]="FALSE"
-    [DEBUG.strings]="FALSE"
+    [DEBUG.settings]="FALSE"
     [DEBUG.textmap]="FALSE"
     [DEBUG.textmap-bash]="FALSE"
     [DEBUG.time]="FALSE"
@@ -1027,12 +1027,13 @@ declare -A SCRIPT_STRINGS=(
     [DEBUG.xxd]="FALSE"
 
     #
-    # The value assigned to DEBUG.strings.prefixes are the space separated prefixes
-    # of the keys that are dumped when the --debug=strings option is used. Change
-    # it if you want to see a different collection (or order) of key/value pairs.
+    # The value assigned to DEBUG_settings_prefixes are the space separated prefixes
+    # of the variable names that are dumped when the --debug=settings option is used.
+    # Change the list if you want a different collection of "settings" or have them
+    # presented in a different order.
     #
 
-    [DEBUG.strings.prefixes]="DUMP ADDR BYTE TEXT DEBUG INFO SCRIPT"
+    [DEBUG.settings.prefixes]="DUMP ADDR BYTE TEXT DEBUG INFO SCRIPT"
 )
 
 #
@@ -2165,7 +2166,7 @@ Debug() {
     #
 
     if (( $# == 0 )); then
-        set -- "foreground" "background" "attributes" "bytemap" "textmap" "textmap-bash" "strings"
+        set -- "foreground" "background" "attributes" "bytemap" "textmap" "textmap-bash" "settings"
     fi
 
     while (( $# > 0 )); do
@@ -2207,15 +2208,16 @@ Debug() {
 
 DebugHandler() {
     local -n array
+    local -a buffer
     local char
     local col
-    local -A consumed_keys
+    local -A consumed
     local field
     local index
     local initial_keys
     local key
     local -n map
-    local -a matched_keys
+    local -a matched
     local name
     local prefix
     local quote
@@ -2318,18 +2320,19 @@ DebugHandler() {
                 done
             fi;;
 
-        strings)
-            if [[ ${SCRIPT_STRINGS[DEBUG.strings]} == "TRUE" ]]; then
+        settings)
+            if [[ ${SCRIPT_STRINGS[DEBUG.settings]} == "TRUE" ]]; then
                 #
                 # This probably is the most useful debugging output when you're
                 # trying to fix a real problem. It's automatically called after
                 # all the initialization is complete, but just add the line
                 #
-                #     Debug strings
+                #     Debug settings
                 #
-                # to the code whenever you want to see what's in SCRIPT_STRINGS.
-                # You can adjust the fields that are displayed in this the dump
-                # by changing SCRIPT_STRINGS[DEBUG.strings.prefixes].
+                # to this script whenever you want to check what's stored in the
+                # SCRIPT_STRINGS associative array. You can also select what this
+                # debugging code displays by adjusting the prefix strings defined
+                # in SCRIPT_STRINGS[DEBUG.settings.prefixes].
                 #
                 # NOTE - SCRIPT_STRINGS is a big associative array, so using
                 #
@@ -2338,33 +2341,39 @@ DebugHandler() {
                 # is quick, but I found it almost useless for tracking down bugs
                 # because the keys are unsorted and they all print on one line.
                 #
-                consumed_keys=()
+                buffer=()
+                consumed=()
                 initial_keys="${SCRIPT_STRINGS[INFO.initial.keys]}"
 
-                printf "[Debug] SCRIPT_STRINGS[%d]:\n" "${#SCRIPT_STRINGS[@]}"
-                for prefix in ${SCRIPT_STRINGS[DEBUG.strings.prefixes]}; do
-                    matched_keys=()
+                for prefix in ${SCRIPT_STRINGS[DEBUG.settings.prefixes]}; do
+                    matched=()
                     for key in "${!SCRIPT_STRINGS[@]}"; do
-                        if [[ $key =~ ^"${prefix}" ]] && [[ -z ${consumed_keys[$key]} ]]; then
-                            matched_keys+=("$key")
-                            consumed_keys[$key]="TRUE"
+                        if [[ $key =~ ^"${prefix}" ]] && [[ -z ${consumed[$key]} ]]; then
+                            matched+=("$key")
+                            consumed[$key]="TRUE"
                         fi
                     done
-                    if (( ${#matched_keys[@]} > 0 )); then
-                        for key in $(printf "%s\n" "${matched_keys[@]}" | LC_ALL=C command -p sort --field-separator='.' --key=1 --key=2 --key=3); do
+                    if (( ${#matched[@]} > 0 )); then
+                        for key in $(printf "%s\n" "${matched[@]}" | LC_ALL=C command -p sort --field-separator='.' --key=1 --key=2 --key=3); do
                             #
                             # shellcheck disable=SC2076
                             #
                             if [[ $initial_keys =~ "${key} " ]]; then
                                 tag="  "
                             else
-                                tag="->"            # marks a possible mistake
+                                tag="->"                # marks a possible mistake
                             fi
-                            printf "[Debug] %s %s=%s\n" "$tag" "$key" "$(Delimit "${SCRIPT_STRINGS[$key]}")"
+                            #
+                            # NOTE - the $(printf ...) strips trailing newlines so we just
+                            # add them later when the elements in buffer are printed.
+                            #
+                            buffer+=("$(printf "[Debug] %s %s=%s" "$tag" "$key" "$(Delimit "${SCRIPT_STRINGS[$key]}")")")
                         done
-                        printf "[Debug]\n"
+                        buffer+=("[Debug]")             # newline also not needed here
                     fi
                 done
+                printf "[Debug] Settings[%d]:\n" "${#consumed[@]}"
+                printf "%s\n" "${buffer[@]}"
                 printf "\n"
             fi;;
 
@@ -3701,6 +3710,7 @@ Options() {
     local attribute
     local field
     local length
+    local name
     local optarg
     local selector
     local spacing
@@ -3936,21 +3946,24 @@ Options() {
                 # The expansion of optarg in the for loop replaces each comma with
                 # a space.
                 #
-                for field in ${optarg//,/ }; do
-                    case "$field" in
+                # NOTE - use --debug=settings instead of --debug=strings. Change was
+                # made to align all of the bytedump implementations.
+                #
+                for name in ${optarg//,/ }; do
+                    case "$name" in
                           attributes) SCRIPT_STRINGS[DEBUG.attributes]="TRUE";;
                           background) SCRIPT_STRINGS[DEBUG.background]="TRUE";;
                              bytemap) SCRIPT_STRINGS[DEBUG.bytemap]="TRUE";;
                           foreground) SCRIPT_STRINGS[DEBUG.foreground]="TRUE";;
                               locals) SCRIPT_STRINGS[DEBUG.locals]="TRUE";;
                              handler) SCRIPT_STRINGS[DEBUG.handler]="TRUE";;
-                             strings) SCRIPT_STRINGS[DEBUG.strings]="TRUE";;
+                            settings) SCRIPT_STRINGS[DEBUG.settings]="TRUE";;
                              textmap) SCRIPT_STRINGS[DEBUG.textmap]="TRUE";;
                         textmap-bash) SCRIPT_STRINGS[DEBUG.textmap-bash]="TRUE";;
                                 time) SCRIPT_STRINGS[DEBUG.time]="TRUE";;
                           unexpanded) SCRIPT_STRINGS[DEBUG.unexpanded]="TRUE";;
                                  xxd) SCRIPT_STRINGS[DEBUG.xxd]="TRUE";;
-                                   *) Error "field $(Delimit "${field}") in option $(Delimit "${arg}") is not recognized";;
+                                   *) Error "debugging name $(Delimit "${name}") in option $(Delimit "${arg}") is not recognized";;
                     esac
                 done;;
 
@@ -5170,11 +5183,11 @@ exit 0                  # skip everything else in this file
 #@# a few debug options that users might occasionally be interested in. The four that
 #@# stand out can be added individually
 #@#
-#@#     bytedump-bash --debug=xxd --debug=strings --debug=bytemap --debug=textmap ...
+#@#     bytedump-bash --debug=xxd --debug=settings --debug=bytemap --debug=textmap ...
 #@#
 #@# or in a comma separated list
 #@#
-#@#     bytedump-bash --debug=xxd,strings,bytemap,textmap ...
+#@#     bytedump-bash --debug=xxd,settings,bytemap,textmap ...
 #@#
 #@# to any of the example command lines in the next section. Debugging output goes to
 #@# standard error, so it can easily be separated from the generated dump. Organization
