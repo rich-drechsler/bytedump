@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
+# Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
 # SPDX-License-Identifier: MIT
 #
 # ----------------------------------------------------------------------

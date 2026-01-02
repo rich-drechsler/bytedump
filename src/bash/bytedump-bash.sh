@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
+# Copyright (C) 2024-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
 # SPDX-License-Identifier: MIT
 #
 # This is a nontrivial program that tackles things that simply don't belong in a
