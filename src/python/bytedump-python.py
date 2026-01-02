@@ -1622,7 +1622,7 @@ class ByteDump:
         arg: str
         attribute: str
         length: str
-        name: str
+        mode: str
         number: str
         optarg: str
         selector: str
@@ -1792,9 +1792,9 @@ class ByteDump:
                     Terminator.terminate()
 
                 case "--debug=":
-                    for name in optarg.split(","):
-                        name = name.strip()
-                        match name:
+                    for mode in optarg.split(","):
+                        mode = mode.strip()
+                        match mode:
                             case "background":
                                 cls.DEBUG_background = True
                             case "bytemap":
@@ -1808,8 +1808,8 @@ class ByteDump:
                             case "unexpanded":
                                 cls.DEBUG_unexpanded = True
                             case _:
-                                if len(name) > 0:
-                                    cls.user_error("debugging name", cls.delimit(name), "in option", cls.delimit(arg), "is not recognized")
+                                if len(mode) > 0:
+                                    cls.user_error("debugging mode", cls.delimit(mode), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--foreground=":
                     groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")

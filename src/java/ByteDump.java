@@ -2989,9 +2989,9 @@ class ByteDump {
                     break;
 
                 case "--debug=":
-                    for (String name : optarg.split(",")) {
-                        name = name.trim();
-                        switch (name) {
+                    for (String mode : optarg.split(",")) {
+                        mode = mode.trim();
+                        switch (mode) {
                             case "addresses":
                                 DEBUG_addresses = true;
                                 break;
@@ -3020,9 +3020,13 @@ class ByteDump {
                                 DEBUG_unexpanded = true;
                                 break;
 
+                            case "fields":
+                                userError("use --debug=settings instead of --debug=fields");
+                                break;
+
                             default:
-                                if (name.length() > 0) {
-                                    userError("debugging name", delimit(name), "in option", delimit(arg), "is not recognized");
+                                if (mode.length() > 0) {
+                                    userError("debugging mode", delimit(mode), "in option", delimit(arg), "is not recognized");
                                 }
                                 break;
                         }

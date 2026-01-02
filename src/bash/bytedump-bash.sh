@@ -3710,7 +3710,7 @@ Options() {
     local attribute
     local field
     local length
-    local name
+    local mode
     local optarg
     local selector
     local spacing
@@ -3949,8 +3949,8 @@ Options() {
                 # NOTE - use --debug=settings instead of --debug=strings. Change was
                 # made to align all of the bytedump implementations.
                 #
-                for name in ${optarg//,/ }; do
-                    case "$name" in
+                for mode in ${optarg//,/ }; do
+                    case "$mode" in
                           attributes) SCRIPT_STRINGS[DEBUG.attributes]="TRUE";;
                           background) SCRIPT_STRINGS[DEBUG.background]="TRUE";;
                              bytemap) SCRIPT_STRINGS[DEBUG.bytemap]="TRUE";;
@@ -3963,7 +3963,9 @@ Options() {
                                 time) SCRIPT_STRINGS[DEBUG.time]="TRUE";;
                           unexpanded) SCRIPT_STRINGS[DEBUG.unexpanded]="TRUE";;
                                  xxd) SCRIPT_STRINGS[DEBUG.xxd]="TRUE";;
-                                   *) Error "debugging name $(Delimit "${name}") in option $(Delimit "${arg}") is not recognized";;
+
+                             strings) Error "use --debug=settings instead of --debug=strings";;
+                                   *) Error "debugging mode $(Delimit "${mode}") in option $(Delimit "${arg}") is not recognized";;
                     esac
                 done;;
 
