@@ -717,7 +717,6 @@ class ByteDump:
     @classmethod
     def byte_selector(cls, attribute: str, tokens: str, output: List[Optional[str]]) -> None:
         manager = RegexManager()
-        groups: Optional[List[str]] = None
         chars: List[Optional[str]]
         prefix: str
         suffix: str
@@ -820,10 +819,9 @@ class ByteDump:
         # First check for the optional base prefix.
         #
 
-        groups = manager.matched_groups(tokens, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$")
-        if groups is not None:
-            prefix = groups[1]
-            tokens = groups[2]
+        if manager.matched(tokens, "^[ \\t]*(0[xX]?)?[(](.*)[)][ \\t]*$"):
+            prefix = manager.cached_groups[1]
+            tokens = manager.cached_groups[2]
 
             if prefix is None:
                 base = 10
@@ -885,10 +883,9 @@ class ByteDump:
                     for index in range(first, last + 1):
                         output[index] = attribute
             elif manager.matched(tokens, "^\\[:"):
-                groups = manager.matched_groups(tokens, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)")
-                if groups is not None:
-                    name = groups[1]
-                    tokens = tokens[len(groups[0]):]
+                if manager.matched(tokens, "^\\[:([a-zA-Z0-9]+):\\]([ \\t]+|$)"):
+                    name = manager.cached_groups[1]
+                    tokens = tokens[len(manager.cached_groups[0]):]
 
                     match name:
                         #
