@@ -2248,23 +2248,51 @@ class RegexManager:
 
     def matched(self, text: str, regex: str) -> bool:
         #
-        # Caching the matched groups means they're available without requiring more
-        # matching by calling matched_groups().
+        # This currently is the only method that caches matched groups. It helped us
+        # simplify some of the regex matching code (without using the := assignment
+        # operator).
         #
+
         self.cached_matched_groups = self.matched_groups(text, regex)
         return self.cached_matched_groups is not None
 
     def matched_group(self, group_index: int, text: str, regex: str) -> Optional[str]:
+        #
+        # No group caching by this method, at least right now. Not 100% convinced it's
+        # the right approach, but it's also not unreasonable because the RegexManager
+        # class was only designed to be be used by the ByteDump class.
+        #
+
         groups = self.matched_groups(text, regex)
         return groups[group_index] if groups and group_index < len(groups) else None
 
     def matched_groups(self, text: str, regex: str) -> Optional[List[str]]:
+        #
+        # No group caching by this method, at least right now. Not 100% convinced it's
+        # the right approach, but it's also not unreasonable because the RegexManager
+        # class was only designed to be be used by the ByteDump class.
+        #
+
         groups = None
         if text is not None and regex is not None:
             match = re.search(regex, text)
             if match:
                 groups = [match.group(0)] + list(match.groups())
         return groups
+
+    def matches(self, text: str, regex: str) -> bool:
+        #
+        # Same return value as the matched() method, but doesn't cache matched groups
+        # so there's less overhead and it will run a little faster. Currently unused,
+        #
+        # NOTE - currently unused, but it's included for completeness and because I
+        # may include the group caching stuff in the Java version of RegexManager.
+        #
+
+        if text is not None and regex is not None:
+            return re.search(regex, text) is not None
+        else:
+            return False
 
 ###################################
 #
