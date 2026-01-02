@@ -971,8 +971,8 @@ class ByteDump:
         buffer: List[str]
         col: int
         consumed: Dict[str, Any]
+        key: str
         matched: List[str]
-        name: str
         prefix: str
         row: int
         tag: str
@@ -1026,11 +1026,11 @@ class ByteDump:
 
                         for prefix in cls.DEBUG_settings_prefixes.split(" "):
                             matched = []
-                            for name in dir(cls):
-                                if name not in consumed and name.startswith(prefix):
-                                    if hasattr(cls, name) and not callable(getattr(cls, name)):
-                                        matched.append(name)
-                                        consumed[name] = getattr(cls, name)
+                            for key in dir(cls):
+                                if key not in consumed and key.startswith(prefix):
+                                    if hasattr(cls, key) and not callable(getattr(cls, key)):
+                                        matched.append(key)
+                                        consumed[key] = getattr(cls, key)
 
                             if len(matched) > 0:
                                 matched.sort()
