@@ -34,7 +34,7 @@ from typing import List, Dict, Optional, Any
 
 class ByteDump:
     """
-    Java reproduction of the bash bytedump script (Python Translation).
+    Python reproduction of the bash bytedump script (Python Translation).
     """
 
     ###################################
@@ -938,11 +938,10 @@ class ByteDump:
                 suffix = manager.cached_groups[3] + manager.cached_groups[2]
                 tokens = tokens[len(prefix):]
 
-                tail = manager.matched_group(1, tokens, suffix + "(.*)")
-                if tail is not None:
+                if manager.matched(tokens, suffix + "(.*)"):
+                    tail = manager.cached_groups[1]
                     if manager.matched(tail, "^([ \\t]|$)"):
-                        body_len = len(tokens) - (len(suffix) + len(tail))
-                        body = tokens[:body_len]
+                        body = tokens[:len(tokens) - (len(suffix) + len(tail))]
                         tokens = tail
 
                         chars = [None] * 256
