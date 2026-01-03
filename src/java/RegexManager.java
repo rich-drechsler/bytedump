@@ -123,6 +123,15 @@ import java.util.TreeSet;
  * NOTE - in Java source files I only use block style comments, like the one you're
  * reading right now, outside class definitions, because that means they're usually
  * available for temporarily commenting out one or more lines of Java code.
+ *
+ * NOTE - modified the matched() instance method so it now saves a reference to the
+ * matched subexpression groups in the cachedGroups public instance variable. It's a
+ * style that helped in the Python implementation of bytedump and it also resembles
+ * the way bash regular expressions handle subexpressions (using BASH_REMATCH). The
+ * cachedGroups array isn't currently used in the Java implementation of bytedump,
+ * but replacing all of the matchedGroups() and matchedGroup() calls with matched()
+ * calls and then using cachedGroups to access the matched subexpressions would be
+ * pretty easy - maybe later.
  */
 
 public
@@ -187,6 +196,14 @@ class RegexManager {
     //
 
     private boolean lockedCache = false;        // true => cacheLoader() is in control
+
+    //
+    // cachedGroups is where the matched() instance method stores a reference to all
+    // of the subexpressions that were found the last time it was called. A null value
+    // means the last match failed or that matched() has never been called.
+    //
+
+    public String[] cachedGroups = null;
 
     //
     // The key associated with a compiled regular expression in the cache is built by
@@ -396,13 +413,12 @@ class RegexManager {
     public static boolean
     getMatched(String target, String regex, int flags)  {
 
-        boolean matches = false;
+        boolean matched = false;
         Pattern pattern;
 
         //
         // Matches a target string against a regular expression and returns true if it
-        // succeeds and false if it fails. In this method, the regex string is always
-        // compiled into a Pattern class using flags as the compilation flags.
+        // succeeds and false if it fails.
         //
         // NOTE - this is a static method, so successfully compiled regular expressions
         // are never cached. The equivalent instance method is matched().
@@ -410,11 +426,11 @@ class RegexManager {
 
         if (target != null && regex != null) {
             if ((pattern = getCompiledRegex(regex, flags)) != null) {
-                matches = getMatchedFromMatcher(pattern.matcher(target));
+                matched = getMatchedFromMatcher(pattern.matcher(target));
             }
         }
 
-        return(matches);
+        return(matched);
     }
 
 
@@ -521,29 +537,24 @@ class RegexManager {
     }
 
 
-    public boolean
+    public synchronized boolean
     matched(String target, String regex, int flags) {
 
-        boolean matches = false;
-        Pattern pattern;
+        String[] groups = null;
 
         //
         // Matches a target string against a regular expression and returns true if it
-        // succeeds and false if the match fails. In this method, the regex string is
-        // only compiled into a Pattern class if it's not currently cached. The flags
-        // are compilation flags, but they're also included as part of the cache key.
+        // succeeds and false if the match fails. This method now uses matchedGroups()
+        // to handle regular expression matching because we get subexpression groups
+        // as the return values. The new instance method named matches() behaves like
+        // the original version of this method.
         //
         // NOTE - this is an instance method, so it caches every successfully compiled
         // regular expression. The equivalent static method is getMatched().
         //
 
-        if (target != null && regex != null) {
-            if ((pattern = compiledRegex(regex, flags)) != null) {
-                matches = getMatchedFromMatcher(pattern.matcher(target));
-            }
-        }
-
-        return(matches);
+        groups = matchedGroups(target, regex, flags);
+        return((cachedGroups = groups) != null);
     }
 
 
@@ -641,6 +652,41 @@ class RegexManager {
         }
 
         return(groups);
+    }
+
+
+    public boolean
+    matches(String target, String regex) {
+
+        return(matches(target, regex, FLAGS_DEFAULT));
+    }
+
+
+    public boolean
+    matches(String target, String regex, int flags) {
+
+        boolean matched = false;
+        Pattern pattern;
+
+        //
+        // Matches a target string against a regular expression and returns true if it
+        // succeeds and false if the match fails. It behaves like the original version
+        // of the matched() instance method and doesn't ask for the matched groups. The
+        // only reason to use this, rather than matched(), is if you're concerned about
+        // performance and not ever interested in the matched subexpressions. I kind of
+        // doubt that will ever be a serious concern.
+        //
+        // NOTE - this is an instance method, so it caches every successfully compiled
+        // regular expression. The equivalent static method is getMatched().
+        //
+
+        if (target != null && regex != null) {
+            if ((pattern = compiledRegex(regex, flags)) != null) {
+                matched = getMatchedFromMatcher(pattern.matcher(target));
+            }
+        }
+
+        return(matched);
     }
 
     ///////////////////////////////////
