@@ -1520,7 +1520,6 @@ class ByteDump:
     @classmethod
     def initialize4_maps(cls) -> None:
         manager: RegexManager
-        groups: Optional[List[str]]
         element: str
         codepoint: int
         encoder: str
@@ -1546,12 +1545,11 @@ class ByteDump:
                 for index in range(len(cls.text_map)):
                     element = cls.text_map[index]
                     if element is not None:
-                        groups = manager.matched_groups(element, r"^(.*)(\\u([0123456789abcdefABCDEF]{4}))$")
-                        if groups is not None:
-                            codepoint = int(groups[3], 16)
+                        if manager.matched(element, r"^(.*)(\\u([0123456789abcdefABCDEF]{4}))$"):
+                            codepoint = int(manager.cached_groups[3], 16)
                             try:
                                 chr(codepoint).encode(encoder)
-                                cls.text_map[index] = groups[1] + chr(codepoint)
+                                cls.text_map[index] = manager.cached_groups[1] + chr(codepoint)
                             except UnicodeEncodeError:
                                 cls.text_map[index] = cls.TEXT_unexpanded_string
                         else:
@@ -1566,10 +1564,9 @@ class ByteDump:
         for key in cls.attribute_tables.registered_keys:
             byte_table = cls.attribute_tables.get(key)
             if byte_table is not None:
-                groups = manager.matched_groups(key, "^(BYTE|TEXT)_(.+)$")
-                if groups is not None:
-                    field = groups[1]
-                    layer = groups[2]
+                if manager.matched(key, "^(BYTE|TEXT)_(.+)$"):
+                    field = manager.cached_groups[1]
+                    layer = manager.cached_groups[2]
 
                     field_map = cls.byte_map if field == "BYTE" else cls.text_map
 
@@ -1718,8 +1715,9 @@ class ByteDump:
                         if length is not None:
                             #
                             # We assume Python 3, so ints don't impose an upper bound on length
-                            # that we can check. In addition, length was matched by the regular
-                            # expression, so we can assume it will be correctly parsed by int().
+                            # that we can check. In addition, length was successfully matched by
+                            # a regular expression that only recognized decimal, hex, and octal
+                            # numbers, so int() should be able to handle any length we give it.
                             #
                             cls.DUMP_record_length = int(length, 0)
                     else:
@@ -1879,8 +1877,9 @@ class ByteDump:
                         if length is not None:
                             #
                             # We assume Python 3, so ints don't impose an upper bound on length
-                            # that we can check. In addition, length was matched by the regular
-                            # expression, so we can assume it will be correctly parsed by int().
+                            # that we can check. In addition, length was successfully matched by
+                            # a regular expression that only recognized decimal, hex, and octal
+                            # numbers, so int() should be able to handle any length we give it.
                             #
                             cls.DUMP_record_length = int(length, 0)
                     else:
@@ -2282,7 +2281,6 @@ class Terminator:
     def error_handler(cls, *args: str) -> str:
         arguments: List[str]
         manager: RegexManager
-        groups: Optional[List[str]]
         done: bool
         should_exit: bool
         arg: str
@@ -2307,11 +2305,10 @@ class Terminator:
         # Argument parsing loop mirroring Java
         while index < len(args):
             arg = args[index]
-            groups = manager.matched_groups(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$")
-            if groups is not None:
-                target = groups[1]
-                opttag = groups[2]
-                optarg = groups[5]
+            if manager.matched(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$"):
+                target = manager.cached_groups[1]
+                opttag = manager.cached_groups[2]
+                optarg = manager.cached_groups[5]
             else:
                 target = arg
                 opttag = ""
