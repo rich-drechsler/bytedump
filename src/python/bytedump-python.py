@@ -930,10 +930,6 @@ class ByteDump:
                 else:
                     cls.user_error("problem extracting a character class from", cls.delimit(tokens_start))
             elif manager.matched(tokens, "^(r([#]*)(\"|'))"):
-                #
-                # The manager.matched() method now keeps a temporary copy of the matched groups
-                # whenever the match succeeds.
-                #
                 prefix = manager.cached_groups[1]
                 suffix = manager.cached_groups[3] + manager.cached_groups[2]
                 tokens = tokens[len(prefix):]
@@ -1613,16 +1609,13 @@ class ByteDump:
     @classmethod
     def options(cls, args: List[str]) -> None:
         manager = RegexManager()
-        groups: Optional[List[str]] = None
         done = False
         arg: str
         attribute: str
         length: str
         mode: str
-        number: str
         optarg: str
         selector: str
-        spacing: str
         style: str
         target: str
         format_width: str
@@ -1636,27 +1629,21 @@ class ByteDump:
         while next_idx < len(args):
             arg = args[next_idx]
 
-            # Check for --option=value
-            groups = manager.matched_groups(arg, "^(--[^=-][^=]*=)(.*)$")
-            if groups is not None:
-                target = groups[1]
-                optarg = groups[2]
+            if manager.matched(arg, "^(--[^=-][^=]*=)(.*)$"):
+                target = manager.cached_groups[1]
+                optarg = manager.cached_groups[2]
+            elif manager.matched(arg, "^(--[^=-][^=]*)$"):
+                target = manager.cached_groups[1]
+                optarg = ""
             else:
-                # Check for --option
-                groups = manager.matched_groups(arg, "^(--[^=-][^=]*)$")
-                if groups is not None:
-                    target = groups[1]
-                    optarg = ""
-                else:
-                    target = arg
-                    optarg = ""
+                target = arg
+                optarg = ""
 
             match target:
                 case "--addr=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*(decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([0]?[1-9][0-9]*)[ \\t]*)?$")
-                    if groups is not None:
-                        style = groups[1]
-                        format_width = groups[3]
+                    if manager.matched(optarg, "^[ \\t]*(decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([0]?[1-9][0-9]*)[ \\t]*)?$"):
+                        style = manager.cached_groups[1]
+                        format_width = manager.cached_groups[3]
 
                         match style:
                             case "decimal":
@@ -1693,10 +1680,9 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
 
                 case "--background=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
-                    if groups is not None:
-                        attribute = groups[1]
-                        selector = groups[4] if groups[3] is not None else "0x(00-FF)"
+                    if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
+                        attribute = manager.cached_groups[1]
+                        selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
@@ -1706,10 +1692,9 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--byte=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*(binary|decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$")
-                    if groups is not None:
-                        style = groups[1]
-                        length = groups[3]
+                    if manager.matched(optarg, "^[ \\t]*(binary|decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$"):
+                        style = manager.cached_groups[1]
+                        length = manager.cached_groups[3]
 
                         match style:
                             case "binary":
@@ -1731,21 +1716,19 @@ class ByteDump:
 
                         cls.BYTE_output = style
                         if length is not None:
-                            # StringTo.unsignedInt simulation using int()
-                            try:
-                                cls.DUMP_record_length = int(length, 0)
-                                if cls.DUMP_record_length < 0:
-                                    raise ValueError
-                            except ValueError:
-                                cls.range_error("record length requested in option", cls.delimit(optarg), "won't fit in a Java int")
+                            #
+                            # We assume Python 3, so ints don't impose an upper bound on length
+                            # that we can check. In addition, length was matched by the regular
+                            # expression, so we can assume it will be correctly parsed by int().
+                            #
+                            cls.DUMP_record_length = int(length, 0)
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--byte-background=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
-                    if groups is not None:
-                        attribute = groups[1]
-                        selector = groups[4] if groups[3] is not None else "0x(00-FF)"
+                    if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
+                        attribute = manager.cached_groups[1]
+                        selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                         else:
@@ -1754,10 +1737,9 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--byte-foreground=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
-                    if groups is not None:
-                        attribute = groups[1]
-                        selector = groups[4] if groups[3] is not None else "0x(00-FF)"
+                    if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
+                        attribute = manager.cached_groups[1]
+                        selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                         else:
@@ -1808,10 +1790,9 @@ class ByteDump:
                                     cls.user_error("debugging mode", cls.delimit(mode), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--foreground=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
-                    if groups is not None:
-                        attribute = groups[1]
-                        selector = groups[4] if groups[3] is not None else "0x(00-FF)"
+                    if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
+                        attribute = manager.cached_groups[1]
+                        selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
@@ -1825,24 +1806,14 @@ class ByteDump:
                     Terminator.terminate()
 
                 case "--length=":
-                    number = manager.matched_group(1, optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$")
-                    if number is not None:
-                        try:
-                            cls.DUMP_record_length = int(number, 0)
-                            if cls.DUMP_record_length < 0: raise ValueError
-                        except ValueError:
-                            cls.range_error("record length", cls.delimit(number), "requested in option", cls.delimit(arg), "won't fit in a Java int")
+                    if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
+                        cls.DUMP_record_length = int(manager.cached_groups[1], 0)
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--length-limit=":
-                    number = manager.matched_group(1, optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$")
-                    if number is not None:
-                        try:
-                            cls.DUMP_record_length_limit = int(number, 0)
-                            if cls.DUMP_record_length_limit < 0: raise ValueError
-                        except ValueError:
-                            cls.range_error("record length limit", cls.delimit(number), "requested in option", cls.delimit(arg), "won't fit in a Java int")
+                    if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
+                        cls.DUMP_record_length = int(manager.cached_groups[1], 0)
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
@@ -1854,24 +1825,14 @@ class ByteDump:
                     cls.DUMP_layout = "NARROW"
 
                 case "--read=":
-                    number = manager.matched_group(1, optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$")
-                    if number is not None:
-                        try:
-                            # StringTo.boundedInt logic simulated
-                            val = int(number, 0)
-                            if 0 <= val <= cls.DUMP_input_maxbuf:
-                                cls.DUMP_input_read = val
-                            else:
-                                raise ValueError
-                        except ValueError:
-                            cls.range_error("byte count", cls.delimit(number), "requested in option", cls.delimit(arg), "must be an integer in the range [0, " + str(cls.DUMP_input_maxbuf) + "]")
+                    if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
+                        cls.DUMP_input_read = int(manager.cached_groups[1], 0)
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--spacing=":
-                    spacing = manager.matched_group(1, optarg, "^[ \\t]*(1|single|2|double|3|triple)[ \\t]*$")
-                    if spacing is not None:
-                        match spacing:
+                    if manager.matched(optarg, "^[ \\t]*(1|single|2|double|3|triple)[ \\t]*$"):
+                        match manager.cached_groups[1]:
                             case "1" | "single":
                                 cls.DUMP_record_separator = "\n"
                             case "2" | "double":
@@ -1884,30 +1845,19 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--start=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$")
-                    if groups is not None:
-                        try:
-                            cls.DUMP_input_start = int(groups[1], 0)
-                            if cls.DUMP_input_start < 0: raise ValueError
-                        except ValueError:
-                            cls.range_error("skip argument", cls.delimit(groups[1]), "in option", cls.delimit(arg), "won't fit in a Java int")
-
-                        if groups[3] is not None:
-                            try:
-                                cls.DUMP_output_start = int(groups[3], 0)
-                                if cls.DUMP_output_start < 0: raise ValueError
-                            except ValueError:
-                                cls.range_error("address argument", cls.delimit(groups[3]), "in option", cls.delimit(arg), "won't fit in a Java int")
+                    if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$"):
+                        cls.DUMP_input_start = int(manager.cached_groups[1], 0)
+                        if manager.cached_groups[3] is not None:
+                            cls.DUMP_output_start = int(manager.cached_groups[3], 0)
                         else:
                             cls.DUMP_output_start = cls.DUMP_input_start
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--text=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*(ascii|caret|empty|escape|unicode|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$")
-                    if groups is not None:
-                        style = groups[1]
-                        length = groups[3]
+                    if manager.matched(optarg, "^[ \\t]*(ascii|caret|empty|escape|unicode|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$"):
+                        style = manager.cached_groups[1]
+                        length = manager.cached_groups[3]
 
                         match style:
                             case "ascii":
@@ -1927,19 +1877,19 @@ class ByteDump:
 
                         cls.TEXT_output = style
                         if length is not None:
-                            try:
-                                cls.DUMP_record_length = int(length, 0)
-                                if cls.DUMP_record_length < 0: raise ValueError
-                            except ValueError:
-                                cls.range_error("record length requested in option", cls.delimit(optarg), "won't fit in a Java int")
+                            #
+                            # We assume Python 3, so ints don't impose an upper bound on length
+                            # that we can check. In addition, length was matched by the regular
+                            # expression, so we can assume it will be correctly parsed by int().
+                            #
+                            cls.DUMP_record_length = int(length, 0)
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--text-background=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
-                    if groups is not None:
-                        attribute = groups[1]
-                        selector = groups[4] if groups[3] is not None else "0x(00-FF)"
+                    if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
+                        attribute = manager.cached_groups[1]
+                        selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
@@ -1948,10 +1898,9 @@ class ByteDump:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
                 case "--text-foreground=":
-                    groups = manager.matched_groups(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$")
-                    if groups is not None:
-                        attribute = groups[1]
-                        selector = groups[4] if groups[3] is not None else "0x(00-FF)"
+                    if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
+                        attribute = manager.cached_groups[1]
+                        selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
