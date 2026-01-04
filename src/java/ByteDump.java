@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -391,8 +392,6 @@ class ByteDump {
     private static boolean DEBUG_foreground = false;
     private static boolean DEBUG_settings = false;
     private static boolean DEBUG_textmap = false;
-    private static boolean DEBUG_unexpanded = false;
-
 
     //
     // The value assigned to DEBUG_settings_prefixes are the space separated prefixes
@@ -2498,6 +2497,24 @@ class ByteDump {
         // are the arrays that dumpFormattedAddress() uses to generate addresses without
         // using String.format().
         //
+        // NOTE - there's more work to do for the TEXT field mapping array than you might
+        // expect. Take a close look at the TEXT field mapping array initializers and you
+        // hopefully will notice that occurrences of "\\uXXXX" in string literals really
+        // aren't Unicode escape sequences. Instead, what happens when the string literal
+        // is processed is that the two backslashes are replaced by a single backslash and
+        // immediately followed by the 'u' and the four hex digits. In other words if you
+        // see something like
+        //
+        //     "\\u00B6"
+        //
+        // at an index in a TEXT field mapping array's initializer, this method would see
+        // the string
+        //
+        //     "\u00B6"
+        //
+        // at that same index. In fact, all we need here are the hex digits, so the "\\u"
+        // prefix really is unnecessary overhead.
+        //
 
         if (BYTE_map.length() > 0) {
             if ((byteMap = (String[])getNamedStaticObject(BYTE_map)) == null) {
@@ -2520,36 +2537,33 @@ class ByteDump {
                 //
                 encoder = Charset.defaultCharset().newEncoder();
                 unexpanded = (TEXT_unexpanded_string.length() > 0) ? TEXT_unexpanded_string : null;
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                encoder = StandardCharsets.UTF_8.newEncoder();
+            }
 
-            if (DEBUG_unexpanded == false) {
-                manager = new RegexManager();
-                for (index = 0; index < textMap.length; index++) {
-                    if ((element = textMap[index]) != null) {
-                        //
-                        // If element looks like a Unicode escape we need to deal with it. This
-                        // will be where all of the escapes used in the TEXT field initializers
-                        // are expanded.
-                        //
-                        // NOTE - we only need the four hex digits that represent code points,
-                        // so their representation as Unicode escape sequences in the strings
-                        // in TEXT field mapping array initializers is "useful overhead".
-                        //
-                        if ((groups = manager.matchedGroups(element, "^(.*)(\\\\u([0123456789abcdefABCDEF]{4}))$")) != null) {
-                            codepoint = Integer.parseInt(groups[3], 16);
-                            //
-                            // Always go with Java's representation of bytes that it can't encode
-                            // when unexpanded is null. Otherwise, encoder won't be null, so use
-                            // it to check each codepoint and decide what to do.
-                            //
-                            if (unexpanded == null || encoder.canEncode((char)codepoint)) {
-                                textMap[index] = groups[1] + String.valueOf((char)codepoint);
-                            } else {
-                                textMap[index] = unexpanded;
-                            }
-                        } else {
-                            textMap[index] = element;
-                        }
+            manager = new RegexManager();
+            for (index = 0; index < textMap.length; index++) {
+                element = textMap[index];
+                //
+                // If element looks like a Unicode escape we need to deal with it. This
+                // will be where all of the escapes used in the TEXT field initializers
+                // are expanded.
+                //
+                // NOTE - we only need the four hex digits that represent code points,
+                // so their representation as Unicode escape sequences in the strings
+                // in TEXT field mapping array initializers is "useful overhead".
+                //
+                if ((groups = manager.matchedGroups(element, "^(.*)(\\\\u([0123456789abcdefABCDEF]{4}))$")) != null) {
+                    codepoint = Integer.parseInt(groups[3], 16);
+                    //
+                    // Always go with Java's representation of bytes that it can't encode
+                    // when unexpanded is null. Otherwise, encoder won't be null, so use
+                    // it to check each codepoint and decide what to do.
+                    //
+                    if (unexpanded == null || encoder.canEncode((char)codepoint)) {
+                        textMap[index] = groups[1] + String.valueOf((char)codepoint);
+                    } else {
+                        textMap[index] = unexpanded;
                     }
                 }
             }
@@ -3014,10 +3028,6 @@ class ByteDump {
 
                             case "textmap":
                                 DEBUG_textmap = true;
-                                break;
-
-                            case "unexpanded":
-                                DEBUG_unexpanded = true;
                                 break;
 
                             case "fields":
