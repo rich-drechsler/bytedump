@@ -49,7 +49,7 @@ class ByteDump:
 
     PROGRAM_VERSION: str = "0.1"
     PROGRAM_DESCRIPTION: str = "Python reproduction of the Java bytedump program"
-    PROGRAM_COPYRIGHT: str = "Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
+    PROGRAM_COPYRIGHT: str = "Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
     PROGRAM_LICENSE: str = "SPDX-License-Identifier: MIT"
 
     #

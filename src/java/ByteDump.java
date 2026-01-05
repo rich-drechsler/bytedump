@@ -207,7 +207,7 @@ class ByteDump {
 
     private static final String PROGRAM_VERSION = "0.9";
     private static final String PROGRAM_DESCRIPTION = "Java reproduction of the bash bytedump script";
-    private static final String PROGRAM_COPYRIGHT = "Copyright (C) 2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)";
+    private static final String PROGRAM_COPYRIGHT = "Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)";
     private static final String PROGRAM_LICENSE = "SPDX-License-Identifier: MIT";
 
     //

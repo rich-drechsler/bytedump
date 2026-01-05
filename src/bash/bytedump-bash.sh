@@ -892,7 +892,7 @@ declare -A SCRIPT_STRINGS=(
 
     [SCRIPT.version]="0.9"
     [SCRIPT.description]="Bash bytedump script"
-    [SCRIPT.copyright]="Copyright (C) 2024-2025 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
+    [SCRIPT.copyright]="Copyright (C) 2024-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
     [SCRIPT.license]="SPDX-License-Identifier: MIT"
     [SCRIPT.usage]="Usage: ${BASH_SOURCE[0]:-bytedump-bash} [OPTIONS] [FILE|-]"
     [SCRIPT.help.trigger]="#@#"
