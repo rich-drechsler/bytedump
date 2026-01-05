@@ -160,8 +160,8 @@ class ByteDump:
     # all bytes with their top bit set are represented by a period in the TEXT field.
     #
     # NOTE - even though they're Python lists the ones that are used to map individual
-    # bytes (i.e., the numbers) to strings that are appear in the dump will usually be
-    # referred to as "mapping arrays" rather than "mapping lists".`
+    # bytes (i.e., the numbers) to strings that are supposed to appear in the dump will
+    # usually be referred to as "mapping arrays" rather than "mapping lists".`
     #
 
     ASCII_TEXT_MAP: List[str] = [
