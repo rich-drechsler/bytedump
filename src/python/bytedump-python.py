@@ -384,17 +384,14 @@ class ByteDump:
     # trivial translations of the arrays declared in the Java version. Actually that's
     # not completely true, but it is what I eventually requested in the chat, primarily
     # to help me follow, test, and modify Gemini's implemetation. Anyway, the explicit
-    # BYTE field mapping array declararions have been deleted, and instead the only one
+    # BYTE field mapping array declarations have been deleted, and instead the only one
     # the program needs is built (using list comprehension) in the initialize4_maps()
     # method.
     #
-
-    #
-    # These will be end up being references to the BYTE and TEXT field mapping arrays
-    # that need to be used to build the dump that the user wants. They're set during
-    # the initialization that happens after the command line options are processed,
-    # and if either one ends up None, the associated field will be omitted from the
-    # dump. Both fields can't be omitted.
+    # The next two variables will be end up being the references to the BYTE and TEXT
+    # field mapping arrays that will be used to produce the dump that the user wants.
+    # They're set in initialize4_maps(), and if either one ends up as None the code
+    # that generates the dump will omit that field. Both fields can't be omitted.
     #
 
     byte_map: Optional[List[str]] = None
