@@ -1408,10 +1408,19 @@ class ByteDump:
 
         #
         # Makes sure the BYTE and TEXT field mapping arrays referenced by BYTE_map and
-        # TEXT_map exist and, in the case of the TEXT field mapping array, is properly
-        # initialized. After that it builds the addrMap and addrBuffer arrays, which
-        # are the arrays that dumpFormattedAddress() uses to generate addresses without
-        # using String.format().
+        # TEXT_map exist. The BYTE field mapping array that's used to generate the dump
+        # is built here, very much like what's done in the bash version of bytedump. The
+        # TEXT field mapping array must already exist, but this is where we make sure
+        # that every byte in the dump will be represented in the TEXT field by characters
+        # that are compatible with the user's locale. It's something that every bytedump
+        # implementation tries to address, but it's low level behavior that only happens
+        # at runtime and has to be solved using whatever tools the underlying programming
+        # language provides.
+        #
+        # NOTE - if you always assume UTF-8 character encoding than the issues disappear,
+        # but if not you can force an encoding, like 8859-15, to illustrate the problems.
+        # BYTE field mapping arrays only contain ASCII strings, so they never need to be
+        # checked (in every version of bytedump).
         #
         # NOTE - there's more work to do for the TEXT field mapping array than you might
         # expect. Take a close look at the TEXT field mapping array initializers and you
@@ -1458,7 +1467,7 @@ class ByteDump:
             cls.text_map = getattr(cls, cls.TEXT_map, None)
             if cls.text_map is not None:
                 manager = RegexManager()
-                encoding = sys.stdout.encoding or "utf-8"           # guard against None
+                encoding = sys.stdout.encoding or "utf-8"
 
                 for index in range(len(cls.text_map)):
                     element = cls.text_map[index]

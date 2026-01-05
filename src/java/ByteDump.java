@@ -2492,10 +2492,24 @@ class ByteDump {
 
         //
         // Makes sure the BYTE and TEXT field mapping arrays referenced by BYTE_map and
-        // TEXT_map exist and, in the case of the TEXT field mapping array, is properly
-        // initialized. After that it builds the addrMap and addrBuffer arrays, which
-        // are the arrays that dumpFormattedAddress() uses to generate addresses without
-        // using String.format().
+        // TEXT_map exist. In this version all of the BYTE and TEXT field mapping arrays
+        // have already been declared and initialized. It's a reasonable approach because
+        // there's a compiler (i.e., javac) that only has to do the work once, however we
+        // still have to check each element in the selected TEXT field mapping array. The
+        // issues that can arise happen at runtime and they depend on the user's character
+        // encoding. We want to control what's displayed if it looks like there could be a
+        // problem with any of the strings in the selected TEXT field mapping array.
+        //
+        // After that it builds the addrMap and addrBuffer arrays, which are usually used
+        // by dumpFormattedAddress() generate addresses without relying on String.format().
+        // It's an approach that seems to be a little faster, but any improvement probably
+        // will only be measurable when fairly large files are dumped, so it's really not
+        // a big deal.
+        //
+        // NOTE - if you always assume UTF-8 character encoding than the issues disappear,
+        // but if not you can force an encoding, like 8859-15, to illustrate the problems.
+        // BYTE field mapping arrays only contain ASCII strings, so they never need to be
+        // checked (in every version of bytedump).
         //
         // NOTE - there's more work to do for the TEXT field mapping array than you might
         // expect. Take a close look at the TEXT field mapping array initializers and you
