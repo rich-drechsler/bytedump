@@ -3427,13 +3427,20 @@ Initialize7_Maps() {
     local unexpanded
 
     #
-    # Makes sure all required mapping arrays exist and are properly initialized.
-    # Only builds BYTE field mapping arrays, so a referenced TEXT field mapping
-    # array must already exist. The TEXT field mapping array is checked, just to
-    # make sure that all Unicode escape sequences in its initializer were really
-    # expanded. After that, the ANSI escape sequences the user referenced using
-    # foreground and background command line options are added to the selected
-    # entries in the mapping arrays.
+    # Makes sure the BYTE and TEXT field mapping arrays referenced by BYTE_map and
+    # TEXT_map exist. The BYTE field mapping array that's used to generate the dump
+    # is built here, very much like what's done in the python version of bytedump.
+    # The TEXT field mapping array must already exist, but this is where we make sure
+    # that every byte in the dump will be represented in the TEXT field by characters
+    # that are compatible with the user's locale. It's something that every bytedump
+    # implementation tries to address, but it's low level behavior that only happens
+    # at runtime and has to be solved using whatever tools the underlying programming
+    # language provides.
+    #
+    # NOTE - if you always assume UTF-8 character encoding than the issues disappear,
+    # but if not you can force an encoding, like 8859-15, to illustrate the problems.
+    # BYTE field mapping arrays only contain ASCII strings, so they never need to be
+    # checked (in every version of bytedump).
     #
 
     if [[ -n ${SCRIPT_STRINGS[BYTE.map]} ]]; then
