@@ -192,15 +192,7 @@
          a convenience the --byte and --text options can also set the <length>.
 
          The default <length> is 16 bytes. If <length> is 0, the entire input file
-         is displayed in a single record. The maximum <length> is an internal limit
-         that can be changed using the --length-limit option, but the single record
-         dump produced when <length> is 0 probably is what you really want.
-
-     --length-limit=<limit>
-         Sets the upper bound on the length of every record displayed in the dump
-         to <limit> bytes when <limit> is a positive integer. A <limit> of 0 means
-         the upper bound is the biggest integer that can fit in a 32 bit Java int.
-         The default <limit> is 4096.
+         is displayed in a single record.
 
      --license
          Print licensing information on standard output and then exit.

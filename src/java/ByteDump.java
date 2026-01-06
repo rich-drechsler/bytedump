@@ -3156,14 +3156,9 @@ class ByteDump {
                     }
                     break;
 
-                case "--length-limit=":
-                    //
-                    // Currently documented, but may remove that documentation.
-                    //
+                case "--length-limit=":         // undocumented option
                     if ((number = manager.matchedGroup(1, optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$")) != null) {
-                        if ((DUMP_record_length_limit = StringTo.unsignedInt(number)) < 0) {
-                            rangeError("record length limit", delimit(number), "requested in option", delimit(arg), "won't fit in a Java int");
-                        }
+                        DUMP_record_length_limit = StringTo.unsignedInt(number);
                     } else {
                         userError("argument", delimit(optarg), "in option", delimit(arg), "is not recognized");
                     }

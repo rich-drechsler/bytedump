@@ -1736,9 +1736,9 @@ class ByteDump:
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
-                case "--length-limit=":
+                case "--length-limit=":         # undocumented option
                     if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
-                        cls.DUMP_record_length = int(manager.cached_groups[1], 0)
+                        cls.DUMP_record_length_limit = int(manager.cached_groups[1], 0)
                     else:
                         cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
 
