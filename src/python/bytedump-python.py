@@ -160,8 +160,8 @@ class ByteDump:
     # all bytes with their top bit set are represented by a period in the TEXT field.
     #
     # NOTE - even though they're Python lists the ones that are used to map individual
-    # bytes (i.e., the numbers) to strings that are supposed to appear in the dump will
-    # usually be referred to as "mapping arrays" rather than "mapping lists".`
+    # bytes (i.e., the numbers) to the strings that are supposed to appear in the dump
+    # will usually be referred to as "mapping arrays" rather than "mapping lists".
     #
 
     ASCII_TEXT_MAP: List[str] = [
@@ -481,7 +481,7 @@ class ByteDump:
         #
         # The ANSI escape code that restores the default foreground color is
         #
-        #    $'\e[39m'
+        #    "\u001B[39m"
         #
         # but in our implementation, an empty string accomplishes the same thing, so
         # it's a much better choice.
@@ -523,7 +523,7 @@ class ByteDump:
         #
         # The ANSI escape code that restores the default background color is
         #
-        #    $'\e[49m'
+        #    "\u001B[49m"
         #
         # but in our implementation, an empty string accomplishes the same thing and
         # is a much better choice.
@@ -582,14 +582,11 @@ class ByteDump:
 
         if len(args) <= 1:
             arg = args[0] if len(args) > 0 else "-"
-
-            # Python's "-" check and path access checks
             if arg == "-" or cls.path_is_readable(arg):
                 if arg == "-" or not cls.path_is_directory(arg):
                     if arg != "-":
                         try:
-                            # In Python, we open the file. 'rb' is crucial for ByteDump.
-                            input_stream = open(arg, 'rb')
+                            input_stream = open(arg, "rb")      # the "rb" is crucial
                             cls.dump(input_stream, sys.stdout)
                             input_stream.close()
                         except (FileNotFoundError, PermissionError):
@@ -842,7 +839,6 @@ class ByteDump:
                                 chars[code] = f"{code:02X}"
 
                         if count > 0:
-                            # StringTo.joiner simulation
                             joined_chars = " ".join([c for c in chars if c is not None])
                             cls.byte_selector(attribute, f"0x({joined_chars})", output)
                     else:
