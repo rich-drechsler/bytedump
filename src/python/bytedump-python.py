@@ -592,7 +592,7 @@ class ByteDump:
                         except (FileNotFoundError, PermissionError):
                             cls.user_error("problem opening input file", arg)
                         except Exception as e:
-                            cls.java_error(str(e))
+                            cls.python_error(str(e))
                     else:
                         # Standard Input. In Python, sys.stdin.buffer matches Java's System.in (bytes)
                         cls.dump(sys.stdin.buffer, sys.stdout)
@@ -974,7 +974,7 @@ class ByteDump:
             # input_stream.close() # Managed by caller in Python usually
 
         except IOError as e:
-            cls.java_error(str(e))
+            cls.python_error(str(e))
 
     @classmethod
     def dump_all(cls, input_stream, output) -> None:
@@ -1905,10 +1905,10 @@ class ByteDump:
         )
 
     @classmethod
-    def java_error(cls, *args: str) -> None:
+    def python_error(cls, *args: str) -> None:
         Terminator.error_handler(
             "-prefix=" + cls.PROGRAM_NAME,
-            "-tag=JavaError",
+            "-tag=PythonError",
             "-info=location",
             "+exit",
             "+frame",
