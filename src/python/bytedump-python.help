@@ -1,0 +1,522 @@
+ SYNOPSIS
+ ========
+
+ bytedump-python [OPTIONS] [FILE|-]
+
+ DESCRIPTION
+ ===========
+
+ A program that generates a dump of the bytes in FILE, which must be a readable file
+ that's not a directory. Standard input is read if the argument is missing or equal
+ to '-'.
+
+ This is the Python implementation of that program. The initial version was written
+ by Gemini 3.0 Pro in a single chat that was an experiment that happened in December
+ 2025. The source code that Gemini produced and the instructions that it was asked
+ to follow were added to the GitHub repository
+
+     https://github.com/rich-drechsler/bytedump
+
+ on 12/23/25 and for now all changes made to it can be tracked in that repository.
+
+ OPTIONS
+ =======
+
+ Options are processed in the order they appear on the command line and options that
+ are processed later take precedence. Option processing continues until there are no
+ more arguments that start with a '-' character. The option '--', which is otherwise
+ ignored, can be used to mark the end of the options. The argument '-', which always
+ stands for standard input, also ends option processing.
+
+ The documented options are:
+
+     --addr=<style>
+     --addr=<style>:<width>
+         The <style> controls how addresses are displayed. It must be one of the
+         case-dependent strings in the list:
+
+             decimal - addresses are displayed in decimal (width=6)
+                 hex - addresses are displayed in lowercase hex (width=6)
+                 HEX - addresses are displayed in uppercase hex (width=6)
+               octal - addresses are displayed in octal (width=6)
+                 xxd - addresses are displayed in lowercase hex (width=08)
+
+               empty - address fields are all empty
+
+         The <width> that can be set using this option is the minimum <width> of
+         the field, in digits, that's allocated for addresses. Each one is right
+         justified in that field and padded on the left with spaces, or zeros, to
+         fill the field. Zeros are only used for padding when the first digit of
+         the <width> is 0, as it is in the xxd <style>.
+
+         The default <style> is hex and the default <width>, for each <style>, is
+         shown in the list.
+
+     --addr-prefix=<string>
+         Prepend <string> to the address in every record that's included in the
+         dump. All characters in <string> must be printable or the <string> can
+         be empty. The default prefix is the empty string.
+
+     --addr-suffix=<string>
+         Append <string> to the address in every record that's included in the
+         dump. All characters in <string> must be printable or the <string> can
+         be empty. The default suffix is a single colon (i.e., ":").
+
+     --background=<color>
+     --background=<color>:<selector>
+         Sets the background <color> that's used when any of the bytes selected by
+         <selector> are displayed in the dump's byte or text fields.
+
+         The background <color> should be one of the names in the table
+
+             red            alt-red            bright-red
+             green          alt-green          bright-green
+             blue           alt-blue           bright-blue
+             cyan           alt-cyan           bright-cyan
+             magenta        alt-magenta        bright-magenta
+             yellow         alt-yellow         bright-yellow
+             black          alt-black          bright-black
+             white          alt-white          bright-white
+
+         or the word
+
+             reset
+
+         which cancels any background color already assigned to the selected bytes.
+         The relative brightness of a <color> tends to increase as you move to the
+         right in the table.
+
+         The <selector> is documented below in the SELECTORS section. If <selector>
+         and the colon are omitted, <color> is applied to all bytes.
+
+     --byte=<style>
+     --byte=<style>:<length>
+         The <style> controls how each byte is displayed and it must be one of the
+         case-dependent strings in the list:
+
+              binary - bytes are displayed in binary (base 2)
+             decimal - bytes are displayed in decimal (base 10)
+                 hex - bytes are displayed in lowercase hex (base 16)
+                 HEX - bytes are displayed in uppercase hex (base 16)
+               octal - bytes are displayed in octal (base 8)
+                 xxd - bytes are displayed in lowercase hex (base 16)
+
+               empty - byte fields are all empty. The byte and text fields can't
+                       both be empty.
+
+         The optional <length> must be a nonnegative integer that's used to set the
+         maximum length of each record in the dump. See the --length option for more
+         details.
+
+     --byte-background=<color>
+     --byte-background=<color>:<selector>
+         Sets the background <color> that's used when any of the bytes selected by
+         <selector> are displayed in the dump's byte field.
+
+         The available <color> choices are listed under the --background option's
+         description. The <selector> is documented below in the SELECTORS section.
+         If <selector> and the colon are omitted, <color> is applied to all bytes.
+
+     --byte-foreground=<color>
+     --byte-foreground=<color>:<selector>
+         Sets the foreground <color> that's used when any of the bytes selected by
+         <selector> are displayed in the dump's byte field.
+
+         The available <color> choices are listed under the --foreground option's
+         description. The <selector> is documented below in the SELECTORS section.
+         If <selector> and the colon are omitted, <color> is applied to all bytes.
+
+     --byte-prefix=<string>
+         Prepend <string> to the byte field in every record that's included in the
+         dump. All characters in <string> must be printable or the <string> can be
+         empty. The default prefix is the empty string.
+
+     --byte-separator=<string>
+         Use <string> to separate individual bytes in every record that's included
+         in the dump. All characters in <string> must be printable or the <string>
+         can be empty. The default separator is a single space (i.e., " ").
+
+     --byte-suffix=<string>
+         Append <string> to the byte field in every record that's included in the
+         dump. All characters in <string> must be printable or the <string> can be
+         empty. The default suffix is the empty string.
+
+     --copyright
+         Print copyright information on standard output and then exit.
+
+     --foreground=<color>
+     --foreground=<color>:<selector>
+         Sets the foreground <color> that's used when any of the bytes selected by
+         <selector> are displayed in the dump's byte or text fields.
+
+         The foreground <color> should be one of the names in the table
+
+             red            alt-red            bright-red
+             green          alt-green          bright-green
+             blue           alt-blue           bright-blue
+             cyan           alt-cyan           bright-cyan
+             magenta        alt-magenta        bright-magenta
+             yellow         alt-yellow         bright-yellow
+             black          alt-black          bright-black
+             white          alt-white          bright-white
+
+             blink-red      blink-alt-red      blink-bright-red
+             blink-green    blink-alt-green    blink-bright-green
+             blink-blue     blink-alt-blue     blink-bright-blue
+             blink-cyan     blink-alt-cyan     blink-bright-cyan
+             blink-magenta  blink-alt-magenta  blink-bright-magenta
+             blink-yellow   blink-alt-yellow   blink-bright-yellow
+             blink-black    blink-alt-black    blink-bright-black
+             blink-white    blink-alt-white    blink-bright-white
+
+         or the word
+
+             reset
+
+         which cancels any foreground color already assigned to the selected bytes.
+         The relative brightness of a <color> tends to increase as you move to the
+         right in the table. Foreground colors that start with the "blink-" prefix
+         cause all characters displayed in that <color> to blink.
+
+         The <selector> is documented below in the SELECTORS section. If <selector>
+         and the colon are omitted, <color> is applied to all bytes.
+
+      -?
+     --help
+         Print the internal documentation about the program on standard output and
+         then exit.
+
+     --length=<length>
+         A <length> that's a positive integer is the maximum number of bytes, read
+         from the input file, that can be displayed in a single record. Each record
+         in a dump, except perhaps the last one, represents exactly <length> input
+         file bytes. Each record's byte and text field components are two different
+         ways that the dump can use to display those <length> input file bytes. As
+         a convenience the --byte and --text options can also set the <length>.
+
+         The default <length> is 16 bytes. If <length> is 0, the entire input file
+         is displayed in a single record.
+
+     --license
+         Print licensing information on standard output and then exit.
+
+     --narrow
+         Each record in the dump starts on a new line, but in this layout style
+         only the address and byte fields are printed next to each other on that
+         line. The text field prints on the next line, but everything is carefully
+         adjusted so each character ends up directly below its corresponding byte.
+         The vertical alignment constraints mean that strings set using unrelated
+         options (e.g., --byte-separator) may occasionally have to be padded with
+         spaces.
+
+         This option is ignored and the default layout style, which is described
+         in the --wide option, is used whenever the byte field or the text field
+         is empty.
+
+     --read=<count>
+         Stop the dump after reading <count> bytes from the input file. <count>
+         must be a nonnegative integer and when it's 0 the entire input file is
+         read. The default <count> is 0.
+
+     --spacing=<separation>
+         The number of newlines used to separate individual records in the dump is
+         specified by <separation>, which must be one of the values in the list:
+
+             single - use one newline separate records
+                  1 - synonym for single
+
+             double - use two newlines to separate records
+                  2 - synonym for double
+
+             triple - use three newlines to separate records
+                  3 - synonym for triple
+
+         The default <separation> is single (or 1).
+
+         See the description of the --length option if you want to dump the entire
+         input file as a single record. This option only covers the spacing between
+         individual records in the dump.
+
+     --start=<address>
+     --start=<address>:<output-address>
+         Start the dump with the byte at <address> in the input file and use it,
+         or the optional <output-address>, as the address that's attached to the
+         first record in the output dump. The <address> and <output-address> must
+         be nonnegative integers. The default <address> is 0.
+
+     --text=<style>
+     --text=<style>:<length>
+         The <style> selects the character strings that are used to represent each
+         byte in the dump's text field. It must be one of the names in the list:
+
+               ascii - one character strings that only identify bytes that are
+                       printable ASCII characters. All other bytes, even the ones
+                       that are classified as printable Unicode code points, are
+                       represented by a period (i.e., ".").
+
+             unicode - one character strings that identify all bytes that represent
+                       printable Unicode code points using the character assigned to
+                       to that code point. The rest of the bytes are all represented
+                       using a period (i.e., ".").
+
+                       Any byte representing a character that Python determines can't
+                       be displayed in the user's locale is replaced by one question
+                       mark (i.e., "?").
+
+               caret - two character strings that use a custom extension of caret
+                       notation to uniquely represent every byte. Bytes that are
+                       printable Unicode code points are represented by character
+                       strings that start with a space and end with the printable
+                       Unicode character assigned to that byte.
+
+                       The rest of the bytes are assigned to Unicode code points
+                       that aren't printable characters. The two character strings
+                       used to represent them all start with a caret (i.e., "^")
+                       and end with a unique printable character that's selected
+                       using the formula
+
+                           (byte + 0x40) % 0x80
+
+                       when the unprintable byte is ASCII (i.e., byte < 0x80) and
+
+                           (byte + 0x40) % 0x80 + 0x80
+
+                       when it's not ASCII (i.e., byte >= 0x80). The extension of
+                       caret notation beyond ASCII was done to make sure each byte
+                       in an input file could be identified from the two character
+                       strings displayed in the text field. It's not a necessary
+                       constraint, because the byte field is always available, but
+                       it seems like reasonable goal.
+
+                       Any byte representing a character that Python determines can't
+                       be displayed in the user's locale is replaced by two question
+                       marks (i.e., "??").
+
+              escape - two character strings that use C-style escapes to represent
+                       unprintable bytes with numeric values that are the same as
+                       two character C-style backslash escape sequences. All other
+                       bytes are represented by two character strings described in
+                       the caret <style> section.
+
+                       Any byte representing a character that Python determines can't
+                       be displayed in the user's locale is replaced by two question
+                       marks (i.e., "??").
+
+                 xxd - duplicates the text field display style that the xxd command
+                       produces. It's just a synonym for ascii and is only included
+                       for consistency with the --addr and --byte options.
+
+               empty - text fields are all empty. The text and byte fields can't
+                       both be empty.
+
+         The default <style> is ascii.
+
+         The optional <length> must be a nonnegative integer that's used to set the
+         maximum length of each record in the dump. See the --length option for more
+         details.
+
+     --text-background=<color>
+     --text-background=<color>:<selector>
+         Sets the background <color> that's used when any of the bytes selected by
+         <selector> are displayed in the dump's text field.
+
+         The available <color> choices are listed under the --background option's
+         description. The <selector> is documented below in the SELECTORS section.
+         If <selector> and the colon are omitted, <color> is applied to all bytes.
+
+     --text-foreground=<color>
+     --text-foreground=<color>:<selector>
+         Sets the foreground <color> that's used when any of the bytes selected by
+         <selector> are displayed in the dump's text field.
+
+         The available <color> choices are listed under the --foreground option's
+         description. The <selector> is documented below in the SELECTORS section.
+         If <selector> and the colon are omitted, <color> is applied to all bytes.
+
+     --text-prefix=<string>
+         Prepend <string> to the text field in every record that's included in the
+         dump. All characters in <string> must be printable or the <string> can be
+         empty. The default prefix is the empty string.
+
+     --text-suffix=<string>
+         Append <string> to the text field in every record that's included in the
+         dump. All characters in <string> must be printable or the <string> can be
+         empty. The default suffix is the empty string.
+
+     --version
+         Print version information on standard output and then exit.
+
+     --wide
+         Each record in a dump always starts on a new line and in this layout the
+         address, byte, and text field components are arranged in that order and
+         printed on the same line. This is the default layout.
+
+         The implementation of this layout is straightforward and doesn't require
+         changes to settings specified by unrelated options. The --narrow option
+         can be used to request the other supported layout.
+
+ SELECTORS
+ =========
+
+ All background and foreground options expect to find a <selector> in their argument
+ that picks all the bytes targeted by that option. The <selector> consists of one or
+ more space separated tokens that can be integers, integer ranges, character classes,
+ or raw strings (that use a slightly modified notation borrowed from Rust).
+
+ A <selector> that starts with an optional base prefix and is followed by tokens that
+ are completely enclosed in a single set of parentheses picks the base that's used to
+ evaluate every integer and integer range token in <selector>. For example,
+
+     0x(token1 token2 token3 token4 ...)
+
+ is valid syntax that uses "0x" to pick the base used to evaluate every number in the
+ tokens that are enclosed in parentheses. A base prefix that's "0x" or "0X" means all
+ numbers are hex, "0" means they're all octal, and no base prefix means the numbers
+ are all decimal. If a base is set using this syntax, every character that appears in
+ every number in the tokens must be a valid digit in that base.
+
+ Any of the following tokens are recognized in a <selector>:
+
+     Integer
+         Whenever a <selector> has set a base, using the syntax described above, all
+         characters in every integer token in that <selector> must be digits in that
+         base. Otherwise C-style syntax is used, so hex integers start with "0x" or
+         "0X", octal integers start with "0", and decimal integers always start with
+         a nonzero decimal digit. Integers that don't represent a byte are ignored.
+
+     Integer Range
+         A pair of integer tokens separated by '-' represents a closed interval that
+         extends from the left end point to the right end point. Both end points of
+         an integer range must be written in the same base. All rules that apply to
+         integer tokens apply to both end points. Any part of an integer range that
+         doesn't represent a byte is ignored.
+
+     Character Class
+         A character class uses a short, familiar lowercase name to select a group
+         of bytes. Those names must be bracketed by "[:" and ":]" in the <selector>
+         to be recognized as a character class. The 15 character classes that are
+         allowed in a <selector> are:
+
+             [:alnum:]      [:digit:]      [:punct:]
+             [:alpha:]      [:graph:]      [:space:]
+             [:blank:]      [:lower:]      [:upper:]
+             [:cntrl:]      [:print:]      [:xdigit:]
+
+             [:ascii:]      [:latin1:]     [:all:]
+
+         The first four rows are the 12 character classes that are defined in the
+         POSIX standard. They should be familiar because they're supported by most
+         regular expression implementations. The last row are 3 character classes
+         that we support because they seem like a convenient way to select familiar
+         (or otherwise obvious) blocks of contiguous bytes.
+
+     Raw String
+         A modified version of Rust's raw string literal can be used as a token in a
+         <selector>. They start with a prefix that's the letter 'r', zero or more '#'
+         characters, and a single or double quote, and they always end with a suffix
+         that matches the quote and the number of '#' characters used in the prefix.
+         For example,
+
+               r"aeiouAEIOU"
+               r'aeiouAEIOU'
+              r#'aeiouAEIOU'#
+             r##"aeiouAEIOU"##
+
+         are raw string tokens that select all the bytes that represent vowels. Any
+         character, except null, can appear in a raw string. The selected bytes are
+         the Unicode code points of the characters in the string that are less than
+         256.
+
+         Two quoting styles are supported because those quote delimiters have to be
+         protected from your shell on the command line. It's an approach that gives
+         you some flexibility when you use these tokens.
+
+
+ A <selector> can contain one or more of these tokens, so that means there are lots
+ of equivalent ways to select bytes. For example, the command line options
+
+     --text-foreground="bright-red:    r'aeiou@0123456789'"
+     --text-foreground="bright-red:    r'aeiou'         r'@' r'0123456789'"
+     --text-foreground="bright-red:    r'aeiou'         r'@' [:digit:]"
+     --text-foreground="bright-red:    r'aeiou'         0x40  0x30-0x39"
+     --text-foreground="bright-red: 0x(r'aeiou'           40    30-39)"
+     --text-foreground="bright-red: 0x(61 65 69 6F 75     40    30-39)"
+
+ all select exactly the same bytes, namely the lowercase vowels, the '@' character,
+ and the decimal digits, and arrange for "bright-red" to be their foreground color
+ whenever any of them are displayed in the text field.
+
+ DEBUGGING
+ =========
+
+ Even though the program's debugging support is officially undocumented, there are
+ a few debug options that users might occasionally be interested in. The three that
+ stand out can be added individually
+
+     bytedump-python --debug=settings --debug=bytemap --debug=textmap ...
+
+ or in a comma separated list
+
+     bytedump-python --debug=settings,bytemap,textmap ...
+
+ to any of the example command lines in the next section. Debugging output goes to
+ standard error, so it can easily be separated from the generated dump. Organization
+ of the debugging output is controlled internally by the program and does not depend
+ the command line ordering of the debug options.
+
+ EXAMPLES
+ ========
+
+ If you run the program without any command line options, as in
+
+     bytedump-python file
+
+ you get a dump of file using the program's default settings. It's not a dump that
+ xxd can duplicate, because the addresses won't exactly match and there aren't xxd
+ options that change how it displays addresses (always 8 digit, 0 padded, lowercase
+ hex numbers). However, options can control the way this program displays addresses,
+ so if you run
+
+     bytedump-python --addr=xxd file
+
+ or equivalently
+
+     bytedump-python --addr=hex:08 file
+
+ you get a dump that should exactly match the output that
+
+     xxd -c16 -g1 file
+
+ generates.
+
+ There are options that give you quite a bit of control over the address, byte, and
+ text fields in a dump. For example,
+
+     bytedump-python --addr=decimal --byte=HEX --text=caret file
+
+ prints decimal addresses, uppercase hex bytes, and uses caret notation to represent
+ bytes that are displayed in the text field. All three fields will be displayed next
+ to each other on a line, but add the --narrow option to the command line
+
+     bytedump-python --narrow --addr=decimal --byte=HEX --text=caret file
+
+ and the layout changes. The text field prints on a line by itself and everything is
+ adjusted, by stretching and translation, so every byte displayed in the byte field
+ and its representation in the text field end up in the same column.
+
+ Any of the fields can be hidden by setting them to empty, so
+
+     bytedump-python --addr=decimal --byte=binary --text=empty file
+
+ prints decimal addresses, binary (base 2) bytes, and hides the text field, while
+
+     bytedump-python --addr=empty --byte=binary --text=empty file
+
+ just prints the binary (base 2) representation of the bytes. Hiding both the byte
+ and text fields doesn't make sense and will result in an error.
+
+ SEE ALSO
+ ========
+
+ ascii(7), hexdump(1), iso_8859-1(7), python(1), od(1), xxd(1)
+
