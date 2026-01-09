@@ -47,7 +47,7 @@ class ByteDump:
     # Program information.
     #
 
-    PROGRAM_VERSION: str = "0.1"
+    PROGRAM_VERSION: str = "0.2"
     PROGRAM_DESCRIPTION: str = "Python reproduction of the Java bytedump program"
     PROGRAM_COPYRIGHT: str = "Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
     PROGRAM_LICENSE: str = "SPDX-License-Identifier: MIT"
@@ -160,8 +160,9 @@ class ByteDump:
     # all bytes with their top bit set are represented by a period in the TEXT field.
     #
     # NOTE - even though they're Python lists the ones that are used to map individual
-    # bytes (i.e., the numbers) to the strings that are supposed to appear in the dump
-    # will usually be referred to as "mapping arrays" rather than "mapping lists".
+    # bytes (i.e., the numbers) to the strings that are supposed to appear in the TEXT
+    # and BYTE fields in our dump will be called "mapping arrays" rather than "mapping
+    # lists".
     #
 
     ASCII_TEXT_MAP: List[str] = [
@@ -1463,7 +1464,13 @@ class ByteDump:
             if cls.text_map is not None:
                 manager = RegexManager()
                 encoding = sys.stdout.encoding or "utf-8"
-
+                #
+                # Loop uses a regular expression to look through the selected mapping array
+                # for the hex digits that represent Unicode code points that still need to
+                # be expanded. We do it here, rather than in the text field mapping array's
+                # initializer, so we can catch the exception that's thrown whenever there's
+                # an encoding problem and try do something reasonable.
+                #
                 for index in range(len(cls.text_map)):
                     element = cls.text_map[index]
                     if manager.matched(element, r"^(.*)(\\u([0123456789abcdefABCDEF]{4}))$"):
