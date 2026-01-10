@@ -970,17 +970,15 @@ class ByteDump:
             # We will try to write strings to the output stream provided.
             # If standard out is used, it handles strings.
 
-            writer = output_stream
-
             if cls.DUMP_record_length > 0:
                 if cls.DUMP_field_flags == cls.BYTE_field_flag:
-                    cls.dump_byte_field(input_stream, writer)
+                    cls.dump_byte_field(input_stream, output_stream)
                 elif cls.DUMP_field_flags == cls.TEXT_field_flag:
-                    cls.dump_text_field(input_stream, writer)
+                    cls.dump_text_field(input_stream, output_stream)
                 else:
-                    cls.dump_all(input_stream, writer)
+                    cls.dump_all(input_stream, output_stream)
             else:
-                cls.dump_all_single_record(input_stream, writer)
+                cls.dump_all_single_record(input_stream, output_stream)
 
             # We don't close sys.stdout usually, but logic says input.close()
             # input_stream.close() # Managed by caller in Python usually
