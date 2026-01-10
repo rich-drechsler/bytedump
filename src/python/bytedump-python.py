@@ -948,14 +948,18 @@ class ByteDump:
     @classmethod
     def dump(cls, input_stream, output_stream) -> None:
         #
-        # Responsible for important initialization, like the buffering of the input and
-        # output streams.
+        # Responsible for important initialization, like seeking to the right spot in the
+        # input_stream, loading the right number of bytes whenever the user wants to read
+        # a fixed number from that stream, and then selecting the final method that's used
+        # to generate the dump.
         #
+
         try:
-            # Python file objects are already buffered, but we follow the logic structure.
-            # Seeking if input_start > 0
             if cls.DUMP_input_start > 0:
-                # read() consumes bytes, acting like skip for non-seekable streams
+                #
+                # Reading and ignoring the required number of bytes should always work,
+                # so we don't have to worry about non-seekable streams.
+                #
                 input_stream.read(cls.DUMP_input_start)
 
             if cls.DUMP_input_read > 0:
@@ -986,7 +990,6 @@ class ByteDump:
 
     @classmethod
     def dump_all(cls, input_stream, output) -> None:
-
         #
         # This is the primary dump method. Even though it can handle everything except
         # single record dumps, I decided to use separate methods (i.e., dump_byte_field()
@@ -1143,14 +1146,17 @@ class ByteDump:
     @classmethod
     def dump_byte_field(cls, input_stream, output) -> None:
         #
-        # OPTIMIZED: Dump only byte field
+        # Called to produce the dump when the BYTE field is the only field that's supposed
+        # to appear in the output. It won't be used often and isn't even required, because
+        # dumpAll() can handle it. However, treating this as an obscure special case means
+        # we can eliminate some overhead and that should make this run a little faster.
         #
+
         if cls.DUMP_record_length > 0:
             if cls.byte_map is not None:
                 byte_map = cls.byte_map
                 record_len = cls.DUMP_record_length
 
-                # Check if we have complex formatting (prefixes, suffixes, etc.)
                 complex_fmt = (len(cls.BYTE_separator) > 0 or len(cls.BYTE_prefix) > 0 or
                                len(cls.BYTE_indent) > 0 or len(cls.BYTE_suffix) > 0)
 
@@ -1167,13 +1173,11 @@ class ByteDump:
                         output.write(byte_separator.join([byte_map[b] for b in buffer]))
                         output.write(byte_suffix)
                 else:
-                    # Super fast path: no separators, just join bytes directly
                     record_separator = cls.DUMP_record_separator
                     while True:
                         buffer = input_stream.read(record_len)
                         if not buffer: break
 
-                        # Join with empty string
                         output.write("".join([byte_map[b] for b in buffer]))
                         output.write(record_separator)
 
@@ -1186,8 +1190,12 @@ class ByteDump:
     @classmethod
     def dump_text_field(cls, input_stream, output) -> None:
         #
-        # OPTIMIZED: Dump only text field
+        # Called to produce the dump when the TEXT field is the only field that's supposed
+        # to appear in the output. It won't be used often and isn't even required, because
+        # dumpAll() can handle it. However, treating this as an obscure special case means
+        # we can eliminate some overhead and that should make this run a little faster.
         #
+
         if cls.DUMP_record_length > 0:
             if cls.text_map is not None:
                 text_map = cls.text_map
