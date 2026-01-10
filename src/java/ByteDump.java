@@ -1167,7 +1167,7 @@ class ByteDump {
         // delimiters have to be protected from your shell on the command line.
         //
         // NOTE - this is a difficult method to follow, but similarity to what's done
-        // in the other bytedump implementations should help if really want to tackle
+        // in the other bytedump implementations should help if you decide to tackle
         // this method. Lots of regular expressions, but chatbots can help with them.
         //
 
@@ -1539,7 +1539,6 @@ class ByteDump {
     dump(InputStream input, OutputStream output) {
 
         BufferedWriter writer;
-        String         mask;
 
         //
         // Responsible for important initialization, like the buffering of the input and
