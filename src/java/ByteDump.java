@@ -1613,8 +1613,8 @@ class ByteDump {
         // This is the primary dump method. Even though it can handle everything except
         // single record dumps, I decided to use separate methods (i.e., dumpByteField()
         // and dumpTextField()) to the generate dumps that only include the BYTE or TEXT
-        // fields. Each of those methods try to eliminate a little of the overhead that
-        // this method needs, and there's a chance that could occasionally be useful.
+        // fields. Each of those methods tries to eliminate a little of the overhead that
+        // this method can't, and there's a chance that could occasionally be useful.
         //
         // NOTE - local variables are used to save frequently accessed values. They're an
         // attempt to squeeze out a little performance, because accessing local variables

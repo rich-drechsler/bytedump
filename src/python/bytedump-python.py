@@ -986,11 +986,29 @@ class ByteDump:
 
     @classmethod
     def dump_all(cls, input_stream, output) -> None:
+
         #
-        # OPTIMIZED: Vectorized using list comprehensions and str.join()
+        # This is the primary dump method. Even though it can handle everything except
+        # single record dumps, I decided to use separate methods (i.e., dump_byte_field()
+        # and dump_text_field()) to the generate dumps that only include the BYTE or TEXT
+        # fields. Each of those methods tries to eliminate a little of the overhead that
+        # this method can't, and there's a chance that could occasionally be useful.
         #
+        # NOTE - local variables are used to save frequently accessed values. They're an
+        # attempt to squeeze out a little performance, because accessing local variables
+        # should be a little faster than class variables. It's probably just a very small
+        # optimization, but I didn't verify that claim in this bytedump implementation.
+        #
+        # NOTE - the selection of the method that's used to generate the actual dump is
+        # made by dump(), so that's where to go if you want to modify my choices.
+        #
+
         if cls.DUMP_record_length > 0:
-            # Localize lookups for speed
+            #
+            # Compute strings used in the loop and make sure only local variables are used
+            # in that loop. Accessing local variables should be slightly faster than class
+            # variables.
+            #
             addr_prefix = cls.ADDR_prefix
             addr_format = cls.ADDR_format
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
