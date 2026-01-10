@@ -24,7 +24,7 @@ import re
 import sys
 
 from io import BytesIO, StringIO
-from typing import List, Dict, Optional, Any
+from typing import Any, BinaryIO, Dict, List, Optional
 
 ###################################
 #
@@ -564,8 +564,8 @@ class ByteDump:
 
     @classmethod
     def arguments(cls, args: List[str]) -> None:
-        input_stream = None
-        arg = None
+        input_stream: BinaryIO
+        arg: str
 
         #
         # Expects at most one argument, which must be "-" or the name of a readable
@@ -587,7 +587,11 @@ class ByteDump:
                 if arg == "-" or not cls.path_is_directory(arg):
                     if arg != "-":
                         try:
-                            input_stream = open(arg, "rb")      # the "rb" is crucial
+                            #
+                            # Want to read bytes from the file so we need to use "rb"
+                            # when we try to open it.
+                            #
+                            input_stream = open(arg, "rb")
                             cls.dump(input_stream, sys.stdout)
                             input_stream.close()
                         except (FileNotFoundError, PermissionError):
@@ -595,7 +599,10 @@ class ByteDump:
                         except Exception as e:
                             cls.python_error(str(e))
                     else:
-                        # Standard Input. In Python, sys.stdin.buffer matches Java's System.in (bytes)
+                        #
+                        # Need to use sys.stdin.buffer if we expect to read bytes from
+                        # standard input.
+                        #
                         cls.dump(sys.stdin.buffer, sys.stdout)
                 else:
                     cls.user_error("argument", cls.delimit(arg), "is a directory")
@@ -606,7 +613,7 @@ class ByteDump:
 
     @classmethod
     def byte_selector(cls, attribute: str, tokens: str, output: List[Optional[str]]) -> None:
-        manager = RegexManager()
+        manager: RegexManager
         chars: List[Optional[str]]
         prefix: str
         suffix: str
@@ -694,15 +701,16 @@ class ByteDump:
         # delimiters have to be protected from your shell on the command line.
         #
         # NOTE - this is a difficult method to follow, but similarity to what's done
-        # in the other bytedump implementations should help if really want to tackle
+        # in the other bytedump implementations should help if you decide to tackle
         # this method. Lots of regular expressions, but chatbots can help with them.
         #
-        # NOTE - the RegexManager class defined later in this file now caches keeps a
-        # temporary copy of the matched groups whenever the manager.matched() method
-        # succeeds. Those groups can be accessed using manager.cached_groups and they
-        # stick around until the next call of manager.matched().
+        # NOTE - the RegexManager class defined later in this file saves a temporary
+        # copy of the matched groups whenever the manager.matched() method succeeds.
+        # Those groups can be accessed using the manager.cached_groups list and that
+        # copy sticks around until the next call of manager.matched().
         #
 
+        manager = RegexManager()
         base = 0
 
         #
@@ -823,7 +831,6 @@ class ByteDump:
                 prefix = manager.cached_groups[1]
                 suffix = manager.cached_groups[3] + manager.cached_groups[2]
                 tokens = tokens[len(prefix):]
-
                 if manager.matched(tokens, suffix + "(.*)"):
                     tail = manager.cached_groups[1]
                     if manager.matched(tail, "^([ \\t]|$)"):
@@ -1200,6 +1207,12 @@ class ByteDump:
 
     @classmethod
     def help(cls) -> None:
+        #
+        # Really nothing much to do here - the help text that we're supposed to display
+        # should be assigned to bytedump_help using a triple quoted string and all we
+        # do here is try to print that string.
+        #
+
         try:
             print(bytedump_help)
         except NameError:
@@ -1441,7 +1454,7 @@ class ByteDump:
             #
             # We now follow the bash version's approach and only build the BYTE field
             # mapping array that we really need. No compiler to do the work once for
-            # us, so the bash approach seems like a better model to follow.
+            # us, so the bash approach seems like the right model to follow.
             #
             match cls.BYTE_output:
                 case "BINARY":
