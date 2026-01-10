@@ -23,7 +23,7 @@ import os
 import re
 import sys
 
-from io import BytesIO, StringIO
+from io import BytesIO, StringIO, UnsupportedOperation
 from typing import Any, BinaryIO, Dict, List, Optional
 
 ###################################
@@ -956,19 +956,12 @@ class ByteDump:
 
         try:
             if cls.DUMP_input_start > 0:
-                #
-                # Reading and ignoring the required number of bytes should always work,
-                # so we don't have to worry about non-seekable streams.
-                #
-                input_stream.read(cls.DUMP_input_start)
-
+                try:
+                    input_stream.seek(cls.DUMP_input_start)
+                except UnsupportedOperation:
+                    input_stream.read(cls.DUMP_input_start)
             if cls.DUMP_input_read > 0:
                 input_stream = cls.byte_loader(input_stream, cls.DUMP_input_read)
-
-            # In Python, we write strings to a TextIOWrapper or bytes to a Bufferedwriter.
-            # The Java code wraps output in BufferedWriter(OutputStreamWriter).
-            # We will try to write strings to the output stream provided.
-            # If standard out is used, it handles strings.
 
             if cls.DUMP_record_length > 0:
                 if cls.DUMP_field_flags == cls.BYTE_field_flag:
@@ -979,10 +972,6 @@ class ByteDump:
                     cls.dump_all(input_stream, output_stream)
             else:
                 cls.dump_all_single_record(input_stream, output_stream)
-
-            # We don't close sys.stdout usually, but logic says input.close()
-            # input_stream.close() # Managed by caller in Python usually
-
         except IOError as e:
             cls.python_error(str(e))
 
@@ -1042,13 +1031,11 @@ class ByteDump:
                 if count <= 0:
                     break
 
-                # 1. Address
                 if addr_enabled:
                     output.write(addr_prefix)
                     output.write(addr_format % address)
                     output.write(addr_suffix)
 
-                # 2. Bytes
                 if byte_enabled:
                     output.write(byte_prefix)
                     output.write(byte_separator.join([byte_map[b] for b in buffer]))
@@ -1056,7 +1043,6 @@ class ByteDump:
                         output.write(" " * ((record_len - count) * byte_pad_width))
                     output.write(byte_suffix)
 
-                # 3. Text
                 if text_enabled:
                     output.write(text_prefix)
                     output.write(text_separator.join([text_map[b] for b in buffer]))
@@ -1072,19 +1058,23 @@ class ByteDump:
     @classmethod
     def dump_all_single_record(cls, input_stream, output) -> None:
         #
-        # OPTIMIZED: Single record dump
+        # Dumps the entire input file as a single record. The TEXT field must be buffered
+        # (or saved in a temp file) when it and the BYTE field are supposed to be included
+        # in the dump, otherwise TEXT field buffering can be skipped. This dump style won't
+        # be used often.
         #
 
         output_byte = output
-        # If both enabled, we must buffer text to print it AFTER all bytes
-        output_text = StringIO() if (cls.byte_map is not None and cls.text_map is not None) else output
+        if cls.byte_map is None or cls.text_map is None:
+            output_text = output
+        else:
+            output_text = StringIO()
 
         if cls.DUMP_record_length == 0:
             addr_prefix = cls.ADDR_prefix
             addr_format = cls.ADDR_format
             addr_suffix = cls.ADDR_suffix + cls.ADDR_field_separator
 
-            # These variables update as we loop (prefix becomes separator)
             current_byte_prefix = cls.BYTE_indent + cls.BYTE_prefix
             byte_separator = cls.BYTE_separator
 
@@ -1107,17 +1097,15 @@ class ByteDump:
                 if not buffer:
                     break
 
-                # Address prints only once at the very start
                 if addr_enabled:
                     output.write(addr_prefix)
                     output.write(addr_format % address)
                     output.write(addr_suffix)
-                    addr_enabled = False
+                    addr_enabled = False        # one record ==> one address
 
                 if byte_enabled:
                     output_byte.write(current_byte_prefix)
                     output_byte.write(byte_separator.join([byte_map[b] for b in buffer]))
-                    # After first chunk, the prefix for the next chunk is the separator
                     current_byte_prefix = byte_separator
 
                 if text_enabled:
@@ -1190,7 +1178,7 @@ class ByteDump:
         #
         # Called to produce the dump when the TEXT field is the only field that's supposed
         # to appear in the output. It won't be used often and isn't even required, because
-        # dumpAll() can handle it. However, treating this as an obscure special case means
+        # dump_all() can handle it. However, treating this as an obscure special case means
         # we can eliminate some overhead and that should make this run a little faster.
         #
 
