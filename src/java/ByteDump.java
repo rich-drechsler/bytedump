@@ -2333,7 +2333,7 @@ class ByteDump {
         }
 
         //
-        // Unlike the bash version, counting the extra characters that print in the TEXT
+        // Unlike the bash version, counting the extra characters that print in the BYTE
         // field of the dump is trivial and locale independent, but only because we made
         // sure (in the option handling code) that all those characters are printable.
         //
@@ -2545,8 +2545,9 @@ class ByteDump {
                 // Java replaces code points that it can't encode with a single question mark.
                 // Access to the encoder that String.valueOf() uses lets us intervene before
                 // that replacement happens, but it's really not a big deal. Java's approach
-                // is reasonable, but always using one question mark makes it a little harder
-                // for us to notice encoding issues.
+                // is reasonable, but always using one question mark could make it a little
+                // harder to notice encoding issues (e.g., when strings in the TEXT field are
+                // all two characters).
                 //
                 encoder = Charset.defaultCharset().newEncoder();
                 unexpanded = (TEXT_unexpanded_string.length() > 0) ? TEXT_unexpanded_string : null;

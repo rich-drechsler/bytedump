@@ -47,7 +47,7 @@ class ByteDump:
     # Program information.
     #
 
-    PROGRAM_VERSION: str = "0.2"
+    PROGRAM_VERSION: str = "0.3"
     PROGRAM_DESCRIPTION: str = "Python reproduction of the Java bytedump program"
     PROGRAM_COPYRIGHT: str = "Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
     PROGRAM_LICENSE: str = "SPDX-License-Identifier: MIT"
@@ -549,12 +549,12 @@ class ByteDump:
     attribute_tables = None
 
     #
-    # Using the argumentsConsumed class variable means command line option can be
+    # Using the arguments_consumed class variable means command line option can be
     # handled in a way that resembles the bash version of this program. There are
     # lots of alternatives, but this is appropriate for this program.
     #
 
-    argumentsConsumed: int = 0
+    arguments_consumed: int = 0
 
     ###################################
     #
@@ -1234,6 +1234,25 @@ class ByteDump:
 
     @classmethod
     def initialize(cls) -> None:
+        #
+        # Handles the initialization that happens after all the command line options
+        # are processed. The goal is to try to honor all the user's requests and to
+        # finish as many calculations as possible before starting the dump. Some of
+        # those calculations are difficult, but I think what's done in this version
+        # of bytedump is much easier to follow than the original bash implementation.
+        #
+        # All of the initialization could have been done right here in this method,
+        # but there's so much code that splitting the work up into separate methods
+        # seemed like a way to make it a little easier to follow. The names of those
+        # methods were chosen so their (case independent) sorted order matched the
+        # order that they're called. However, no matter how the initialization code
+        # is organized, it's still difficult to follow.
+        #
+        # NOTE - the good news is, if you're willing to believe this stuff works, you
+        # probably can skip all the initialization, return to main(), and still follow
+        # the rest of the program.
+        #
+
         cls.initialize1_fields()
         cls.initialize2_field_widths()
         cls.initialize3_layout()
@@ -1242,6 +1261,17 @@ class ByteDump:
 
     @classmethod
     def initialize1_fields(cls) -> None:
+        #
+        # The main job in this method is to check the output styles for the ADDR, BYTE,
+        # and TEXT fields that are set after the command line options are processed and
+        # use them to initialize all other fields that depend on the selected style.
+        #
+        # Bits set in DUMP_field_flags represent the fields that will be printed in the
+        # dump. All three fields are enabled when we start. Fields that are "EMPTY" will
+        # have their flag bits cleared and when this method returns the flag bits set in
+        # DUMP_field_flags represent the fields that are included in the dump.
+        #
+
         cls.DUMP_field_flags = cls.ADDR_field_flag | cls.BYTE_field_flag | cls.TEXT_field_flag
 
         match cls.ADDR_output:
@@ -1284,12 +1314,17 @@ class ByteDump:
             if cls.ADDR_digits > cls.ADDR_format_width_limit:
                 cls.user_error("address width", cls.delimit(cls.ADDR_format_width), "exceeds the internal limit of", cls.delimit(str(cls.ADDR_format_width_limit)))
 
+        #
+        # Unlike the bash version, counting the extra characters that print in the ADDR
+        # field of the dump is trivial and locale independent, but only because we made
+        # sure (in the option handling code) that all those characters are printable.
+        #
+
         cls.ADDR_prefix_size = len(cls.ADDR_prefix)
         cls.ADDR_suffix_size = len(cls.ADDR_suffix)
         cls.ADDR_field_separator_size = len(cls.ADDR_field_separator)
         cls.ADDR_padding = "0" if cls.ADDR_format_width.startswith("0") else " "
 
-        # TEXT field
         match cls.TEXT_output:
             case "ASCII":
                 cls.TEXT_map = "ASCII_TEXT_MAP"
@@ -1322,6 +1357,12 @@ class ByteDump:
             case _:
                 cls.internal_error("text output", cls.delimit(cls.TEXT_output), "has not been implemented")
 
+        #
+        # Unlike the bash version, counting the extra characters that print in the TEXT
+        # field of the dump is trivial and locale independent, but only because we made
+        # sure (in the option handling code) that all those characters are printable.
+        #
+
         cls.TEXT_prefix_size = len(cls.TEXT_prefix)
         cls.TEXT_suffix_size = len(cls.TEXT_suffix)
         cls.TEXT_separator_size = len(cls.TEXT_separator)
@@ -1330,7 +1371,6 @@ class ByteDump:
             if not cls.has_named_field(cls.TEXT_map):
                 cls.internal_error(cls.delimit(cls.TEXT_map), "is not recognized as a TEXT field mapping array name")
 
-        # BYTE field
         match cls.BYTE_output:
             case "BINARY":
                 cls.BYTE_map = "byte_map"
@@ -1366,6 +1406,12 @@ class ByteDump:
             if not cls.has_named_field(cls.BYTE_map):
                 cls.internal_error(cls.delimit(cls.BYTE_map), "is not recognized as a BYTE field mapping array name")
 
+        #
+        # Unlike the bash version, counting the extra characters that print in the BYTE
+        # field of the dump is trivial and locale independent, but only because we made
+        # sure (in the option handling code) that all those characters are printable.
+        #
+
         cls.BYTE_prefix_size = len(cls.BYTE_prefix)
         cls.BYTE_suffix_size = len(cls.BYTE_suffix)
         cls.BYTE_separator_size = len(cls.BYTE_separator)
@@ -1376,6 +1422,19 @@ class ByteDump:
 
     @classmethod
     def initialize2_field_widths(cls) -> None:
+        #
+        # All we use BYTE_field_width for is to decide whether the BYTE field in the
+        # dump's last record needs space padding, after the final byte, to make sure
+        # its TEXT field starts in the correct column. It's only used in dump_all(),
+        # so that's where to look for more details.
+        #
+        # NOTE - even though the value stored in BYTE_field_width is correct, all we
+        # really care about in this class is whether it's zero or not. A zero value
+        # means padding isn't needed, which will happen when the BYTE or TEXT field
+        # is empty, we're doing a single record or narrow dump, or there aren't any
+        # missing bytes in the last record.
+        #
+
         if cls.DUMP_record_length > 0:
             if cls.BYTE_output == "EMPTY" or cls.TEXT_output == "EMPTY" or cls.DUMP_layout == "NARROW":
                 cls.BYTE_field_width = 0
@@ -1386,16 +1445,57 @@ class ByteDump:
 
     @classmethod
     def initialize3_layout(cls) -> None:
-        padding = 0
+        padding: int
+
+        #
+        # Different "layouts" give the user a little control over the arrangement of
+        # each record's ADDR, BYTE, and TEXT fields. The currently supported layouts
+        # are named "WIDE" and "NARROW". There are other possibilites, but these two
+        # are easy to describe and feel like they should be more than sufficent. They
+        # can be requested on the command line using the --wide or --narrow options.
+        #
+        # WIDE is the default layout and it generally resembles the way xxd organizes
+        # its output - the ADDR, BYTE, and TEXT fields are printed next to each other,
+        # and in that order, on the same line.
+        #
+        # The NARROW layout is harder and needs lots of subtle calculations to make
+        # sure everything gets lined up properly. Basically NARROW layout prints the
+        # ADDR and BYTE fields next to each other on the same line. The TEXT field is
+        # printed by itself on the next line and what we have to do here is make sure
+        # each character in the TEXT field is printed directly below the appropriate
+        # byte in the BYTE field. The calculations are painful, so they've been split
+        # into small steps that hopefully will be little easier to follow.
+        #
 
         if cls.DUMP_layout == "NARROW":
+            #
+            # In this case, each TEXT field is supposed to be printed directly below
+            # the corresponding BYTE field. Lots of adjustments will be required, but
+            # the first step is make sure the TEXT and BYTE fields print on separate
+            # lines by assigning a newline to the string that separates the BYTE field
+            # from the TEXT field.
+            #
+
             cls.BYTE_field_separator = "\n"
+
+            #
+            # Figure out the number of spaces that need to be appended to the TEXT or
+            # BYTE field indents to make the first byte and first character end up in
+            # the same "column". The positioning of individual text characters within
+            # the column will be addressed separately.
+            #
 
             padding = cls.BYTE_prefix_size - cls.TEXT_prefix_size
             if padding > 0:
                 cls.TEXT_indent = cls.TEXT_indent + f"{'':>{padding}}"
             elif padding < 0:
                 cls.BYTE_indent = cls.BYTE_indent + f"{'':>{-padding}}"
+
+            #
+            # Next, modify the separation between individual bytes in the BYTE field
+            # or characters in the TEXT field so they all can be lined up vertically
+            # when they're printed on separate lines.
+            #
 
             padding = cls.BYTE_digits_per_octet - cls.TEXT_chars_per_octet + cls.BYTE_separator_size - cls.TEXT_separator_size
             if padding > 0:
@@ -1405,12 +1505,23 @@ class ByteDump:
                 cls.BYTE_separator = cls.BYTE_separator + f"{'':>{-padding}}"
                 cls.BYTE_separator_size = len(cls.BYTE_separator)
 
+            #
+            # Adjust the TEXT field prefix by appending the number of spaces needed
+            # to make sure the first character lines up right adjusted and directly
+            # below the first displayed byte.
+            #
+
             padding = cls.BYTE_digits_per_octet - cls.TEXT_chars_per_octet
             if padding > 0:
                 cls.TEXT_prefix = cls.TEXT_prefix + f"{'':>{padding}}"
                 cls.TEXT_prefix_size = len(cls.TEXT_prefix)
             elif padding < 0:
                 cls.internal_error("chars per octet exceeds digits per octet")
+
+            #
+            # If there's an address, adjust the TEXT field indent so all characters
+            # line up vertically with the appropriate BYTE field bytes.
+            #
 
             if cls.ADDR_output != "EMPTY":
                 padding = cls.ADDR_prefix_size + cls.ADDR_digits + cls.ADDR_suffix_size + cls.ADDR_field_separator_size
@@ -1466,7 +1577,8 @@ class ByteDump:
             #
             # We now follow the bash version's approach and only build the BYTE field
             # mapping array that we really need. No compiler to do the work once for
-            # us, so the bash approach seems like the right model to follow.
+            # us, so the bash approach seems like the right model to follow and python
+            # makes that easy.
             #
             match cls.BYTE_output:
                 case "BINARY":
@@ -1512,10 +1624,14 @@ class ByteDump:
 
     @classmethod
     def initialize5_attributes(cls) -> None:
+        #
+        # Applies attributes that were selected by command line options to the active
+        # TEXT and BYTE field mapping arrays.
+        #
+
         manager = RegexManager()
         last = cls.last_encoded_byte()
 
-        # Iterate over attribute_tables
         for key in cls.attribute_tables.registered_keys:
             byte_table = cls.attribute_tables.get(key)
             if byte_table is not None:
@@ -1547,7 +1663,7 @@ class ByteDump:
             cls.options(args)
             cls.initialize()
             cls.debug()
-            cls.arguments(args[cls.argumentsConsumed:])
+            cls.arguments(args[cls.arguments_consumed:])
         except Terminator.ExitException as e:
             message = e.get_message()
             if message is not None and len(message) > 0:
@@ -1574,8 +1690,11 @@ class ByteDump:
         next_idx: int = 0
 
         #
-        # A long, but straightforward method that uses RegexManager to process command line options.
-        # Uses a while loop to allow manual index manipulation (like skipping args).
+        # A long, but straightforward method that uses RegexManager to process command
+        # line options. Everything was designed so this method would "resemble" the way
+        # options were handled in the Java and bash implementations of bytedump, and the
+        # RegexManager class, which is defined later in this file, is a fundamental part
+        # of the solution to that puzzle.
         #
 
         while next_idx < len(args):
@@ -1896,7 +2015,7 @@ class ByteDump:
 
             next_idx += 1
 
-        cls.argumentsConsumed = next_idx
+        cls.arguments_consumed = next_idx
 
     @classmethod
     def setup(cls) -> None:
