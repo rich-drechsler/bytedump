@@ -2119,10 +2119,6 @@ class ByteDump:
         return hasattr(cls, name)
 
     @classmethod
-    def get_this_class_name(cls) -> str:
-        return cls.__name__
-
-    @classmethod
     def last_encoded_byte(cls) -> int:
         #
         # An unimportant hack introduced in the bash version. Always returning 255 is just
