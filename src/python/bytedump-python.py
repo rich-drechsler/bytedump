@@ -1577,7 +1577,7 @@ class ByteDump:
             #
             # We now follow the bash version's approach and only build the BYTE field
             # mapping array that we really need. No compiler to do the work once for
-            # us, so the bash approach seems like the right model to follow and python
+            # us, so the bash approach seems like the right model to follow and Python
             # makes that easy.
             #
             match cls.BYTE_output:
@@ -1669,8 +1669,6 @@ class ByteDump:
             if message is not None and len(message) > 0:
                 sys.stderr.write(message + "\n")
 
-            # Cause printStackTrace not strictly needed for parity of output
-
             if e.get_status() != 0:
                 sys.exit(e.get_status())
 
@@ -1690,11 +1688,21 @@ class ByteDump:
         next_idx: int = 0
 
         #
-        # A long, but straightforward method that uses RegexManager to process command
-        # line options. Everything was designed so this method would "resemble" the way
-        # options were handled in the Java and bash implementations of bytedump, and the
-        # RegexManager class, which is defined later in this file, is a fundamental part
-        # of the solution to that puzzle.
+        # A long, but straightforward method that uses RegexManager to process command line
+        # options. Everything was designed so this method would "resemble" the way options
+        # were handled in the Java and bash implementations of bytedump, and the RegexManager
+        # class, which is defined later in this file, is a fundamental part of the solution
+        # to that puzzle.
+        #
+        # Just like the bash version, main() needs to know how many arguments were consumed as
+        # options. That number is stored in the arguments_consumed class variable right before
+        # this method returns, but only because that approach "resembles" how the bash version
+        # does it. There are many other ways this could be handled in a Python program.
+        #
+        # NOTE - the options that set prefixes, separators, and suffixes let the user provide
+        # strings that will appear in the dump we generate. That means the arguments of those
+        # options are checked using a character class that accepts any character that the user
+        # would consider printable.
         #
 
         while next_idx < len(args):
@@ -2116,8 +2124,12 @@ class ByteDump:
 
     @classmethod
     def last_encoded_byte(cls) -> int:
-        # Java logic: US-ASCII ? 127 : 255.
-        # Python default is usually UTF-8 (extends ASCII), so 255
+        #
+        # An unimportant hack introduced in the bash version. Always returning 255 is just
+        # fine here. Honestly can't recall exactly what test triggered the hack, so I kind
+        # doubt omitting it will ever be an issue. Same thing probably applies to the Java
+        # version.
+        #
         return 255
 
     @classmethod
