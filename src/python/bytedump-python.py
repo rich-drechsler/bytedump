@@ -24,7 +24,7 @@ import re
 import sys
 
 from io import BytesIO, StringIO, UnsupportedOperation
-from typing import Any, BinaryIO, Dict, List, Optional
+from typing import Any, BinaryIO
 
 ###################################
 #
@@ -47,7 +47,7 @@ class ByteDump:
     # Program information.
     #
 
-    PROGRAM_VERSION: str = "0.3"
+    PROGRAM_VERSION: str = "0.4"
     PROGRAM_DESCRIPTION: str = "Python reproduction of the Java bytedump program"
     PROGRAM_COPYRIGHT: str = "Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)"
     PROGRAM_LICENSE: str = "SPDX-License-Identifier: MIT"
@@ -165,7 +165,7 @@ class ByteDump:
     # lists".
     #
 
-    ASCII_TEXT_MAP: List[str] = [
+    ASCII_TEXT_MAP: list[str] = [
         #
         # Basic Latin Block (ASCII)
         #
@@ -219,7 +219,7 @@ class ByteDump:
     # handled in the ASCII_TEXT_MAP mapping array.
     #
 
-    UNICODE_TEXT_MAP: List[str] = [
+    UNICODE_TEXT_MAP: list[str] = [
         #`
         # Basic Latin Block (ASCII)
         #
@@ -280,7 +280,7 @@ class ByteDump:
     # but as far as I know it's just my own convention.
     #
 
-    CARET_TEXT_MAP: List[str] = [
+    CARET_TEXT_MAP: list[str] = [
         #
         # Basic Latin Block (ASCII)
         #
@@ -333,7 +333,7 @@ class ByteDump:
     # using the caret notation that's already been described.
     #
 
-    CARET_ESCAPE_TEXT_MAP: List[str] = [
+    CARET_ESCAPE_TEXT_MAP: list[str] = [
         #
         # Basic Latin Block (ASCII)
         #
@@ -395,8 +395,8 @@ class ByteDump:
     # that generates the dump will omit that field. Both fields can't be omitted.
     #
 
-    byte_map: Optional[List[str]] = None
-    text_map: Optional[List[str]] = None
+    byte_map: list[str] | None = None
+    text_map: list[str] | None = None
 
     #
     # Values stored in the ANSI_ESCAPE dictionary are the ANSI escape sequences used
@@ -416,7 +416,7 @@ class ByteDump:
     # if you want more information about ANSI escape codes.
     #
 
-    ANSI_ESCAPE: Dict[str, str] = {
+    ANSI_ESCAPE: dict[str, str] = {
         #
         # Foregound color escape sequences.
         #
@@ -563,7 +563,7 @@ class ByteDump:
     ###################################
 
     @classmethod
-    def arguments(cls, args: List[str]) -> None:
+    def arguments(cls, args: list[str]) -> None:
         input_stream: BinaryIO
         arg: str
 
@@ -612,9 +612,9 @@ class ByteDump:
             cls.user_error("too many non-option command line arguments:", cls.delimit_args(args))
 
     @classmethod
-    def byte_selector(cls, attribute: str, tokens: str, output: List[Optional[str]]) -> None:
+    def byte_selector(cls, attribute: str, tokens: str, output: list[str | None]) -> None:
         manager: RegexManager
-        chars: List[Optional[str]]
+        chars: list[str | None]
         prefix: str
         suffix: str
         body: str
@@ -856,11 +856,11 @@ class ByteDump:
 
     @classmethod
     def debug(cls, *args: str) -> None:
-        buffer: List[str]
+        buffer: list[str]
         col: int
-        consumed: Dict[str, Any]
+        consumed: dict[str, Any]
         key: str
-        matched: List[str]
+        matched: list[str]
         prefix: str
         row: int
         tag: str
@@ -1651,7 +1651,7 @@ class ByteDump:
                                         field_map[index] = prefix + field_map[index] + suffix
 
     @classmethod
-    def main(cls, args: List[str]) -> None:
+    def main(cls, args: list[str]) -> None:
 
         #
         # This method runs the program, basically by just calling the other methods that
@@ -1673,7 +1673,7 @@ class ByteDump:
                 sys.exit(e.get_status())
 
     @classmethod
-    def options(cls, args: List[str]) -> None:
+    def options(cls, args: list[str]) -> None:
         manager = RegexManager()
         done = False
         arg: str
@@ -2111,7 +2111,7 @@ class ByteDump:
         return f"\"{str(arg)}\""
 
     @classmethod
-    def delimit_args(cls, args: List[str]) -> str:
+    def delimit_args(cls, args: list[str]) -> str:
         return "\"" + " ".join(args) + "\""
 
     @classmethod
@@ -2226,7 +2226,7 @@ class AttributeTables(dict):
                 sys.stderr.write(f"{elements}\n")
                 sys.stderr.write("\n")
 
-    def get_table(self, key: str) -> List[Optional[str]]:
+    def get_table(self, key: str) -> list[str | None]:
         #
         # Returns the table that is (or soon will be) associated with key, but only if
         # key is in registered_keys. The table is created and added to this dict if it's
@@ -2272,7 +2272,7 @@ class RegexManager:
         self.cached_groups = self.matched_groups(text, regex)
         return self.cached_groups is not None
 
-    def matched_group(self, group_index: int, text: str, regex: str) -> Optional[str]:
+    def matched_group(self, group_index: int, text: str, regex: str) -> str | None:
         #
         # No group caching by this method, at least right now. Not 100% convinced it's
         # the right approach, but it's also not unreasonable because the RegexManager
@@ -2282,7 +2282,7 @@ class RegexManager:
         groups = self.matched_groups(text, regex)
         return groups[group_index] if groups and group_index < len(groups) else None
 
-    def matched_groups(self, text: str, regex: str) -> Optional[List[str]]:
+    def matched_groups(self, text: str, regex: str) -> list[str] | None:
         #
         # No group caching by this method, at least right now. Not 100% convinced it's
         # the right approach, but it's also not unreasonable because the RegexManager
@@ -2351,7 +2351,7 @@ class Terminator:
 
     @classmethod
     def error_handler(cls, *args: str) -> str:
-        arguments: List[str]
+        arguments: list[str]
         manager: RegexManager
         done: bool
         should_exit: bool
@@ -2423,7 +2423,7 @@ class Terminator:
         return message
 
     @classmethod
-    def terminate(cls, message: Optional[str] = "", cause: Optional[BaseException] = None,
+    def terminate(cls, message: str | None = "", cause: BaseException | None = None,
                   status: int = DEFAULT_EXIT_STATUS) -> None:
 
         #
@@ -2441,20 +2441,20 @@ class Terminator:
         raise Terminator.ExitException(message, cause, status)
 
     @classmethod
-    def message_formatter(cls, args: List[str]) -> str:
-        caller: Dict[str, str]
+    def message_formatter(cls, args: list[str]) -> str:
+        caller: dict[str, str]
         manager: RegexManager
-        groups: Optional[List[str]]
+        groups: list[str] | None
         done: bool
         arg: str
-        message: Optional[str]
+        message: str | None
         optarg: str
         opttag: str
         target: str
-        info: Optional[str]
-        prefix: Optional[str]
-        suffix: Optional[str]
-        tag: Optional[str]
+        info: str | None
+        prefix: str | None
+        suffix: str | None
+        tag: str | None
         frame_offset: int
         index: int
 
@@ -2583,7 +2583,7 @@ class Terminator:
     ###################################
 
     class ExitException(RuntimeError):
-        def __init__(self, message: Optional[str] = None, cause: Optional[BaseException] = None, status: int = 1):
+        def __init__(self, message: str | None = None, cause: BaseException | None = None, status: int = 1):
             super().__init__(message)
             self.status = status
             if cause:
