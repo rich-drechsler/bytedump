@@ -542,8 +542,14 @@ class ByteDump:
 
     #
     # This will be an instance of the AttributeTables class, but I didn't want that
-    # class to be the first one in this file. Initialization of attribute_tables now
-    # happens in the setup() method, which is the first method called by main().
+    # class to be the first one in this file, which would have been required if the
+    # AttributeTables class were mentioned at this point in the program. Instead of
+    # doing the initialization here (the way it's done in Java version) moving it to
+    # the setup() method means the only restriction on the AttributeTables class is
+    # that it has to be defined before main() is called.
+    #
+    # TODO - even though it's not necessary, eventually consider doing the the same
+    # thing in the Java version??
     #
 
     attribute_tables = None
@@ -589,7 +595,7 @@ class ByteDump:
                         try:
                             #
                             # Want to read bytes from the file so we need to use "rb"
-                            # when we try to open it.
+                            # when we open it.
                             #
                             input_stream = open(arg, "rb")
                             cls.dump(input_stream, sys.stdout)
@@ -953,6 +959,14 @@ class ByteDump:
         # a fixed number from that stream, and then selecting the final method that's used
         # to generate the dump.
         #
+        # NOTE - unlike the original bash version that usually postprocessed xxd output,
+        # this program handles all the low level details and does care quite a bit about
+        # performance. As a result there are methods that handle unusual dumps, like the
+        # ones that want everything displayed as a single record or just want to see the
+        # BYTE or TEXT fields. None of those methods make much of a difference, but some
+        # careful code duplication seemed worthwhile. If you disagree it should be trivial
+        # to have dump_all() handle almost everything.
+        #
 
         try:
             if cls.DUMP_input_start > 0:
@@ -1134,7 +1148,7 @@ class ByteDump:
         #
         # Called to produce the dump when the BYTE field is the only field that's supposed
         # to appear in the output. It won't be used often and isn't even required, because
-        # dumpAll() can handle it. However, treating this as an obscure special case means
+        # dump_all() can handle it. However, treating this as an obscure special case means
         # we can eliminate some overhead and that should make this run a little faster.
         #
 
