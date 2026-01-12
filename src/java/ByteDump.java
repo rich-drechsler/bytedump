@@ -3631,7 +3631,12 @@ class ByteDump {
     private static int
     lastEncodedByte() {
 
-        return(Charset.defaultCharset().name().equals("US-ASCII") ? 127 : 255);
+        //
+        // Decided to always return 255, at least until I can remember exactly why this
+        // version thought 127 would sometimes be appropriate.
+        //
+
+        return(255);
     }
 
 

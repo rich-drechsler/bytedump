@@ -2121,10 +2121,9 @@ class ByteDump:
     @classmethod
     def last_encoded_byte(cls) -> int:
         #
-        # An unimportant hack introduced in the bash version. Always returning 255 is just
-        # fine here. Honestly can't recall exactly what test triggered the hack, so I kind
-        # doubt omitting it will ever be an issue. Same thing probably applies to the Java
-        # version.
+        # Decided to always return 255, at least until I can remember exactly why the Java
+        # and bash versions thought 127 would sometimes be appropriate. Probably will do
+        # the same thing in the other bytedump versions.
         #
         return 255
 
