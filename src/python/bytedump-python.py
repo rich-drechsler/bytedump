@@ -1234,9 +1234,11 @@ class ByteDump:
     @classmethod
     def help(cls) -> None:
         #
-        # Really nothing much to do here - the help text that we're supposed to display
-        # should be assigned to bytedump_help using a triple quoted string and all we
-        # do here is try to print that string.
+        # Really nothing much to do here - by the time this method is called the help
+        # text we're supposed to display should be assigned to bytedump_help (using a
+        # triple quoted string) and all we do here is print that string. bytedump_help
+        # is currently initialized (with that string) right before the main() method
+        # is called.
         #
 
         try:
@@ -1666,7 +1668,6 @@ class ByteDump:
 
     @classmethod
     def main(cls, args: list[str]) -> None:
-
         #
         # This method runs the program, basically by just calling the other methods that
         # do the real work.
