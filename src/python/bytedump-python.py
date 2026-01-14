@@ -615,7 +615,7 @@ class ByteDump:
             else:
                 cls.user_error("argument", cls.delimit(arg), "isn't a readable file")
         else:
-            cls.user_error("too many non-option command line arguments:", cls.delimit_args(args))
+            cls.user_error("too many non-option command line arguments:", cls.delimit(args))
 
     @classmethod
     def byte_selector(cls, attribute: str, tokens: str, output: list[str | None]) -> None:
@@ -2200,17 +2200,7 @@ class ByteDump:
         # This is really only used to maintain some resemblance to the Java version, which
         # needed help dealing with nulls.
         #
-
-        return f"\"{str(arg)}\""
-
-    @staticmethod
-    def delimit_args(args: list[str]) -> str:
-        #
-        # TODO - this is only used once and I don't think a separate method is needed. Will
-        # investigate later.
-        #
-
-        return "\"" + " ".join(args) + "\""
+        return "\"" + " ".join(arg) + "\"" if isinstance(arg, list) else f"\"{str(arg)}\""
 
     @staticmethod
     def last_encoded_byte() -> int:
@@ -2219,7 +2209,6 @@ class ByteDump:
         # and bash versions thought 127 would sometimes be appropriate. Probably will do
         # the same thing in the other bytedump versions.
         #
-
         return 255
 
     @staticmethod
@@ -2233,7 +2222,6 @@ class ByteDump:
         # I'm not sure how to make that approach work in Python. Anyway, what's done here
         # seems to be sufficient.
         #
-
         if arg.isprintable():
             try:
                 #
