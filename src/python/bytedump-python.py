@@ -611,11 +611,11 @@ class ByteDump:
                         #
                         cls.dump(sys.stdin.buffer, sys.stdout)
                 else:
-                    cls.user_error("argument", cls.delimit(arg), "is a directory")
+                    cls.user_error("argument", delimit(arg), "is a directory")
             else:
-                cls.user_error("argument", cls.delimit(arg), "isn't a readable file")
+                cls.user_error("argument", delimit(arg), "isn't a readable file")
         else:
-            cls.user_error("too many non-option command line arguments:", cls.delimit(args))
+            cls.user_error("too many non-option command line arguments:", delimit(args))
 
     @classmethod
     def byte_selector(cls, attribute: str, tokens: str, output: list[str | None]) -> None:
@@ -735,7 +735,7 @@ class ByteDump:
             elif prefix == "0":
                 base = 8
             else:
-                cls.internal_error("selector base prefix", cls.delimit(prefix), "has not been implemented")
+                cls.internal_error("selector base prefix", delimit(prefix), "has not been implemented")
 
         while manager.matched(tokens, "^[ \\t]*([^ \\t].*)"):
             tokens = manager.cached_groups[1]
@@ -750,23 +750,23 @@ class ByteDump:
                             last = int(manager.cached_groups[4], base) if manager.cached_groups[4] is not None else first
                             tokens = tokens[len(manager.cached_groups[0]):]
                         else:
-                            cls.user_error("problem extracting a hex integer from", cls.delimit(tokens_start))
+                            cls.user_error("problem extracting a hex integer from", delimit(tokens_start))
                     elif base == 8:
                         if manager.matched(tokens, "^(([0-7]+)([-]([0-7]+))?)([ \\t]+|$)"):
                             first = int(manager.cached_groups[2], base)
                             last = int(manager.cached_groups[4], base) if manager.cached_groups[4] is not None else first
                             tokens = tokens[len(manager.cached_groups[0]):]
                         else:
-                            cls.user_error("problem extracting an octal integer from", cls.delimit(tokens_start))
+                            cls.user_error("problem extracting an octal integer from", delimit(tokens_start))
                     elif base == 10:
                         if manager.matched(tokens, "^(([1-9][0-9]*)([-]([1-9][0-9]*))?)([ \\t]+|$)"):
                             first = int(manager.cached_groups[2], base)
                             last = int(manager.cached_groups[4], base) if manager.cached_groups[4] is not None else first
                             tokens = tokens[len(manager.cached_groups[0]):]
                         else:
-                            cls.user_error("problem extracting a decimal integer from", cls.delimit(tokens_start))
+                            cls.user_error("problem extracting a decimal integer from", delimit(tokens_start))
                     else:
-                        cls.internal_error("base", cls.delimit(str(base)), "has not been implemented")
+                        cls.internal_error("base", delimit(str(base)), "has not been implemented")
                 else:
                     if manager.matched(tokens, "^(0[xX]([0-9a-fA-F]+)([-]0[xX]([0-9a-fA-F]+))?)([ \\t]+|$)"):
                         first = int(manager.cached_groups[2], 16)
@@ -781,7 +781,7 @@ class ByteDump:
                         last = int(manager.cached_groups[4], 10) if manager.cached_groups[4] is not None else first
                         tokens = tokens[len(manager.cached_groups[0]):]
                     else:
-                        cls.user_error("problem extracting an integer from", cls.delimit(tokens_start))
+                        cls.user_error("problem extracting an integer from", delimit(tokens_start))
                 if first <= last and first < 256:
                     if last > 256:
                         last = 256
@@ -831,9 +831,9 @@ class ByteDump:
                         case "all":
                             cls.byte_selector(attribute, "0x(00-FF)", output)
                         case _:
-                            cls.user_error(cls.delimit(name), "is not the name of an implemented character class")
+                            cls.user_error(delimit(name), "is not the name of an implemented character class")
                 else:
-                    cls.user_error("problem extracting a character class from", cls.delimit(tokens_start))
+                    cls.user_error("problem extracting a character class from", delimit(tokens_start))
             elif manager.matched(tokens, "^(r([#]*)(\"|'))"):
                 prefix = manager.cached_groups[1]
                 suffix = manager.cached_groups[3] + manager.cached_groups[2]
@@ -857,9 +857,9 @@ class ByteDump:
                             joined_chars = " ".join([c for c in chars if c is not None])
                             cls.byte_selector(attribute, f"0x({joined_chars})", output)
                     else:
-                        cls.user_error("all tokens must be space separated in byte selector", cls.delimit(tokens_start))
+                        cls.user_error("all tokens must be space separated in byte selector", delimit(tokens_start))
             else:
-                cls.user_error("no valid token found at the start of byte selector", cls.delimit(tokens_start))
+                cls.user_error("no valid token found at the start of byte selector", delimit(tokens_start))
 
     @classmethod
     def debug(cls, *args: str) -> None:
@@ -1384,11 +1384,11 @@ class ByteDump:
                 cls.ADDR_digits = int(cls.ADDR_format_width)
                 cls.ADDR_radix = 16
             case _:
-                cls.internal_error("address output", cls.delimit(cls.ADDR_output), "has not been implemented")
+                cls.internal_error("address output", delimit(cls.ADDR_output), "has not been implemented")
 
         if cls.ADDR_format_width_limit > 0:
             if cls.ADDR_digits > cls.ADDR_format_width_limit:
-                cls.user_error("address width", cls.delimit(cls.ADDR_format_width), "exceeds the internal limit of", cls.delimit(str(cls.ADDR_format_width_limit)))
+                cls.user_error("address width", delimit(cls.ADDR_format_width), "exceeds the internal limit of", delimit(str(cls.ADDR_format_width_limit)))
 
         #
         # Unlike the bash version, counting the extra characters that print in the ADDR
@@ -1431,7 +1431,7 @@ class ByteDump:
                 cls.TEXT_chars_per_octet = 1
                 cls.TEXT_unexpanded_string = "?"
             case _:
-                cls.internal_error("text output", cls.delimit(cls.TEXT_output), "has not been implemented")
+                cls.internal_error("text output", delimit(cls.TEXT_output), "has not been implemented")
 
         #
         # Unlike the bash version, counting the extra characters that print in the TEXT
@@ -1445,7 +1445,7 @@ class ByteDump:
 
         if len(cls.TEXT_map) > 0:
             if not hasattr(cls, cls.TEXT_map):
-                cls.internal_error(cls.delimit(cls.TEXT_map), "is not recognized as a TEXT field mapping array name")
+                cls.internal_error(delimit(cls.TEXT_map), "is not recognized as a TEXT field mapping array name")
 
         match cls.BYTE_output:
             case "BINARY":
@@ -1476,11 +1476,11 @@ class ByteDump:
                 cls.BYTE_map = "byte_map"
                 cls.BYTE_digits_per_octet = 2
             case _:
-                cls.internal_error("byte output", cls.delimit(cls.BYTE_output), "has not been implemented")
+                cls.internal_error("byte output", delimit(cls.BYTE_output), "has not been implemented")
 
         if len(cls.BYTE_map) > 0:
             if not hasattr(cls, cls.BYTE_map):
-                cls.internal_error(cls.delimit(cls.BYTE_map), "is not recognized as a BYTE field mapping array name")
+                cls.internal_error(delimit(cls.BYTE_map), "is not recognized as a BYTE field mapping array name")
 
         #
         # Unlike the bash version, counting the extra characters that print in the BYTE
@@ -1494,7 +1494,7 @@ class ByteDump:
 
         if cls.DUMP_record_length_limit > 0:
             if cls.DUMP_record_length > cls.DUMP_record_length_limit:
-                cls.user_error("requested record length", cls.delimit(str(cls.DUMP_record_length)), "exceeds the internal buffer limit of", cls.delimit(str(cls.DUMP_record_length_limit)), "bytes")
+                cls.user_error("requested record length", delimit(str(cls.DUMP_record_length)), "exceeds the internal buffer limit of", delimit(str(cls.DUMP_record_length_limit)), "bytes")
 
     @classmethod
     def initialize2_field_widths(cls) -> None:
@@ -1605,7 +1605,7 @@ class ByteDump:
                     cls.TEXT_indent = cls.TEXT_indent + f"{'':>{padding}}"
 
         elif cls.DUMP_layout != "WIDE":
-            cls.internal_error("layout", cls.delimit(cls.DUMP_layout), "has not been implemented")
+            cls.internal_error("layout", delimit(cls.DUMP_layout), "has not been implemented")
 
     @classmethod
     def initialize4_maps(cls) -> None:
@@ -1669,7 +1669,7 @@ class ByteDump:
                 case "OCTAL":
                     cls.byte_map = [f"{i:03o}" for i in range(256)]
                 case _:
-                    cls.internal_error("builder for base", cls.delimit(cls.BYTE_output), "map has not been implemented")
+                    cls.internal_error("builder for base", delimit(cls.BYTE_output), "map has not been implemented")
         else:
             cls.byte_map = None
 
@@ -1695,7 +1695,7 @@ class ByteDump:
                         except UnicodeEncodeError:
                             cls.text_map[index] = cls.TEXT_unexpanded_string
             else:
-                cls.internal_error(cls.delimit(cls.TEXT_map), "is not a recognized text mapping array name")
+                cls.internal_error(delimit(cls.TEXT_map), "is not a recognized text mapping array name")
         else:
             cls.text_map = None
 
@@ -1718,7 +1718,7 @@ class ByteDump:
         #
 
         manager = RegexManager()
-        last = cls.last_encoded_byte()
+        last = last_encoded_byte()
 
         for key in cls.attribute_tables.registered_keys:
             byte_table = cls.attribute_tables.get(key)
@@ -1829,25 +1829,25 @@ class ByteDump:
                             case "xxd":
                                 style = "XXD"
                             case _:
-                                cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
+                                cls.internal_error("option", delimit(arg), "has not been completely implemented")
 
                         cls.ADDR_output = style
                         if format_width is not None:
                             cls.ADDR_format_width = format_width
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--addr-prefix=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.ADDR_prefix = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--addr-suffix=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.ADDR_suffix = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--background=":
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
@@ -1857,9 +1857,9 @@ class ByteDump:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
-                            cls.user_error("background attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
+                            cls.user_error("background attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--byte=":
                     if manager.matched(optarg, "^[ \\t]*(binary|decimal|empty|hex|HEX|octal|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$"):
@@ -1882,7 +1882,7 @@ class ByteDump:
                             case "xxd":
                                 style = "XXD"
                             case _:
-                                cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
+                                cls.internal_error("option", delimit(arg), "has not been completely implemented")
 
                         cls.BYTE_output = style
                         if length is not None:
@@ -1894,7 +1894,7 @@ class ByteDump:
                             #
                             cls.DUMP_record_length = int(length, 0)
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--byte-background=":
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
@@ -1903,9 +1903,9 @@ class ByteDump:
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                         else:
-                            cls.user_error("background attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
+                            cls.user_error("background attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--byte-foreground=":
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
@@ -1914,27 +1914,27 @@ class ByteDump:
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                         else:
-                            cls.user_error("foreground attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
+                            cls.user_error("foreground attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--byte-prefix=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.BYTE_prefix = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--byte-separator=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.BYTE_separator = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--byte-suffix=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.BYTE_suffix = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--copyright":
                     print(cls.PROGRAM_COPYRIGHT)
@@ -1956,7 +1956,7 @@ class ByteDump:
                                 cls.DEBUG_textmap = True
                             case _:
                                 if len(mode) > 0:
-                                    cls.user_error("debugging mode", cls.delimit(mode), "in option", cls.delimit(arg), "is not recognized")
+                                    cls.user_error("debugging mode", delimit(mode), "in option", delimit(arg), "is not recognized")
 
                 case "--foreground=":
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
@@ -1966,9 +1966,9 @@ class ByteDump:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
-                            cls.user_error("foreground attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
+                            cls.user_error("foreground attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--help":
                     cls.help()
@@ -1978,13 +1978,13 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
                         cls.DUMP_record_length = int(manager.cached_groups[1], 0)
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--length-limit=":         # undocumented option
                     if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
                         cls.DUMP_record_length_limit = int(manager.cached_groups[1], 0)
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--license":
                     print(cls.PROGRAM_LICENSE)
@@ -1997,7 +1997,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*$"):
                         cls.DUMP_input_read = int(manager.cached_groups[1], 0)
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--spacing=":
                     if manager.matched(optarg, "^[ \\t]*(1|single|2|double|3|triple)[ \\t]*$"):
@@ -2009,9 +2009,9 @@ class ByteDump:
                             case "3" | "triple":
                                 cls.DUMP_record_separator = "\n\n\n"
                             case _:
-                                cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
+                                cls.internal_error("option", delimit(arg), "has not been completely implemented")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--start=":
                     if manager.matched(optarg, "^[ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$"):
@@ -2021,7 +2021,7 @@ class ByteDump:
                         else:
                             cls.DUMP_output_start = cls.DUMP_input_start
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--text=":
                     if manager.matched(optarg, "^[ \\t]*(ascii|caret|empty|escape|unicode|xxd)[ \\t]*([:][ \\t]*([1-9][0-9]*|0[xX][0-9a-fA-F]+|0[0-7]*)[ \\t]*)?$"):
@@ -2042,7 +2042,7 @@ class ByteDump:
                             case "xxd":
                                 style = "XXD"
                             case _:
-                                cls.internal_error("option", cls.delimit(arg), "has not been completely implemented")
+                                cls.internal_error("option", delimit(arg), "has not been completely implemented")
 
                         cls.TEXT_output = style
                         if length is not None:
@@ -2054,7 +2054,7 @@ class ByteDump:
                             #
                             cls.DUMP_record_length = int(length, 0)
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--text-background=":
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
@@ -2063,9 +2063,9 @@ class ByteDump:
                         if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
-                            cls.user_error("background attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
+                            cls.user_error("background attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--text-foreground=":
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
@@ -2074,21 +2074,21 @@ class ByteDump:
                         if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
-                            cls.user_error("foreground attribute", cls.delimit(attribute), "in option", cls.delimit(arg), "is not recognized")
+                            cls.user_error("foreground attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "is not recognized")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--text-prefix=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.TEXT_prefix = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--text-suffix=":
-                    if cls.printable_user_string(optarg):
+                    if printable_user_string(optarg):
                         cls.TEXT_suffix = optarg
                     else:
-                        cls.user_error("argument", cls.delimit(optarg), "in option", cls.delimit(arg), "contains unprintable characters")
+                        cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--version":
                     print(cls.PROGRAM_VERSION)
@@ -2107,7 +2107,7 @@ class ByteDump:
                 case _:
                     done = True
                     if target.startswith("-"):
-                        cls.user_error("invalid option", cls.delimit(arg))
+                        cls.user_error("invalid option", delimit(arg))
 
             if done:
                 break
@@ -2184,57 +2184,53 @@ class ByteDump:
             " ".join(args)
         )
 
-    ###################################
-    #
-    # Helper Methods
-    #
-    ###################################
+###################################
+#
+# Helper Methods
+#
+###################################
 
+def delimit(arg: Any) -> str:
     #
-    # TODO - these probably should be regular functions defined outside the ByteDump class.
+    # This is really only used to maintain some resemblance to the Java version, which
+    # needed help dealing with nulls.
     #
 
-    @staticmethod
-    def delimit(arg: Any) -> str:
-        #
-        # This is really only used to maintain some resemblance to the Java version, which
-        # needed help dealing with nulls.
-        #
-        return "\"" + " ".join(arg) + "\"" if isinstance(arg, list) else f"\"{str(arg)}\""
+    return "\"" + " ".join(arg) + "\"" if isinstance(arg, list) else f"\"{str(arg)}\""
 
-    @staticmethod
-    def last_encoded_byte() -> int:
-        #
-        # Decided to always return 255, at least until I can remember exactly why the Java
-        # and bash versions thought 127 would sometimes be appropriate. Probably will do
-        # the same thing in the other bytedump versions.
-        #
-        return 255
+def last_encoded_byte() -> int:
+    #
+    # Decided to always return 255, at least until I can remember exactly why the Java
+    # and bash versions thought 127 would sometimes be appropriate. Probably will do
+    # the same thing in the other bytedump versions.
+    #
 
-    @staticmethod
-    def printable_user_string(arg: str) -> bool:
-        #
-        # Just used to make sure that all of the characters in the strings that a user can
-        # "add" to our dump using command line options (e.g., --addr-suffix) are printable
-        # characters. It's important, because we count characters in those strings to make
-        # sure everything in the dump lines up vertically. The bash and Java versions were
-        # able to do this by combining locales with appropriate regular expressions, but
-        # I'm not sure how to make that approach work in Python. Anyway, what's done here
-        # seems to be sufficient.
-        #
-        if arg.isprintable():
-            try:
-                #
-                # I think this part works - the Python UTF-8 Mode documentation seems to
-                # imply that issues with locale.getpreferredencoding() are only enabled
-                # (at startup) when LC_CTYPE is C or POSIX.
-                #
-                encoding = locale.getpreferredencoding(False)
-                arg.encode(encoding)
-                return True
-            except UnicodeEncodeError:
-                pass
-        return False
+    return 255
+
+def printable_user_string(arg: str) -> bool:
+    #
+    # Just used to make sure that all of the characters in the strings that a user can
+    # "add" to our dump using command line options (e.g., --addr-suffix) are printable
+    # characters. It's important, because we count characters in those strings to make
+    # sure everything in the dump lines up vertically. The bash and Java versions were
+    # able to do this by combining locales with appropriate regular expressions, but
+    # I'm not sure how to make that approach work in Python. Anyway, what's done here
+    # seems to be sufficient.
+    #
+
+    if arg.isprintable():
+        try:
+            #
+            # I think this part works - the Python UTF-8 Mode documentation seems to
+            # imply that issues with locale.getpreferredencoding() are only enabled
+            # (at startup) when LC_CTYPE is C or POSIX.
+            #
+            encoding = locale.getpreferredencoding(False)
+            arg.encode(encoding)
+            return True
+        except UnicodeEncodeError:
+            pass
+    return False
 
 ###################################
 #
