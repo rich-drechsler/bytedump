@@ -589,8 +589,8 @@ class ByteDump:
 
         if len(args) <= 1:
             arg = args[0] if len(args) > 0 else "-"
-            if arg == "-" or cls.path_is_readable(arg):
-                if arg == "-" or not cls.path_is_directory(arg):
+            if arg == "-" or os.access(arg, os.R_OK):
+                if arg == "-" or not os.path.isdir(arg):
                     if arg != "-":
                         try:
                             #
@@ -2207,14 +2207,6 @@ class ByteDump:
         # the same thing in the other bytedump versions.
         #
         return 255
-
-    @classmethod
-    def path_is_directory(cls, path: str) -> bool:
-        return os.path.isdir(path)
-
-    @classmethod
-    def path_is_readable(cls, path: str) -> bool:
-        return os.access(path, os.R_OK)
 
     @classmethod
     def printable_user_string(cls, arg: str) -> bool:
