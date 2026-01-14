@@ -2161,18 +2161,6 @@ class ByteDump:
         )
 
     @classmethod
-    def range_error(cls, *args: str) -> None:
-        Terminator.error_handler(
-            "-prefix=" + cls.PROGRAM_NAME,
-            "-tag=RangeError",
-            "-info",
-            "+exit",
-            "+frame",
-            "--",
-            " ".join(args)
-        )
-
-    @classmethod
     def user_error(cls, *args: str) -> None:
         Terminator.error_handler(
             "-prefix=" + cls.PROGRAM_NAME,
@@ -2186,7 +2174,7 @@ class ByteDump:
 
 ###################################
 #
-# Helper Methods
+# Helper Functions
 #
 ###################################
 
