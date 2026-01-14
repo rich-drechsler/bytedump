@@ -977,7 +977,7 @@ class ByteDump:
                 except UnsupportedOperation:
                     input_stream.read(cls.DUMP_input_start)
             if cls.DUMP_input_read > 0:
-                input_stream = cls.byte_loader(input_stream, cls.DUMP_input_read)
+                input_stream = BytesIO(input_stream.read(cls.DUMP_input_read))
 
             if cls.DUMP_record_length > 0:
                 if cls.DUMP_field_flags == cls.BYTE_field_flag:
@@ -1444,7 +1444,7 @@ class ByteDump:
         cls.TEXT_separator_size = len(cls.TEXT_separator)
 
         if len(cls.TEXT_map) > 0:
-            if not cls.has_named_field(cls.TEXT_map):
+            if not hasattr(cls, cls.TEXT_map):
                 cls.internal_error(cls.delimit(cls.TEXT_map), "is not recognized as a TEXT field mapping array name")
 
         match cls.BYTE_output:
@@ -1479,7 +1479,7 @@ class ByteDump:
                 cls.internal_error("byte output", cls.delimit(cls.BYTE_output), "has not been implemented")
 
         if len(cls.BYTE_map) > 0:
-            if not cls.has_named_field(cls.BYTE_map):
+            if not hasattr(cls, cls.BYTE_map):
                 cls.internal_error(cls.delimit(cls.BYTE_map), "is not recognized as a BYTE field mapping array name")
 
         #
@@ -2191,12 +2191,6 @@ class ByteDump:
     ###################################
 
     @classmethod
-    def byte_loader(cls, input_stream, limit: int):
-        # Reads limit bytes and returns a BytesIO
-        buffer = input_stream.read(limit)
-        return BytesIO(buffer)
-
-    @classmethod
     def delimit(cls, arg: Any) -> str:
         # Trivial quote wrapping
         return f"\"{str(arg)}\""
@@ -2204,10 +2198,6 @@ class ByteDump:
     @classmethod
     def delimit_args(cls, args: list[str]) -> str:
         return "\"" + " ".join(args) + "\""
-
-    @classmethod
-    def has_named_field(cls, name: str) -> bool:
-        return hasattr(cls, name)
 
     @classmethod
     def last_encoded_byte(cls) -> int:
