@@ -2186,30 +2186,44 @@ class ByteDump:
 
     ###################################
     #
-    # ByteDump - Helper Methods
+    # Helper Methods
     #
     ###################################
 
-    @classmethod
-    def delimit(cls, arg: Any) -> str:
-        # Trivial quote wrapping
+    #
+    # TODO - these probably should be regular functions defined outside the ByteDump class.
+    #
+
+    @staticmethod
+    def delimit(arg: Any) -> str:
+        #
+        # This is really only used to maintain some resemblance to the Java version, which
+        # needed help dealing with nulls.
+        #
+
         return f"\"{str(arg)}\""
 
-    @classmethod
-    def delimit_args(cls, args: list[str]) -> str:
+    @staticmethod
+    def delimit_args(args: list[str]) -> str:
+        #
+        # TODO - this is only used once and I don't think a separate method is needed. Will
+        # investigate later.
+        #
+
         return "\"" + " ".join(args) + "\""
 
-    @classmethod
-    def last_encoded_byte(cls) -> int:
+    @staticmethod
+    def last_encoded_byte() -> int:
         #
         # Decided to always return 255, at least until I can remember exactly why the Java
         # and bash versions thought 127 would sometimes be appropriate. Probably will do
         # the same thing in the other bytedump versions.
         #
+
         return 255
 
-    @classmethod
-    def printable_user_string(cls, arg: str) -> bool:
+    @staticmethod
+    def printable_user_string(arg: str) -> bool:
         #
         # Just used to make sure that all of the characters in the strings that a user can
         # "add" to our dump using command line options (e.g., --addr-suffix) are printable
@@ -2219,7 +2233,7 @@ class ByteDump:
         # I'm not sure how to make that approach work in Python. Anyway, what's done here
         # seems to be sufficient.
         #
-        printable = False
+
         if arg.isprintable():
             try:
                 #
@@ -2229,10 +2243,10 @@ class ByteDump:
                 #
                 encoding = locale.getpreferredencoding(False)
                 arg.encode(encoding)
-                printable = True
+                return True
             except UnicodeEncodeError:
                 pass
-        return printable
+        return False
 
 ###################################
 #
