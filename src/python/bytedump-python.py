@@ -619,20 +619,21 @@ class ByteDump:
 
     @classmethod
     def byte_selector(cls, attribute: str, tokens: str, output: list[str | None]) -> None:
-        manager: RegexManager
+        base: int
+        body: str
         chars: list[str | None]
+        code: int
+        count: int
+        first: int
+        index: int
+        joined_chars: str
+        last: int
+        manager: RegexManager
+        name: str
         prefix: str
         suffix: str
-        body: str
         tail: str
         tokens_start: str
-        name: str
-        code: int
-        base: int
-        first: int
-        last: int
-        index: int
-        count: int
 
         #
         # Called to parse a string that's supposed to assign an attribute (primarily
@@ -862,6 +863,7 @@ class ByteDump:
 
     @classmethod
     def debug(cls, *args: str) -> None:
+        arg: str
         buffer: list[str]
         col: int
         consumed: dict[str, Any]
@@ -991,6 +993,27 @@ class ByteDump:
 
     @classmethod
     def dump_all(cls, input_stream, output) -> None:
+        addr_enabled: bool
+        addr_format: str
+        addr_prefix: str
+        addr_suffix: str
+        address: int
+        buffer: bytes
+        byte_enabled: bool
+        byte_map: list[str] | None
+        byte_pad_width: int
+        byte_prefix: str
+        byte_separator: str
+        byte_suffix: str
+        count: int
+        record_len: int
+        record_separator: str
+        text_enabled: bool
+        text_map: list[str] | None
+        text_prefix: str
+        text_separator: str
+        text_suffix: str
+
         #
         # This is the primary dump method. Even though it can handle everything except
         # single record dumps, I decided to use separate methods (i.e., dump_byte_field()
@@ -1071,6 +1094,25 @@ class ByteDump:
 
     @classmethod
     def dump_all_single_record(cls, input_stream, output) -> None:
+        addr_enabled: bool
+        addr_format: str
+        addr_prefix: str
+        addr_suffix: str
+        address: int
+        buffer: bytes
+        byte_enabled: bool
+        byte_map: list[str] | None
+        byte_separator: str
+        chunk_size: int
+        current_byte_prefix: str
+        current_text_prefix: str
+        looped: bool
+        output_byte: Any
+        output_text: Any
+        text_enabled: bool
+        text_map: list[str] | None
+        text_separator: str
+
         #
         # Dumps the entire input file as a single record. The TEXT field must be buffered
         # (or saved in a temp file) when it and the BYTE field are supposed to be included
@@ -1145,6 +1187,15 @@ class ByteDump:
 
     @classmethod
     def dump_byte_field(cls, input_stream, output) -> None:
+        buffer: bytes
+        byte_map: list[str] | None
+        byte_prefix: str
+        byte_separator: str
+        byte_suffix: str
+        complex_fmt: bool
+        record_len: int
+        record_separator: str
+
         #
         # Called to produce the dump when the BYTE field is the only field that's supposed
         # to appear in the output. It won't be used often and isn't even required, because
@@ -1189,6 +1240,15 @@ class ByteDump:
 
     @classmethod
     def dump_text_field(cls, input_stream, output) -> None:
+        buffer: bytes
+        complex_fmt: bool
+        record_len: int
+        record_separator: str
+        text_map: list[str] | None
+        text_prefix: str
+        text_separator: str
+        text_suffix: str
+
         #
         # Called to produce the dump when the TEXT field is the only field that's supposed
         # to appear in the output. It won't be used often and isn't even required, because
@@ -1549,10 +1609,11 @@ class ByteDump:
 
     @classmethod
     def initialize4_maps(cls) -> None:
-        manager: RegexManager
-        element: str
         codepoint: int
+        element: str
         encoding: str
+        index: int
+        manager: RegexManager
 
         #
         # Makes sure the BYTE and TEXT field mapping arrays referenced by BYTE_map and
@@ -1640,6 +1701,17 @@ class ByteDump:
 
     @classmethod
     def initialize5_attributes(cls) -> None:
+        byte_table: list[str | None]
+        field: str
+        field_map: list[str] | None
+        index: int
+        key: str
+        last: int
+        layer: str
+        manager: RegexManager
+        prefix: str
+        suffix: str
+
         #
         # Applies attributes that were selected by command line options to the active
         # TEXT and BYTE field mapping arrays.
@@ -1689,18 +1761,18 @@ class ByteDump:
 
     @classmethod
     def options(cls, args: list[str]) -> None:
-        manager = RegexManager()
-        done = False
         arg: str
         attribute: str
+        done: bool
+        format_width: str
         length: str
+        manager: RegexManager
         mode: str
+        next_idx: int
         optarg: str
         selector: str
         style: str
         target: str
-        format_width: str
-        next_idx: int = 0
 
         #
         # A long, but straightforward method that uses RegexManager to process command line
@@ -1719,6 +1791,10 @@ class ByteDump:
         # options are checked using a character class that accepts any character that the user
         # would consider printable.
         #
+
+        manager = RegexManager()
+        done = False
+        next_idx = 0
 
         while next_idx < len(args):
             arg = args[next_idx]
@@ -2044,9 +2120,9 @@ class ByteDump:
     def setup(cls) -> None:
         #
         # This is where initialization that needs to happen before the command line
-        # options are processed can be done. In this case the AttributeTables class
-        # definition now follows the definition of the ByteDump class, so we have to
-        # wait use its constructor.
+        # options are processed can be done. The initialization of attribute_tables
+        # uses the AttributeTables constructor, so it's done here just to make sure
+        # it doesn't depend on exactly where that class is defined.
         #
 
         cls.attribute_tables = AttributeTables(

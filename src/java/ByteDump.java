@@ -2785,7 +2785,6 @@ class ByteDump {
         String       style;
         String       target;
         String       format_width;
-        int          newlines;
         int          next;
 
         //
