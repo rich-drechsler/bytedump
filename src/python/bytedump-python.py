@@ -2319,7 +2319,7 @@ class RegexManager:
     # matched_groups() to get them.
     #
 
-    cached_groups: list[str] = None
+    cached_groups: list[str] | None = None
 
     def matched(self, text: str, regex: str) -> bool:
         #
@@ -2332,6 +2332,8 @@ class RegexManager:
         return self.cached_groups is not None
 
     def matched_group(self, group_index: int, text: str, regex: str) -> str | None:
+        groups: list[str]
+
         #
         # No group caching by this method, at least right now. Not 100% convinced it's
         # the right approach, but it's also not unreasonable because the RegexManager
@@ -2342,18 +2344,19 @@ class RegexManager:
         return groups[group_index] if groups and group_index < len(groups) else None
 
     def matched_groups(self, text: str, regex: str) -> list[str] | None:
+        match: re.Match
+
         #
         # No group caching by this method, at least right now. Not 100% convinced it's
         # the right approach, but it's also not unreasonable because the RegexManager
         # class was only designed to be be used by the ByteDump class.
         #
 
-        groups = None
         if text is not None and regex is not None:
             match = re.search(regex, text)
             if match:
-                groups = [match.group(0)] + list(match.groups())
-        return groups
+                return [match.group(0)] + list(match.groups())
+        return None
 
     def matches(self, text: str, regex: str) -> bool:
         #
@@ -2366,8 +2369,7 @@ class RegexManager:
 
         if text is not None and regex is not None:
             return re.search(regex, text) is not None
-        else:
-            return False
+        return False
 
 ###################################
 #
