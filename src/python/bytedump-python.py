@@ -2424,6 +2424,23 @@ class Terminator:
         status: int
         target: str
 
+        #
+        # A method that builds an error message from its arguments. That message is either
+        # returned to the caller or included in a RuntimeError subclass that's created and
+        # thrown when the caller wants to force the program to stop. The main() method in
+        # ByteDump is the place to look if you want to see how the exception is handled.
+        #
+        # NOTE - options supported by this method make it a particularly useful way define
+        # error handling convenience methods. Take a look at the definitions of methods,
+        # like internal_error() or user_error(), in ByteDump for simple examples.
+        #
+        # NOTE - this method intentionally doesn't use sys.exit() to force the program to
+        # stop, even though there's probably no compelling reason to avoid sys.exit(). The
+        # Java version managed all error and program termination stuff in a class that was
+        # designed to be used in different applications, but this bytedump implementation
+        # is really just trying to "resemble" the Java version.
+        #
+
         should_exit = True
         status = cls.DEFAULT_EXIT_STATUS
 
@@ -2435,7 +2452,6 @@ class Terminator:
         done = False
         index = 0
 
-        # Argument parsing loop mirroring Java
         while index < len(args):
             arg = args[index]
             if manager.matched(arg, "^(([+-])[^=+-][^=]*)(([=])(.*))?$"):
@@ -2471,12 +2487,21 @@ class Terminator:
 
             index += 1
 
-        # Hand off remaining args
+        #
+        # Add a few control options and anything left in args[] to the arguments List,
+        # then hand everything in arguments to message_formatter(), which is where the
+        # final message is built.
+        #
+
         arguments.append("+frame")
         arguments.append("--")
         arguments.append(" ".join(args[index:]))
 
         message = cls.message_formatter(arguments)
+
+        #
+        # Terminate the program or return the message to the caller.
+        #
 
         if should_exit:
             cls.terminate(message, None, status)
@@ -2489,7 +2514,7 @@ class Terminator:
 
         #
         # Gemini's original Python version of this method set the default message to None.
-        # However, apparently somewhere behind the scenes that None message was translated
+        # However, somewhere behind the scenes that None message was apparently translated
         # to the string "None", which ended up as the message that main() printed whenever
         # this method is called with no arguments.
         #
@@ -2527,6 +2552,14 @@ class Terminator:
         target: str
         token: str
         token_upper: str
+
+        #
+        # Builds a string that usually ends up as a one line message that's included in
+        # the information displayed to a user when something goes wrong. The strings in
+        # args[] are interpreted as options that give the caller some control over what
+        # happens here or as individual strings that are joined together (using a space
+        # as the separator) and included in the final message.
+        #
 
         message = None
         info = None

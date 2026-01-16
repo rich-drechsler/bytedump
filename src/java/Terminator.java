@@ -219,11 +219,15 @@ class Terminator {
 
         message = messageFormatter(arguments.toArray(new String[0]));
 
+        //
+        // Terminate the program or return the message to the caller.
+        //
+
         if (exit == true) {
             terminate(message, null, status, runtime);
         }
 
-        return(message);                // or return the message to the caller
+        return(message);
     }
 
     //
