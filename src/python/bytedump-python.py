@@ -2412,17 +2412,17 @@ class Terminator:
 
     @classmethod
     def error_handler(cls, *args: str) -> str:
-        arguments: list[str]
-        manager: RegexManager
-        done: bool
-        should_exit: bool
         arg: str
+        arguments: list[str]
+        done: bool
+        index: int
+        manager: RegexManager
         message: str
         optarg: str
         opttag: str
-        target: str
+        should_exit: bool
         status: int
-        index: int
+        target: str
 
         should_exit = True
         status = cls.DEFAULT_EXIT_STATUS
@@ -2503,21 +2503,30 @@ class Terminator:
 
     @classmethod
     def message_formatter(cls, args: list[str]) -> str:
-        caller: dict[str, str]
-        manager: RegexManager
-        groups: list[str] | None
-        done: bool
         arg: str
+        caller: dict[str, str]
+        current_tag: str
+        done: bool
+        fname: str
+        frame_info: inspect.FrameInfo
+        frame_offset: int
+        groups: list[str] | None
+        index: int
+        info: str | None
+        line_no: int
+        manager: RegexManager
         message: str | None
         optarg: str
         opttag: str
-        target: str
-        info: str | None
+        part: str
         prefix: str | None
+        result: str
+        stack: list[inspect.FrameInfo]
         suffix: str | None
         tag: str | None
-        frame_offset: int
-        index: int
+        target: str
+        token: str
+        token_upper: str
 
         message = None
         info = None
