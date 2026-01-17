@@ -26,6 +26,49 @@ import sys
 from io import BytesIO, StringIO, UnsupportedOperation
 from typing import Any, BinaryIO
 
+#
+# The source code is organized into sections that are discussed next. All of the
+# top-level headings in this discussion are also used in comments that mark where
+# each section starts in the source code. Search for any heading and you'll find
+# it in these comments and the comment that shows you where that section starts
+# in the source code.
+#
+# So here are the sections, listed in the same order that you'll find them in the
+# source code, along with a few sentences about each section:
+#
+#    ByteDump Variables
+#       These are class variables that correspond primarily to static fields that
+#       are defined in the Java version of ByteDump.
+#
+#       NOTE - some of the class variable names in this script don't follow Python
+#       naming conventions. The exceptions are very unusual names and are briefly
+#       discussed in the comments right before they're used in declarations. If
+#       you're curious don't worry - you won't be able to miss the strange names.
+#
+#    ByteDump Methods
+#       These are the Python class methods that "correspond" to functions that can
+#       be found in the "Script Functions" section of the bash version of bytedump
+#       or the static methods defined in the "ByteDump Methods" section of the Java
+#       version of bytedump. The three sets are similiar, but they're not identical.
+#
+#    Error Methods
+#       The methods defined in this section are convenience methods that guarantee
+#       the program terminates after printing an error message that resembles what
+#       you would get from the other bytedump implementations. The Python code that
+#       was designed to manage errors can be found in the Terminator class, which is
+#       defined later in this file.
+#
+#    Helper Functions
+#       A few simple functions that are occasionally useful and may or may not have
+#       counterparts in the other bytedump implementations. It's mostly a place to
+#       hide language dependent code for a few relatively simple tasks.
+#
+#    Helper Class ...
+#       There are three of them named Terminator, RegexManager, and AttributeTables,
+#       that replicate some of the capabilities that exist in the Java implementation
+#       of those classes.
+#
+
 ###################################
 #
 # ByteDump - Main Class
@@ -1682,7 +1725,7 @@ class ByteDump:
                 # Loop uses a regular expression to look through the selected mapping array
                 # for the hex digits that represent Unicode code points that still need to
                 # be expanded. We do it here, rather than in the text field mapping array's
-                # initializer, so we can catch the exception that's thrown whenever there's
+                # initializer, so we can catch the exception that's raised whenever there's
                 # an encoding problem and try do something reasonable.
                 #
                 for index in range(len(cls.text_map)):
@@ -2132,7 +2175,7 @@ class ByteDump:
 
     ###################################
     #
-    # ByteDump - Error Methods
+    # Error Methods
     #
     ###################################
 
@@ -2222,7 +2265,7 @@ def printable_user_string(arg: str) -> bool:
 
 ###################################
 #
-# AttributeTables - Helper Class
+# Helper Class - AttributeTables
 #
 ###################################
 
@@ -2307,7 +2350,7 @@ class AttributeTables(dict):
 
 ###################################
 #
-# RegexManager - Helper Class
+# Helper Class - RegexManager
 #
 ###################################
 
@@ -2373,7 +2416,7 @@ class RegexManager:
 
 ###################################
 #
-# Terminator - Helper Class
+# Helper Class - Terminator
 #
 ###################################
 
@@ -2427,7 +2470,7 @@ class Terminator:
         #
         # A method that builds an error message from its arguments. That message is either
         # returned to the caller or included in a RuntimeError subclass that's created and
-        # thrown when the caller wants to force the program to stop. The main() method in
+        # raised when the caller wants to force the program to stop. The main() method in
         # ByteDump is the place to look if you want to see how the exception is handled.
         #
         # NOTE - options supported by this method make it a particularly useful way define

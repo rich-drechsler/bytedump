@@ -133,6 +133,9 @@ import java.util.Scanner;
  *      used that a careful look at RegexManager.java might be worthwhile if you're
  *      really interested in understanding the Java implementation of bytedump.
  *
+ */
+
+/*
  * Just like the bash version, the source code in this class file is organized into
  * sections that are discussed next. All of the top-level headings in the next block
  * of comments are also used in comments that mark where each section starts in the
@@ -159,28 +162,23 @@ import java.util.Scanner;
  *      separating the capabilities of Java and bash.
  *
  *   Error Methods
- *      The Java code that was designed to handle errors in this application can be
- *      found in Terminator.java, so that's where to look for the low level details.
- *      The methods defined in this section are simple convenience methods that make
- *      sure the Terminator.errorHandler() method is called with the arguments that
- *      arrange to print the appropriate error message right before the application
- *      exits.
+ *      The methods defined in this section are convenience methods that guarantee
+ *      the program terminates after printing an error message that resembles what
+ *      you would get from the other bytedump implementations. The Java code that
+ *      was designed to manage errors can be found in the Terminator.java file.
  *
- *      The low level details involved in gracefully shutting down a Java application
- *      are a little trickier than you might expect. If you're curious take a look at
- *      the methods defined in this section, the main() method defined in this class,
- *      and the Terminator.errorHandler() method that's defined in Terminator.java.
+ *      The low level details needed to gracefully shut down a Java application are
+ *      trickier than you might expect. If you're curious take a look at the methods
+ *      defined in this section, the main() method defined in this class, and the
+ *      Terminator.errorHandler() method that's defined in Terminator.java.
  *
  *   Helper Methods
- *      Some short methods that are occasionally useful in this class, but don't have
- *      counterparts in the bash version of bytedump. They're all fairly simple, but
- *      about half of them rely on Java reflection, and if that's a topic you're not
- *      familiar with then you'll probably find some of these methods confusing.
- *
- *      My guess is most Java programmers have never used reflection, so don't worry
- *      if you belong to that set - I doubt you really need a solid understanding of
- *      it to read this class. However, if you have a strong Java foundation and just
- *      want to learn more about reflection then
+ *      A few simple functions that are occasionally useful and may or may not have
+ *      counterparts in the other bytedump implementations. It's mostly a place to
+ *      hide language dependent code for a few relatively simple tasks. About half
+ *      of them rely on reflection, and if that's a topic you're not familiar with
+ *      you'll undoubtedly find some of these methods confusing. However, if you're
+ *      curious and want to learn more about reflection then
  *
  *          https://docs.oracle.com/javase/tutorial/reflect/index.html
  *
@@ -189,7 +187,6 @@ import java.util.Scanner;
  *          https://docs.oracle.com/javase/8/docs/api/
  *
  *      should be good references.
- *
  */
 
 public
