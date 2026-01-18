@@ -63,10 +63,15 @@ from typing import Any, BinaryIO
 #       counterparts in the other bytedump implementations. It's mostly a place to
 #       hide language dependent code for a few relatively simple tasks.
 #
-#    Helper Class ...
-#       There are three of them named Terminator, RegexManager, and AttributeTables,
-#       that replicate some of the capabilities that exist in the Java implementation
-#       of those classes.
+#    Helper Classes
+#       There are three of them named RegexManager, Terminator, and AttributeTables,
+#       that replicate the most relevant capabilities currently built into the Java
+#       implementation of those classes.
+#
+#    Documentation
+#       This is where you'll find the text that's written to standard output when
+#       the --help option is used on the command line. It's encapsulated in a triple
+#       quoted string that's assigned to a Python variable.
 #
 
 ###################################
@@ -2265,92 +2270,7 @@ def printable_user_string(arg: str) -> bool:
 
 ###################################
 #
-# Helper Class - AttributeTables
-#
-###################################
-
-class AttributeTables(dict):
-    #
-    # This class tries to replicate how the Java implementation manages attributes
-    # (like colors) that can be assigned by options and later applied to the dump.
-    # It's called in options() and used by byte_selector() to associate attributes
-    # with individual bytes.
-    #
-    # NOTE - there likely are better approaches, but this is sufficient. The main
-    # reason for using this stuff is to help simplify the management of attributes
-    # during option processing - take a look at the comments about attributes and
-    # options in the bash and Java implementations if you want more details.
-    #
-
-    TABLE_SIZE: int = 256               # one attribute slot for each byte
-
-    def __init__(self, *keys: str):
-        super().__init__()
-        self.registered_keys = set()
-
-        if len(keys) > 0:
-            for key in keys:
-                if key is not None:
-                    self[key] = None
-                    self.registered_keys.add(key)
-                else:
-                    raise ValueError("null keys are not allowed")
-        else:
-            raise ValueError("constructor requires at least one argument")
-
-    def dump_table(self, key: str, prefix: str) -> None:
-        #
-        # This method reproduces the "debugging" output that the original bash version
-        # of bytedump produced when it was asked to display "background" or "foreground"
-        # attributes that command line options assigned to individual bytes displayed in
-        # the dump's BYTE or TEXT fields. Occasionally helpful, but it has nothing to do
-        # with the actual generation of the dump.
-        #
-
-        table = self.get(key)
-        if table is not None:
-            count = 0
-            prefix = prefix if prefix is not None else ""
-            elements = ""
-            separator = ""
-
-            for index in range(len(table)):
-                value = table[index]
-                if value is not None:
-                    # Formatting logic mirroring Java's String.format
-                    # "%s%s  %5s=%s"
-                    elements += f"{separator}{prefix}  {'[' + str(index) + ']':>5}=\"{value}\""
-                    separator = "\n"
-                    count += 1
-
-            if count > 0:
-                sys.stderr.write(f"{prefix}{key}[{count}]:\n")
-                sys.stderr.write(f"{elements}\n")
-                sys.stderr.write("\n")
-
-    def get_table(self, key: str) -> list[str | None]:
-        #
-        # Returns the table that is (or soon will be) associated with key, but only if
-        # key is in registered_keys. The table is created and added to this dict if it's
-        # not there yet, which should only happen on the first request for key's table.
-        #
-
-        if key in self.registered_keys:
-            if key is not None:
-                table = self.get(key)
-                if table is None:
-                    table = [None] * self.TABLE_SIZE
-                    self[key] = table
-            else:
-                raise ValueError("Key cannot be None")
-        else:
-            raise ValueError(f"{key} is not a key that was registered by the constructor.")
-
-        return table
-
-###################################
-#
-# Helper Class - RegexManager
+# Helper Classes
 #
 ###################################
 
@@ -2358,7 +2278,7 @@ class RegexManager:
     #
     # Simple class that supports some regular expression methods that can be used to
     # replicate how regular expressions are used in the Java bytedump implemenation.
-    # Caching groups recognized by matched() means the program doesn't need to call
+    # Caching groups recognized by matched() means the program doesn't have to call
     # matched_groups() to get them.
     #
 
@@ -2367,7 +2287,7 @@ class RegexManager:
     def matched(self, text: str, regex: str) -> bool:
         #
         # This currently is the only method that caches matched groups. It helped us
-        # simplify some of the regex matching code (without using the := assignment
+        # simplify some of the regex matching code (without use of the := assignment
         # operator).
         #
 
@@ -2379,7 +2299,7 @@ class RegexManager:
 
         #
         # No group caching by this method, at least right now. Not 100% convinced it's
-        # the right approach, but it's also not unreasonable because the RegexManager
+        # the right approach, but it's also not unreasonable because this RegexManager
         # class was only designed to be be used by the ByteDump class.
         #
 
@@ -2400,25 +2320,6 @@ class RegexManager:
             if match:
                 return [match.group(0)] + list(match.groups())
         return None
-
-    def matches(self, text: str, regex: str) -> bool:
-        #
-        # Same return value as the matched() method, but doesn't cache matched groups
-        # so there's less overhead and it will run a little faster. Currently unused,
-        #
-        # NOTE - currently unused, but it's included for completeness and because I
-        # may include the group caching stuff in the Java version of RegexManager.
-        #
-
-        if text is not None and regex is not None:
-            return re.search(regex, text) is not None
-        return False
-
-###################################
-#
-# Helper Class - Terminator
-#
-###################################
 
 class Terminator:
     #
@@ -2740,6 +2641,86 @@ class Terminator:
 
         def get_message(self) -> str:
             return str(self)
+
+class AttributeTables(dict):
+    #
+    # This class tries to replicate how the Java implementation manages attributes
+    # (like colors) that can be assigned by options and later applied to the dump.
+    # It's called in options() and used by byte_selector() to associate attributes
+    # assigned by command line options with individual bytes.
+    #
+    # NOTE - there likely are better approaches, but this is sufficient. The main
+    # reason for using this stuff is to help simplify the management of attributes
+    # during option processing - take a look at the comments about attributes and
+    # options in the bash and Java implementations if you want more details. This
+    # definitely not a class that you should spend much effort on.
+    #
+
+    TABLE_SIZE: int = 256               # one attribute slot for each byte
+
+    def __init__(self, *keys: str):
+        super().__init__()
+        self.registered_keys = set()
+
+        if len(keys) > 0:
+            for key in keys:
+                if key is not None:
+                    self[key] = None
+                    self.registered_keys.add(key)
+                else:
+                    raise ValueError("null keys are not allowed")
+        else:
+            raise ValueError("constructor requires at least one argument")
+
+    def dump_table(self, key: str, prefix: str) -> None:
+        #
+        # This method reproduces the "debugging" output that the original bash version
+        # of bytedump produced when it was asked to display "background" or "foreground"
+        # attributes that command line options assigned to individual bytes displayed in
+        # the dump's BYTE or TEXT fields. Occasionally helpful, but it has nothing to do
+        # with the actual generation of the dump.
+        #
+
+        table = self.get(key)
+        if table is not None:
+            count = 0
+            prefix = prefix if prefix is not None else ""
+            elements = ""
+            separator = ""
+
+            for index in range(len(table)):
+                value = table[index]
+                if value is not None:
+                    # Formatting logic mirroring Java's String.format
+                    # "%s%s  %5s=%s"
+                    elements += f"{separator}{prefix}  {'[' + str(index) + ']':>5}=\"{value}\""
+                    separator = "\n"
+                    count += 1
+
+            if count > 0:
+                sys.stderr.write(f"{prefix}{key}[{count}]:\n")
+                sys.stderr.write(f"{elements}\n")
+                sys.stderr.write("\n")
+
+    def get_table(self, key: str) -> list[str | None]:
+        #
+        # Returns the table that is (or soon will be) associated with key, but only if
+        # key is in registered_keys. The table is created and added to this dict if it's
+        # not there yet, which should only happen on the first request for key's table.
+        #
+
+        if key in self.registered_keys:
+            if key is not None:
+                table = self.get(key)
+                if table is None:
+                    table = [None] * self.TABLE_SIZE
+                    self[key] = table
+            else:
+                raise ValueError("Key cannot be None")
+        else:
+            raise ValueError(f"{key} is not a key that was registered by the constructor.")
+
+        return table
 
 ###################################
 #
