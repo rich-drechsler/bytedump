@@ -1,42 +1,18 @@
 /*
  * Copyright (C) 2025-2026 Richard L. Drechsler (https://github.com/rich-drechsler/bytedump)
  * SPDX-License-Identifier: MIT
- */
-
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Scanner;
-
-/*
+ *
+ *
  * This is supposed to be a straightforward translation of the bash version of the
  * bytedump script to Java. My goal, when I started working on the conversion, was
  * building a Java class file that resembled the bytedump bash script closely enough
  * that understanding one implementation would be useful if you decided to dig into
  * the other.
  *
- * The organization and style I used in this file doesn't match what I typically use
- * in Java files. Instead, this file was designed to emphasize similarities with the
- * existing bash version of bytedump.
+ * This file doesn't look like a typical Java file, primarily because the style and
+ * organization was deliberately structured to mirror the bash version of bytedump,
+ * which at the time was the only available model. Here are a few other things you
+ * may notice if you decide to take a close look at this source file.
  *
  *   About Comments
  *      I usually only use C-style block comments, like the one you're reading right
@@ -132,8 +108,31 @@ import java.util.Scanner;
  *      of that file. In fact, there are so many places where regular expressions are
  *      used that a careful look at RegexManager.java might be worthwhile if you're
  *      really interested in understanding the Java implementation of bytedump.
- *
  */
+
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Scanner;
 
 /*
  * Just like the bash version, the source code in this class file is organized into
