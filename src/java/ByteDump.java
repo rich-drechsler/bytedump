@@ -326,7 +326,7 @@ class ByteDump {
     // by the initialization code that runs after all of the options are processed.
     //
     // NOTE - there's only one variable with "xxd" in it's name and it's only used
-    // to tell String.format() the default width of the address field in xxd dumps.
+    // when we need to exactly replicate xxd addresses in the dump we generate.
     //
 
     private static String ADDR_output = "HEX-LOWER";

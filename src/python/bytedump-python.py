@@ -81,9 +81,6 @@ from typing import Any, BinaryIO
 ###################################
 
 class ByteDump:
-    """
-    Python reproduction of the bash bytedump script (Python Translation).
-    """
 
     ###################################
     #
@@ -135,6 +132,9 @@ class ByteDump:
     # Values associated with the ADDR, BYTE, and TEXT fields in our dump. Some of
     # them are changed by command line options, while many others are used or set
     # by the initialization code that runs after all of the options are processed.
+    #
+    # NOTE - there's only one variable with "xxd" in it's name and it's only used
+    # when we need to exactly replicate xxd addresses in the dump we generate.
     #
 
     ADDR_output: str = "HEX-LOWER"
@@ -201,6 +201,23 @@ class ByteDump:
     #
 
     DEBUG_settings_prefixes: str = "DUMP ADDR BYTE TEXT DEBUG PROGRAM"
+
+    #
+    # Dumps that this program produces never depend on an external program to generate
+    # any part of final dump. That's different than the bash implementation, which was
+    # really forced to rely on an external program, like xxd, to read individual bytes
+    # from an input file. This is a much better approach, but means we'll usually need
+    # TEXT and BYTE field mapping arrays. The only exceptions happen when those fields
+    # are explicitly excluded from the dump by command line options.
+    #
+    # The first group of mapping arrays are for the TEXT field, and just like the bash
+    # version, we want to control the expansion of Unicode escape sequences. That's why
+    # two backslashes introduce each Unicode escape sequence that appears in the string
+    # literals that initialize TEXT field mapping arrays. They postpone the expansions
+    # so they don't happen when javac runs, but that delay means any TEXT field mapping
+    # array always must be postprocessed (by initialize4_maps()) before it can be used
+    # to map bytes to the character strings that appear in the dump's TEXT field.
+    #
 
     #
     # The ASCII_TEXT_MAP mapping array is designed to reproduce the ASCII text output
@@ -2186,6 +2203,9 @@ class ByteDump:
 
     @classmethod
     def internal_error(cls, *args: str) -> None:
+        #
+        # Error handling convenience method.
+        #
         Terminator.error_handler(
             "-prefix=" + cls.PROGRAM_NAME,
             "-tag=InternalError",
@@ -2198,6 +2218,9 @@ class ByteDump:
 
     @classmethod
     def python_error(cls, *args: str) -> None:
+        #
+        # Error handling convenience method.
+        #
         Terminator.error_handler(
             "-prefix=" + cls.PROGRAM_NAME,
             "-tag=PythonError",
@@ -2210,6 +2233,9 @@ class ByteDump:
 
     @classmethod
     def user_error(cls, *args: str) -> None:
+        #
+        # Error handling convenience method.
+        #
         Terminator.error_handler(
             "-prefix=" + cls.PROGRAM_NAME,
             "-tag=Error",
@@ -2331,14 +2357,12 @@ class Terminator:
     # in the main() method.
     #
 
-    # Constants used in message_formatter to select info
     CALLER_INFO: str = "CALLER"
     LINE_INFO: str = "LINE"
     LOCATION_INFO: str = "LOCATION"
     METHOD_INFO: str = "METHOD"
     SOURCE_INFO: str = "SOURCE"
 
-    # Keys for stack frame info
     FRAME_LINE: str = "LINE"
     FRAME_METHOD: str = "METHOD"
     FRAME_SOURCE: str = "SOURCE"
