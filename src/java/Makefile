@@ -225,7 +225,6 @@ $(BYTEDUMP-JAVA) : $(LAUNCHER_TEMPLATE) $(MAKEFILE)
 	    -e 's#^declare[ ][ ]*SCRIPT_JARPATH=.*#declare SCRIPT_JARPATH="../lib:."#' \
 	< '$<' > '$@'
 	chmod a+x '$@'
-	@echo
 
 ####################
 #

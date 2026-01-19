@@ -156,7 +156,6 @@ $(BYTEDUMP-PYTHON) : $(BYTEDUMP-PYTHON).py
 	@echo "++++ Building $@ ++++"
 	cat '$<' >'$@'
 	chmod a+x '$@'
-	@echo
 
 ####################
 #

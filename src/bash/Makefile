@@ -156,7 +156,6 @@ $(BYTEDUMP-BASH) : $(BYTEDUMP-BASH).sh
 	@echo "++++ Building $@ ++++"
 	cat '$<' >'$@'
 	chmod a+x '$@'
-	@echo
 
 ####################
 #
