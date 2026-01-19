@@ -92,6 +92,9 @@ INSTALLDIR := ../$(ROOT)/image
 INSTALL := install
 PYFLAKES := pyflakes3
 
+LINT := pylint
+LINTFLAGS := --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R1702,R0912,R0914,R0915,W0511
+
 BYTEDUMP-PYTHON := bytedump-python
 
 #
@@ -156,6 +159,15 @@ $(BYTEDUMP-PYTHON) : $(BYTEDUMP-PYTHON).py
 	@echo "++++ Building $@ ++++"
 	cat '$<' >'$@'
 	chmod a+x '$@'
+
+#
+# Output from pylint is verbose and can easily be misunderstood, so this target is
+# not currently run by validate.
+#
+
+lint : $(BYTEDUMP-PYTHON).py
+	@echo "++++ Running $(LINT) ++++"
+	$(LINT) $(LINTFLAGS) '$<' || true
 
 ####################
 #
