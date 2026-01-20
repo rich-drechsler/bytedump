@@ -1903,13 +1903,13 @@ class ByteDump:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--addr-prefix=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.ADDR_prefix = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--addr-suffix=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.ADDR_suffix = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
@@ -1984,19 +1984,19 @@ class ByteDump:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--byte-prefix=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.BYTE_prefix = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--byte-separator=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.BYTE_separator = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--byte-suffix=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.BYTE_suffix = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
@@ -2144,13 +2144,13 @@ class ByteDump:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "is not recognized")
 
                 case "--text-prefix=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.TEXT_prefix = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
 
                 case "--text-suffix=":
-                    if printable_user_string(optarg):
+                    if is_user_printable(optarg):
                         cls.TEXT_suffix = optarg
                     else:
                         cls.user_error("argument", delimit(optarg), "in option", delimit(arg), "contains unprintable characters")
@@ -2260,16 +2260,7 @@ def delimit(arg: Any) -> str:
 
     return "\"" + " ".join(arg) + "\"" if isinstance(arg, list) else f"\"{str(arg)}\""
 
-def last_encoded_byte() -> int:
-    #
-    # Decided to always return 255, at least until I can remember exactly why the Java
-    # and bash versions thought 127 would sometimes be appropriate. Probably will do
-    # the same thing in the other bytedump versions.
-    #
-
-    return 255
-
-def printable_user_string(arg: str) -> bool:
+def is_user_printable(arg: str) -> bool:
     #
     # Just used to make sure that all of the characters in the strings that a user can
     # "add" to our dump using command line options (e.g., --addr-suffix) are printable
@@ -2293,6 +2284,15 @@ def printable_user_string(arg: str) -> bool:
         except UnicodeEncodeError:
             pass
     return False
+
+def last_encoded_byte() -> int:
+    #
+    # Decided to always return 255, at least until I can remember exactly why the Java
+    # and bash versions thought 127 would sometimes be appropriate. Probably will do
+    # the same thing in the other bytedump versions.
+    #
+
+    return 255
 
 ###################################
 #
@@ -2445,10 +2445,11 @@ class Terminator:
                     done = True
                     index += 1
                 case _:
-                    if opttag == "+" or opttag == "-":
-                        arguments.append(arg)
-                    else:
-                        done = True
+                    match opttag:               # resembles Java version
+                        case "+" | "-":
+                            arguments.append(arg)
+                        case _:
+                            done = True
 
             if done:
                 break
@@ -2498,20 +2499,16 @@ class Terminator:
     def message_formatter(cls, args: list[str]) -> str:
         arg: str
         caller: dict[str, str]
-        current_tag: str
         done: bool
-        fname: str
         frame_info: inspect.FrameInfo
         frame_offset: int
         groups: list[str] | None
         index: int
         info: str | None
-        line_no: int
         manager: RegexManager
         message: str | None
         optarg: str
         opttag: str
-        part: str
         prefix: str | None
         result: str
         stack: list[inspect.FrameInfo]
@@ -2519,7 +2516,6 @@ class Terminator:
         tag: str | None
         target: str
         token: str
-        token_upper: str
 
         #
         # Builds a string that usually ends up as a one line message that's included in
@@ -2569,8 +2565,11 @@ class Terminator:
                     done = True
                     index += 1
                 case _:
-                    if opttag != "+" and opttag != "-":
-                        done = True
+                    match opttag:               # resembles Java version
+                        case "+" | "-":
+                            pass
+                        case _:
+                            done = True
 
             if done:
                 break
@@ -2581,60 +2580,48 @@ class Terminator:
             message = " ".join(args[index:])
 
         if info is not None:
-            # Python Stack Inspection
-            # stack[0] is current, stack[1] is caller of message_formatter, etc.
-            # Java default was frame=1 (caller of messageFormatter).
-            # We need to account for Python's stack structure.
-            # 0: message_formatter
-            # 1: error_handler (usually)
-            # 2: The actual caller we want
-
             stack = inspect.stack()
 
             if frame_offset < len(stack):
                 frame_info = stack[frame_offset]
-                # frame_info is a FrameInfo object or tuple
-
                 caller = {}
-                line_no = frame_info.lineno
-                caller[cls.FRAME_LINE] = str(line_no) if line_no >= 0 else cls.UNKNOWN_LINE_TAG
+                caller[cls.FRAME_LINE] = str(frame_info.lineno) if frame_info.lineno > 0 else cls.UNKNOWN_LINE_TAG
                 caller[cls.FRAME_METHOD] = frame_info.function
+                caller[cls.FRAME_SOURCE] = os.path.basename(frame_info.filename)
 
-                # frame_info.filename gives full path, Java often gives just file name.
-                # using os.path.basename to match typical Java behavior
-                fname = frame_info.filename
-                caller[cls.FRAME_SOURCE] = os.path.basename(fname) if fname else cls.UNKNOWN_FILE_TAG
-
+                tag = tag if tag is not None else ""
                 for token in info.split(","):
-                    token_upper = token.strip().upper()
+                    match token.strip().upper():
+                        case cls.CALLER_INFO:
+                            tag = "".join([
+                                tag + "] [" if len(tag) > 0 else "",
+                                f"{caller[cls.FRAME_SOURCE]}; {caller[cls.FRAME_METHOD]}; Line {caller[cls.FRAME_LINE]}"
+                            ])
 
-                    # Logic: tag = String.join("", tag, "] [", ...)
-                    # Check for null tag first to avoid "None] ["
-                    current_tag = tag if tag is not None else ""
+                        case cls.LINE_INFO:
+                            tag = "".join([
+                                tag + "] [" if len(tag) > 0 else "",
+                                f"Line {caller[cls.FRAME_LINE]}"
+                            ])
 
-                    # NOTE: Python string join logic slightly different than Java's String.join with delimiter
-                    # Java: String.join("", tag, "] [", val) -> tag + "] [" + val
+                        case cls.LOCATION_INFO:
+                            tag = "".join([
+                                tag + "] [" if len(tag) > 0 else "",
+                                f"{caller[cls.FRAME_SOURCE]}; Line {caller[cls.FRAME_LINE]}"
+                            ])
 
-                    # We need to handle the initial join if tag is empty?
-                    # Java code: tag = String.join("", tag, "] [", ...)
-                    # If tag was "Error", it becomes "Error] [LOCATION..."
+                        case cls.METHOD_INFO:
+                            tag = "".join([
+                                tag + "] [" if len(tag) > 0 else "",
+                                caller[cls.FRAME_METHOD]
+                            ])
 
-                    part = ""
-                    if token_upper == cls.CALLER_INFO:
-                        part = f"{caller[cls.FRAME_SOURCE]}; {caller[cls.FRAME_METHOD]}; Line {caller[cls.FRAME_LINE]}"
-                    elif token_upper == cls.LINE_INFO:
-                        part = f"Line {caller[cls.FRAME_LINE]}"
-                    elif token_upper == cls.LOCATION_INFO:
-                        part = f"{caller[cls.FRAME_SOURCE]}; Line {caller[cls.FRAME_LINE]}"
-                    elif token_upper == cls.METHOD_INFO:
-                        part = caller[cls.FRAME_METHOD]
-                    elif token_upper == cls.SOURCE_INFO:
-                        part = caller[cls.FRAME_SOURCE]
+                        case cls.SOURCE_INFO:
+                            tag = "".join([
+                                tag + "] [" if len(tag) > 0 else "",
+                                caller[cls.FRAME_SOURCE]
+                            ])
 
-                    if len(part) > 0:
-                        tag = f"{current_tag}] [{part}"
-
-        # Final Assembly
         result = ""
         if prefix is not None and len(prefix) > 0:
             result += prefix + ": "

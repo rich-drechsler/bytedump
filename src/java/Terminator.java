@@ -419,31 +419,41 @@ class Terminator {
                         case CALLER_INFO:
                             tag = String.join(
                                 "",
-                                tag,
-                                "] [",
+                                (tag != null && tag.length() > 0) ? tag + "] [" : "",
                                 caller.get(FRAME_SOURCE) + "; " + caller.get(FRAME_METHOD) + "; " + "Line " + caller.get(FRAME_LINE)
                             );
                             break;
 
                         case LINE_INFO:
-                            tag = String.join("", tag, "] [", "Line " + caller.get(FRAME_LINE));
+                            tag = String.join(
+                                "",
+                                (tag != null && tag.length() > 0) ? tag + "] [" : "",
+                                "Line " + caller.get(FRAME_LINE)
+                            );
                             break;
 
                         case LOCATION_INFO:
                             tag = String.join(
                                 "",
-                                tag,
-                                "] [",
+                                (tag != null && tag.length() > 0) ? tag + "] [" : "",
                                 caller.get(FRAME_SOURCE) + "; " + "Line " + caller.get(FRAME_LINE)
                             );
                             break;
 
                         case METHOD_INFO:
-                            tag = String.join("", tag, "] [", caller.get(FRAME_METHOD));
+                            tag = String.join(
+                                "",
+                                (tag != null && tag.length() > 0) ? tag + "] [" : "",
+                                caller.get(FRAME_METHOD)
+                            );
                             break;
 
                         case SOURCE_INFO:
-                            tag = String.join("", tag, "] [", caller.get(FRAME_SOURCE));
+                            tag = String.join(
+                                "",
+                                (tag != null && tag.length() > 0) ? tag + "] [" : "",
+                                caller.get(FRAME_SOURCE)
+                            );
                             break;
                     }
                 }
