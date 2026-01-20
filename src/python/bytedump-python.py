@@ -1918,7 +1918,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
                         attribute = manager.cached_groups[1]
                         selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
-                        if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
+                        if f"BACKGROUND.{attribute}" in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
@@ -1965,7 +1965,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
                         attribute = manager.cached_groups[1]
                         selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
-                        if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
+                        if f"BACKGROUND.{attribute}" in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_BACKGROUND"))
                         else:
                             cls.user_error("background attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
@@ -1976,7 +1976,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
                         attribute = manager.cached_groups[1]
                         selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
-                        if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
+                        if f"FOREGROUND.{attribute}" in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                         else:
                             cls.user_error("foreground attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
@@ -2027,7 +2027,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
                         attribute = manager.cached_groups[1]
                         selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
-                        if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
+                        if f"FOREGROUND.{attribute}" in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("BYTE_FOREGROUND"))
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
@@ -2125,7 +2125,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
                         attribute = manager.cached_groups[1]
                         selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
-                        if ("BACKGROUND." + attribute) in cls.ANSI_ESCAPE:
+                        if f"BACKGROUND.{attribute}" in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_BACKGROUND"))
                         else:
                             cls.user_error("background attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
@@ -2136,7 +2136,7 @@ class ByteDump:
                     if manager.matched(optarg, "^[ \\t]*([a-zA-Z]+([-][a-zA-Z]+)*)[ \\t]*([:][ \\t]*(.*))?$"):
                         attribute = manager.cached_groups[1]
                         selector = manager.cached_groups[4] if manager.cached_groups[3] is not None else "0x(00-FF)"
-                        if ("FOREGROUND." + attribute) in cls.ANSI_ESCAPE:
+                        if f"FOREGROUND.{attribute}" in cls.ANSI_ESCAPE:
                             cls.byte_selector(attribute, selector, cls.attribute_tables.get_table("TEXT_FOREGROUND"))
                         else:
                             cls.user_error("foreground attribute", delimit(attribute), "in option", delimit(arg), "is not recognized")
