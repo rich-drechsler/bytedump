@@ -1948,8 +1948,8 @@ ByteSelector() {
                 fi
 
                 if (( selector_first <= selector_last && selector_first < 256 )); then
-                    if (( selector_last > 256 )); then
-                        selector_last="256"
+                    if (( selector_last > 255 )); then
+                        selector_last="255"
                     fi
                     for (( selector_index = selector_first; selector_index <= selector_last; selector_index++ )); do
                         selector_output[${selector_index}]="$selector_attribute"

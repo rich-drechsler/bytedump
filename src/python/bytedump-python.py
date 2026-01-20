@@ -839,8 +839,7 @@ class ByteDump:
                     else:
                         cls.user_error("problem extracting an integer from", delimit(tokens_start))
                 if first <= last and first < 256:
-                    if last > 256:
-                        last = 256
+                    last = min(last, 255)
                     for index in range(first, last + 1):
                         output[index] = attribute
             elif manager.matched(tokens, "^\\[:"):

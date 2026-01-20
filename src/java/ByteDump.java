@@ -1240,8 +1240,8 @@ class ByteDump {
                     }
                 }
                 if (first <= last && first < 256) {
-                    if (last > 256) {
-                        last = 256;
+                    if (last > 255) {
+                        last = 255;
                     }
                     for (index = first; index <= last; index++) {
                         output[index] = attribute;
