@@ -954,6 +954,9 @@ class ByteDump:
                 case "bytemap":
                     if cls.DEBUG_bytemap:
                         if cls.byte_map is not None:
+                            #
+                            # pylint: disable=unsubscriptable-object
+                            #
                             sys.stderr.write(f"[Debug] byte_map[{len(cls.byte_map)}]:\n")
                             for row in range(16):
                                 prefix = "[Debug]    "
@@ -1000,6 +1003,9 @@ class ByteDump:
                 case "textmap":
                     if cls.DEBUG_textmap:
                         if cls.text_map is not None:
+                            #
+                            # pylint: disable=unsubscriptable-object
+                            #
                             sys.stderr.write(f"[Debug] text_map[{len(cls.text_map)}]:\n")
                             for row in range(16):
                                 prefix = "[Debug]    "
@@ -1732,6 +1738,9 @@ class ByteDump:
         if cls.TEXT_map is not None and len(cls.TEXT_map) > 0:
             cls.text_map = getattr(cls, cls.TEXT_map, None)
             if cls.text_map is not None:
+                #
+                # pylint: disable=unsubscriptable-object, unsupported-assignment-operation
+                #
                 manager = RegexManager()
                 encoding = sys.stdout.encoding or "utf-8"
                 #

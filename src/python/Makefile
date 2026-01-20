@@ -93,12 +93,13 @@ INSTALL := install
 PYFLAKES := pyflakes3
 
 #
-# There's lots of noise when you run pylint, so right now LINTFLAGS disables a bunch
-# warnings and a few errors. The list will eventually be revisited.
+# Lots of noise when you run pylint, so right now LINTFLAGS disables a bunch warnings.
+# The brute force command line list will eventually be revisited and instead either
+# addressed or selectively disabled (via comments in the code).
 #
 
 LINT := pylint
-LINTFLAGS := --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R1702,R0912,R0914,R0915,W0511
+LINTFLAGS := --disable=C0103,C0114,C0115,C0116,C0301,C0302,R0904,R1702,R0912,R0914,R0915,W0511
 
 BYTEDUMP-PYTHON := bytedump-python
 
