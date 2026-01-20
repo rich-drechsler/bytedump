@@ -7,15 +7,6 @@
 # Ported to Python in collaboration with Google Gemini (December 2025)
 # ----------------------------------------------------------------------
 #
-# NOTE - lots of noise if you run pylint on this file and there still are issues that
-# I'm going to investigate. Right now I use something like
-#
-#   pylint --disable=C0103,C0114,C0115,C0116,C0301,C0302,E1136,E1137,R0904,R0912,R0914,R0915,R1702 bytedump-python.py
-#
-# to run pylint (version 2.12.2) on my Linux system. Disabled messages are things I've
-# decided to permanently ignore or looked at (briefly at least) and may revisit in the
-# near future.
-#
 
 import inspect
 import locale
