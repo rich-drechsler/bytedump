@@ -658,7 +658,7 @@ class ByteDump:
                             input_stream.close()
                         except (FileNotFoundError, PermissionError):
                             cls.user_error("problem opening input file", arg)
-                        except Exception as e:
+                        except Exception as e:          # pylint: disable=broad-except
                             cls.python_error(str(e))
                     else:
                         #
@@ -1280,7 +1280,8 @@ class ByteDump:
 
                     while True:
                         buffer = input_stream.read(record_len)
-                        if not buffer: break
+                        if not buffer:
+                            break
 
                         output.write(byte_prefix)
                         output.write(byte_separator.join([byte_map[b] for b in buffer]))
@@ -1289,7 +1290,8 @@ class ByteDump:
                     record_separator = cls.DUMP_record_separator
                     while True:
                         buffer = input_stream.read(record_len)
-                        if not buffer: break
+                        if not buffer:
+                            break
 
                         output.write("".join([byte_map[b] for b in buffer]))
                         output.write(record_separator)
@@ -1333,7 +1335,8 @@ class ByteDump:
 
                     while True:
                         buffer = input_stream.read(record_len)
-                        if not buffer: break
+                        if not buffer:
+                            break
 
                         output.write(text_prefix)
                         output.write(text_separator.join([text_map[b] for b in buffer]))
@@ -1342,7 +1345,8 @@ class ByteDump:
                     record_separator = cls.DUMP_record_separator
                     while True:
                         buffer = input_stream.read(record_len)
-                        if not buffer: break
+                        if not buffer:
+                            break
 
                         output.write("".join([text_map[b] for b in buffer]))
                         output.write(record_separator)
