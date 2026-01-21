@@ -650,12 +650,11 @@ class ByteDump:
                     if arg != "-":
                         try:
                             #
-                            # Want to read bytes from the file so we need to use "rb"
-                            # when we open it.
+                            # Want to read bytes from the file so we use "rb" when we
+                            # open it. Using a with statement guarantees it's closed.
                             #
-                            input_stream = open(arg, "rb")
-                            cls.dump(input_stream, sys.stdout)
-                            input_stream.close()
+                            with open(arg, "rb") as input_stream:
+                                cls.dump(input_stream, sys.stdout)
                         except (FileNotFoundError, PermissionError):
                             cls.user_error("problem opening input file", arg)
                         except Exception as e:          # pylint: disable=broad-except
@@ -2340,7 +2339,7 @@ class RegexManager:
         groups = self.matched_groups(text, regex)
         return groups[group_index] if groups and group_index < len(groups) else None
 
-    def matched_groups(self, text: str, regex: str) -> list[str] | None:
+    def matched_groups(self, text: str, regex: str) -> list[str] | None:        # pylint: disable=no-self-use
         match: re.Match
 
         #
