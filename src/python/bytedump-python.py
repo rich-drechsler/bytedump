@@ -901,7 +901,7 @@ class ByteDump:
 
                         chars = [None] * 256
                         count = 0
-                        for index in range(len(body)):
+                        for index in range(len(body)):          # pylint: disable=consider-using-enumerate
                             code = ord(body[index])
                             if code < len(chars):
                                 if chars[code] is None:
@@ -1753,8 +1753,7 @@ class ByteDump:
                 # initializer, so we can catch the exception that's raised whenever there's
                 # an encoding problem and try do something reasonable.
                 #
-                for index in range(len(cls.text_map)):
-                    element = cls.text_map[index]
+                for index, element in enumerate(cls.text_map):
                     if manager.matched(element, r"^(.*)(\\u([0123456789abcdefABCDEF]{4}))$"):
                         codepoint = int(manager.cached_groups[3], 16)
                         try:
@@ -1799,7 +1798,13 @@ class ByteDump:
 
                     if field_map is not None:
                         suffix = cls.ANSI_ESCAPE.get("RESET.attributes", "")
-                        for index in range(len(byte_table)):
+                        #
+                        # Right now last is always ends up as 255, but there's a chance that
+                        # 127 might occasionally be appropriate (e.g., for ASCII encoding).
+                        # Decided to ignore pylint's suggestion and not make any changes to
+                        # this loop until last_encoded_byte() issues are completely resolved.
+                        #
+                        for index in range(len(byte_table)):            # pylint: disable=consider-using-enumerate
                             if index <= last:
                                 if byte_table[index] is not None and index < len(field_map):
                                     prefix = cls.ANSI_ESCAPE.get(layer + "." + byte_table[index], "")
@@ -2702,11 +2707,8 @@ class AttributeTables(dict):
             elements = ""
             separator = ""
 
-            for index in range(len(table)):
-                value = table[index]
+            for index, value in enumerate(table):
                 if value is not None:
-                    # Formatting logic mirroring Java's String.format
-                    # "%s%s  %5s=%s"
                     elements += f"{separator}{prefix}  {'[' + str(index) + ']':>5}=\"{value}\""
                     separator = "\n"
                     count += 1
