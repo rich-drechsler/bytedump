@@ -2677,6 +2677,13 @@ class AttributeTables(dict):
     TABLE_SIZE: int = 256               # one attribute slot for each byte
 
     def __init__(self, *keys: str):
+        #
+        # Arguments end up in registered_keys and are the only ones get_table() accepts
+        # when it's asked to return the table (i.e., the 256 element list) associated
+        # with a registered key. At least one key is required and None is not a valid
+        # argument.
+        #
+
         super().__init__()
         self.registered_keys = set()
 
