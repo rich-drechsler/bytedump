@@ -2648,6 +2648,8 @@ class Terminator:
     ###################################
 
     class ExitException(RuntimeError):
+        status: int
+
         def __init__(self, message: str | None = None, cause: BaseException | None = None, status: int = 1):
             super().__init__(message)
             self.status = status
@@ -2676,6 +2678,12 @@ class AttributeTables(dict):
 
     TABLE_SIZE: int = 256               # one attribute slot for each byte
 
+    #
+    # This is where the keys handed to the constructor are saved.
+    #
+
+    registered_keys: set[str] | None = None
+
     def __init__(self, *keys: str):
         #
         # Arguments end up in registered_keys and are the only ones get_table() accepts
@@ -2698,6 +2706,13 @@ class AttributeTables(dict):
             raise ValueError("constructor requires at least one argument")
 
     def dump_table(self, key: str, prefix: str) -> None:
+        count: int
+        elements: str
+        index: int
+        separator: str
+        table: list[str | None]
+        value: str | None
+
         #
         # This method reproduces the "debugging" output that the original bash version
         # of bytedump produced when it was asked to display "background" or "foreground"
@@ -2725,6 +2740,8 @@ class AttributeTables(dict):
                 sys.stderr.write("\n")
 
     def get_table(self, key: str) -> list[str | None]:
+        table: list[str | None]
+
         #
         # Returns the table that is (or soon will be) associated with key, but only if
         # key is in registered_keys. The table is created and added to this dict if it's
