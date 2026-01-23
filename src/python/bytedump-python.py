@@ -2486,7 +2486,7 @@ class Terminator:
 
     @classmethod
     def terminate(cls, message: str | None = "", cause: BaseException | None = None,
-                  status: int = DEFAULT_EXIT_STATUS) -> None:
+                  status: int | None = None) -> None:
 
         #
         # Gemini's original Python version of this method set the default message to None.
@@ -2650,9 +2650,23 @@ class Terminator:
     class ExitException(RuntimeError):
         status: int
 
-        def __init__(self, message: str | None = None, cause: BaseException | None = None, status: int = 1):
+        def __init__(self, message: str | None = None, cause: BaseException | None = None, status: int | None = None):
+            #
+            # Initializing status to None lets us pick the exit status that's included in
+            # the object that we're building and that means it's also available whenever
+            # this object is caught.
+            #
+            # NOTE - this is an approach that lets us map a terminate() call made with no
+            # arguments into a program exit with no error message and a zero status. It's
+            # different than the corresponding Java class, but the results (at least for
+            # this program) are identical.
+            #
+
             super().__init__(message)
-            self.status = status
+            if status is None:
+                self.status = 0
+            else:
+                self.status = status
             if cause:
                 self.__cause__ = cause
 
