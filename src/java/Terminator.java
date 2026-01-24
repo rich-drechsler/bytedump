@@ -230,78 +230,7 @@ class Terminator {
         return(message);
     }
 
-    //
-    // These terminate() methods all end up throwing the exception (or error) that's
-    // supposed to stop the application. The main() method in ByteDump.java catches
-    // the exception and is the place to look if you want an example.
-    //
-
-    public static void
-    terminate() {
-
-        terminate(null, null, 0, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(int status) {
-
-        terminate(null, null, status, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(String message) {
-
-        terminate(message, null, DEFAULT_EXIT_STATUS, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(String message, int status) {
-
-        terminate(message, null, status, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(Throwable cause) {
-
-        terminate(null, cause, DEFAULT_EXIT_STATUS, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(String message, Throwable cause) {
-
-        terminate(message, cause, DEFAULT_EXIT_STATUS, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(String message, Throwable cause, int status) {
-
-        terminate(message, cause, status, RUNTIME_EXCEPTION);
-    }
-
-
-    public static void
-    terminate(String message, Throwable cause, int status, boolean runtime) {
-
-        if (runtime) {
-           throw(new Terminator.ExitException(message, cause, status));
-        } else {
-           throw(new Terminator.ExitError(message, cause, status));
-        }
-    }
-
-    ///////////////////////////////////
-    //
-    // Private Methods
-    //
-    ///////////////////////////////////
-
-    private static String
+    public static String
     messageFormatter(String args[]) {
 
         HashMap<String, String> caller;
@@ -328,8 +257,11 @@ class Terminator {
         // happens here or as individual strings that are joined together (using a space
         // as the separator) and included in the final message.
         //
-        // NOTE - this method is only used by errorHandler() and I'm not convinced it has
-        // much value anywhere else, so it's currently private.
+        // NOTE - this method was private, but decided to make it public even though it
+        // doesn't have much value anywhere else. Only reason is that I tend to separate
+        // private methods from public (and protected) methods and separately sort each
+        // group. It's just my style, and in this instance it was only done to align the
+        // organization of the Java and Python versions of this class - pretty silly!!
         //
 
         message = null;
@@ -469,6 +401,71 @@ class Terminator {
                 (suffix != null && suffix.length() > 0) ? suffix : ""
             )
         );
+    }
+
+    //
+    // These terminate() methods all end up throwing the exception (or error) that's
+    // supposed to stop the application. The main() method in ByteDump.java catches
+    // the exception and is the place to look if you want an example.
+    //
+
+    public static void
+    terminate() {
+
+        terminate(null, null, 0, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(int status) {
+
+        terminate(null, null, status, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(String message) {
+
+        terminate(message, null, DEFAULT_EXIT_STATUS, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(String message, int status) {
+
+        terminate(message, null, status, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(Throwable cause) {
+
+        terminate(null, cause, DEFAULT_EXIT_STATUS, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(String message, Throwable cause) {
+
+        terminate(message, cause, DEFAULT_EXIT_STATUS, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(String message, Throwable cause, int status) {
+
+        terminate(message, cause, status, RUNTIME_EXCEPTION);
+    }
+
+
+    public static void
+    terminate(String message, Throwable cause, int status, boolean runtime) {
+
+        if (runtime) {
+           throw(new Terminator.ExitException(message, cause, status));
+        } else {
+           throw(new Terminator.ExitError(message, cause, status));
+        }
     }
 
     ///////////////////////////////////

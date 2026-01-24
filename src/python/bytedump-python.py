@@ -2485,24 +2485,6 @@ class Terminator:
         return message
 
     @classmethod
-    def terminate(cls, message: str | None = "", cause: BaseException | None = None,
-                  status: int | None = None) -> None:
-
-        #
-        # Gemini's original Python version of this method set the default message to None.
-        # However, somewhere behind the scenes that None message was apparently translated
-        # to the string "None", which ended up as the message that main() printed whenever
-        # this method is called with no arguments.
-        #
-        # Changing the default message to the empty string (i.e., "") fixed that behavior,
-        # but only because main() explicitly ignores all messages that are None or empty
-        # strings. After that I decided not to spend more time trying to track down where
-        # the translation of None to "None" happened.
-        #
-
-        raise Terminator.ExitException(message, cause, status)
-
-    @classmethod
     def message_formatter(cls, args: list[str]) -> str:
         arg: str
         caller: dict[str, str]
@@ -2640,6 +2622,24 @@ class Terminator:
             result += suffix
 
         return result
+
+    @classmethod
+    def terminate(cls, message: str | None = "", cause: BaseException | None = None,
+                  status: int | None = None) -> None:
+
+        #
+        # Gemini's original Python version of this method set the default message to None.
+        # However, somewhere behind the scenes that None message was apparently translated
+        # to the string "None", which ended up as the message that main() printed whenever
+        # this method is called with no arguments.
+        #
+        # Changing the default message to the empty string (i.e., "") fixed that behavior,
+        # but only because main() explicitly ignores all messages that are None or empty
+        # strings. After that I decided not to spend more time trying to track down where
+        # the translation of None to "None" happened.
+        #
+
+        raise Terminator.ExitException(message, cause, status)
 
     ###################################
     #
