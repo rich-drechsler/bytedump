@@ -29,7 +29,7 @@ from typing import Any, BinaryIO
 #
 #    ByteDump Variables
 #       These are class variables that correspond primarily to static fields that
-#       are defined in the Java version of ByteDump.
+#       are defined in the Java implementation of the ByteDump class.
 #
 #       NOTE - some of the class variable names in this script don't follow Python
 #       naming conventions. The exceptions are very unusual names and are briefly

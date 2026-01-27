@@ -1,28 +1,33 @@
 ## ByteDump
 
-Right now, what you'll find in this repository are the Java and bash implementations
+Right now, what you'll in this repository are Java, bash, and Python implementations
 of a program that can be used to dump the bytes in a file. My purpose here isn't to
-convince anyone to use either of the programs. Instead, I wrote them to hopefully be
-useful source code resources for programmers - they might be worth a look if you're
-familiar with (or perhaps just curious about) Java, bash, or even GNU make.
+convince anyone to use the existing programs. Instead, I wrote them to hopefully be
+useful source code resources for programmers. They accept the same (non-debugging)
+command line options, generate identical output, and if you look at the source code
+I'm pretty sure you'll notice quite a bit of similarity across the three versions.
+They're extensively commented and might be worth a look if you're familiar with (or
+perhaps just curious about) Java, bash, Python, or even GNU make.
 
-The Java and bash versions both work on Linux. They accept the same (non-debugging)
-command line options and as far as I know also produce identical output. The bash
-version was written first and uploaded to a public GitHub repository in 2024. The
-Java implementation is new, but seems to work well and is almost always much faster
-than the bash script. Both versions are available in this repository and if I get
-time I plan on adding implementations in a few more languages (e.g., Python, Rust,
-or C).
+The development and testing was done on Linux. The bash version was written first,
+uploaded to GitHub as a standalone application in 2024, and was moved into to this
+repository on July 29 2025, along with the new Java implementation of bytedump. The
+initial Python program was created by Gemini 3.0 Pro (with a little coaching from
+me) and that version was added to this repository on Dec 23 2025. Since then every
+commit on my Linux system was pushed to this repository, primarily because I wanted
+to make sure everyone could track the gradual evolution of Gemini's original Python
+program into the version that's currently available.
 
-### Chatbots
+There's some code cleanup left and a bunch of missing or incomplete documentation
+that really needs to be addressed. I'll probably work on all of it slowly over the
+next month or two, and after that work is finished I'll decide about implementing
+bytedump in another programming language. There have been lots of clones of this
+repository, but I have no idea how to translate GitHub clone counts into interest,
+so consider visiting
 
-Gemini 3 Pro did a pretty good job translating the Java version into Python, and I
-was pleased with the results. It's not complete or thoroughly tested, but it does
-seem to work, so I decided to include it this repository. Gemini 3 Pro handled all
-of the translation with only a little interference from me. No makefile or anything
-else yet, but I still think what's there is worth a look. I'll probably spend a week
-or so working on it, and perhaps after that I'll get back to the documentation that
-I've been postponing for the last few months.
+    https://github.com/rich-drechsler/bytedump/issues/2
+
+and leaving a reaction and/or comment if you want me to tackle another language.
 
 ### Directories
 
@@ -31,7 +36,7 @@ You'll find the following directories in this repository:
            src - the top level source directory
       src/bash - source code for the bash version of bytedump
       src/java - source code for the Java version of bytedump
-    src/python - preliminary source code for the Python version of bytedump
+    src/python - source code for the Python version of bytedump
          image - the default installation directory
 
 Implementations in any additional languages will be stored in directories that, just
@@ -121,6 +126,9 @@ the files that I think might be most interesting and/or easiest come first.
 
     src/java/ByteDump.java
         The Java bytedump version - it "resembles" the bash version.
+
+    src/python/bytedump-python.py
+        The Python bytedump version - modified from Gemini's original program
 
     src/bash/bytedump-bash.sh
         The bash bytedump version - it's a big file with lots of comments.
