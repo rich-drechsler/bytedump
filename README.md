@@ -64,7 +64,7 @@ every makefile in this repository assumes you meant
     make all
 
 That's often what happens in makefiles, but the choice of the "default target" is
-always completely controlled by each makefile.
+always completely controlled by GNU makefiles.
 
 ### Executables
 
@@ -85,7 +85,8 @@ and you'll get the default dump of that file. If you want documentation type
     ./bytedump-java --help | less
 
 and a pretty complete description of the bytedump program and the supported command
-line options will print on standard output.
+line options will print on standard output. That same --help option works in all of
+the bytedump implementations.
 
 ### Installation
 

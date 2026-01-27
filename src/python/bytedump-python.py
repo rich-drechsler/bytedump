@@ -2344,7 +2344,7 @@ class RegexManager:
 
         #
         # No group caching by this method, at least right now. Not 100% convinced it's
-        # the right approach, but it's also not unreasonable because the RegexManager
+        # the right approach, but it's also not unreasonable because this RegexManager
         # class was only designed to be be used by the ByteDump class.
         #
 
@@ -2631,7 +2631,7 @@ class Terminator:
         # Gemini's original Python version of this method set the default message to None.
         # However, somewhere behind the scenes that None message was apparently translated
         # to the string "None", which ended up as the message that main() printed whenever
-        # this method is called with no arguments.
+        # this method was called with no arguments.
         #
         # Changing the default message to the empty string (i.e., "") fixed that behavior,
         # but only because main() explicitly ignores all messages that are None or empty
@@ -2653,17 +2653,17 @@ class Terminator:
         def __init__(self, message: str | None = None, cause: BaseException | None = None, status: int | None = None):
             #
             # Initializing status to None lets us pick the exit status that's included in
-            # the object that we're building and that means it's also available whenever
+            # the object that we're building, which that means it's also available whenever
             # this object is caught.
             #
             # NOTE - this is an approach that lets us map a terminate() call made with no
             # arguments into a program exit with no error message and a zero status. It's
-            # different than the corresponding Java class, but the results (at least for
-            # this program) are identical.
+            # different than the way the corresponding Java class handles things, but the
+            # results (at least for this program) are identical.
             #
 
             super().__init__(message)
-            if status is None:
+            if status is None:          # was it a no argument terminate() call?
                 self.status = 0
             else:
                 self.status = status
