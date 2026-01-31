@@ -114,8 +114,8 @@ all install clean clobber testfiles validate :
 	@# work. It's a subtle difference that probably won't be immediately obvious, but
 	@# the extra dollar sign prevents GNU make from using its realpath function.
 	@#
-	@# NOTE - make always preprocesses recipes before handing anything to the shell. Two
-	@# dollar signs are the "escape sequence" that recipes have to use when they need to
+	@# HINT - make always preprocesses recipes before handing anything to the shell. Two
+	@# dollar signs are the "escape sequence" that recipes have to use when they want to
 	@# hand a single dollar sign to the shell.
 	@#
 	@# NOTE - GNU make normally prints each recipe after it's been preprocessed, but a

@@ -16,12 +16,11 @@ so this should not be a long document.
 Part of the help also involved adding comments to the makefiles, but placing those
 comments exactly where I wanted sometimes triggered strange behavior that could be
 traced back to how GNU make parsed those lines in the makefiles. They were subtle
-issues that I didn't notice for quite a while, but when I did I was suprised (and
-little embarassed) because I've been using make for a very long time. As far as I
-can tell it's not behavior that originated with GNU make. I decided to include a
-brief discussion of the issues in the [Comment Problems](#comment-problems) section
-that I hope explains why some pretty obvious explanations don't appear as makefile
-comments where they might be most helpful.
+issues that I didn't notice for a long time, but when I did I was quite surprised
+because I've used GNU make for decades now. The discussion of the behavior in the
+[Comment Problems](#comment-problems) section hopefully explains why there aren't
+any comments at the end of makefile lines that also include GNU make instructions
+(like variable assignments).
 
 ### The Manual
 
@@ -30,23 +29,22 @@ The GNU make manual, which can be found at the URL
     https://www.gnu.org/software/make/manual/make.html
 
 is the definitive reference. It's huge, and today I can't imagine anyone sitting
-down and reading the whole thing - that's something chatbots have already done and
+down and reading the whole thing. That's something chatbots have already done and
 talking to them is much easier than searching through the manual. But the manual
 is still useful, so I'll occasionally reference section numbers and include short
-quotes from the version that was available on 11/10/25.
+quotes from the manual that was available on 11/10/25 (i.e., Edition 0.77 for GNU
+make version 4.4.1).
 
 ### The SHELL Variable
 
-I don't remember when I first encountered make, but it probably happened in 1981,
-and the version I used was a direct descendant of AT&T's original implementation.
-At that time GNU and POSIX didn't stand for anything and there was no doubt what
-people were talking about when they mentioned the shell.
+My first encounter with make probably happened in 1981, and the version I used was
+undoubtedly was a direct descendant of AT&T's original implementation. At that time
+GNU and POSIX didn't stand for anything and there was no doubt what was meant when
+the "shell" was mentioned.
 
-Everything was simpler back then and that's the environment I was in when I began
-struggling with make. For much of the 1980s shell code in makefiles was handed to
-the Bourne shell. The situation today is different and everyone has their favorite
-shell. GNU make even lets makefiles pick their preferred "shell" by pointing at it
-using GNU make's special SHELL variable. For example, put
+For most of the 1980s shell code in makefiles was handed to the Bourne shell, but
+today GNU make lets makefiles pick their preferred "shell" by pointing at it using
+GNU make's special SHELL variable. For example, put
 
     SHELL = /bin/bash
 
@@ -59,10 +57,10 @@ be installed as /bin/sh) really a POSIX shell, and if so what version of POSIX d
 it support?
 
 They're all legitimate questions that you usually can't answer when you're writing
-a makefile. So instead of trying to point at my favorite shell, I never set SHELL
-in GNU makefiles (despite what the manual recommends in section 16.1) and instead
-I let GNU make pick the shell. After that, I follow the advice in Section 16.2 of
-the GNU make manual
+a makefile, particularly if it's going to be used on systems you don't control. So
+instead of trying to point at my favorite shell, I never set SHELL in GNU makefiles
+(despite what the manual suggests in section 16.1) and instead I let GNU make pick
+the shell. After that, I follow the advice in Section 16.2 of the GNU make manual
 
   > Write the Makefile commands (and any shell scripts, such as configure) to
   > run under sh (both the traditional Bourne shell and the POSIX shell), not
@@ -71,8 +69,9 @@ the GNU make manual
 
 and try to write shell code that would be accepted by a POSIX.2-1992 shell, which
 I believe is the standard that included the $(...) command substitution syntax. If
-GNU make exists on a system then makefiles should be able to safely assume that a
-POSIX shell exists somewhere on that system.
+GNU make exists on a system then makefiles should be able to safely assume that an
+appropriate POSIX shell exists somewhere on that system - letting GNU make find it
+seems much better than using the SHELL variable.
 
 I spent many years talking to a Bourne shell, so I find it easy to do in makefiles,
 but you may not agree or even know what you can and can't say to a Bourne or POSIX
@@ -190,7 +189,7 @@ groups, exactly the way GNU make does. You start at the first line, add it to th
 current group, and check if it ends with a backslash. If it does the next line is
 added to the current group and checked for a trailing backslash. The process used
 to build the group continues until make encounters a line that doesn't end with a
-bashslash. If there's anything left in the recipe, make starts a new group that's
+backslash. If there's anything left in the recipe, make starts a new group that's
 constructed just like previous groups, and make continues the process until there
 are no more lines are left in the rule's recipe.
 
@@ -231,17 +230,18 @@ that start with a '#' character and continue to the end of the line, but a comme
 in a makefile that ends with an unescaped backslash is continued on the next line.
 
 It's a difference between make and shell comments that's documented in the manual,
-but isn't something that's used in any of the makefiles in this repository.
+and isn't something that's used in any of the makefiles in this repository.
 
 ### Comment Problems
 
 More annoying is what happens when you add a comment to the end of a line, like
-the definition of a makefile variable. For example, adding a short comment on the
-same line as the variable definition
+the definition of a makefile variable, and as far as I can tell it's not behavior
+that originated with GNU make. For example, a short comment on the same line as a
+variable definition
 
     KEY := VALUE                # this is used to ...
 
-could often be helpful. Since there's no mention in the manual about what happens
+might often be helpful. Since there's no mention in the manual about what happens
 here, assuming that the word VALUE is assigned to the makefile variable KEY would
 be perfectly reasonable. Unfortunately, what actually happens is all of the white
 space between the end of the variable assignment and the start of the comment also
@@ -264,12 +264,16 @@ so put the following lines
     KEY := VALUE                # this is used to ...
 
     print :
-        @echo "[$(KEY)]"        # this line must start with a tab
+        @echo "[$(KEY)]"        # this line must start with a tab!!
 
-in a file, say /tmp/bug.mk (making sure the echo line starts with a tab), and then
-type
+in a file, say /tmp/bug.mk (making sure the echo line in the recipe starts with a
+tab), and then type
 
     make -f /tmp/bug.mk
+
+or
+
+    make -f /tmp/bug.mk print
 
 and that should convince you ...
 
